@@ -1,0 +1,305 @@
+﻿@page
+@model RegisterEaspSepsModel
+@{
+    ViewData["Title"] = "ESAP/SEPS Registration";
+}
+
+<h2>ESAP/SEPS Registration</h2>
+@if (Model.SuccessMessage != null)
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
+
+<form method="post">
+    <div>
+        <label asp-for="EaspSepsRegistration.AgencyName"></label>
+        <input asp-for="EaspSepsRegistration.AgencyName" />
+        <span asp-validation-for="EaspSepsRegistration.AgencyName"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.AlternateName"></label>
+        <input asp-for="EaspSepsRegistration.AlternateName" />
+        <span asp-validation-for="EaspSepsRegistration.AlternateName"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.County"></label>
+        <select asp-for="EaspSepsRegistration.County" asp-items="Model.CountyList"></select>
+        <span asp-validation-for="EaspSepsRegistration.County"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.UniqueId"></label>
+        <input asp-for="EaspSepsRegistration.UniqueId" />
+        <span asp-validation-for="EaspSepsRegistration.UniqueId"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.Address"></label>
+        <input asp-for="EaspSepsRegistration.Address" />
+        <span asp-validation-for="EaspSepsRegistration.Address"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.Address2"></label>
+        <input asp-for="EaspSepsRegistration.Address2" />
+        <span asp-validation-for="EaspSepsRegistration.Address2"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.City"></label>
+        <input asp-for="EaspSepsRegistration.City" />
+        <span asp-validation-for="EaspSepsRegistration.City"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.State"></label>
+        <input asp-for="EaspSepsRegistration.State" />
+        <span asp-validation-for="EaspSepsRegistration.State"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.Zip"></label>
+        <input asp-for="EaspSepsRegistration.Zip" />
+        <span asp-validation-for="EaspSepsRegistration.Zip"></span>
+    </div>
+    <div>
+        <label asp-for="EaspSepsRegistration.RegistrationType"></label>
+        <div>
+            <input type="radio" asp-for="EaspSepsRegistration.RegistrationType" value="ESAP" /> ESAP Registration
+            <input type="radio" asp-for="EaspSepsRegistration.RegistrationType" value="SEPS" /> SEPS Registration
+        </div>
+        <span asp-validation-for="EaspSepsRegistration.RegistrationType"></span>
+    </div>
+
+    <h3>Agency Contacts/Users</h3>
+    <div>
+        <label asp-for="AgencyContact.ProgramDirector"></label>
+        <input asp-for="AgencyContact.ProgramDirector" />
+        <span asp-validation-for="AgencyContact.ProgramDirector"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.Address"></label>
+        <input asp-for="AgencyContact.Address" />
+        <span asp-validation-for="AgencyContact.Address"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.Address2"></label>
+        <input asp-for="AgencyContact.Address2" />
+        <span asp-validation-for="AgencyContact.Address2"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.City"></label>
+        <input asp-for="AgencyContact.City" />
+        <span asp-validation-for="AgencyContact.City"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.State"></label>
+        <input asp-for="AgencyContact.State" />
+        <span asp-validation-for="AgencyContact.State"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.Zip"></label>
+        <input asp-for="AgencyContact.Zip" />
+        <span asp-validation-for="AgencyContact.Zip"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.Phone"></label>
+        <input asp-for="AgencyContact.Phone" />
+        <span asp-validation-for="AgencyContact.Phone"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.PhoneExtension"></label>
+        <input asp-for="AgencyContact.PhoneExtension" />
+        <span asp-validation-for="AgencyContact.PhoneExtension"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.AltPhone"></label>
+        <input asp-for="AgencyContact.AltPhone" />
+        <span asp-validation-for="AgencyContact.AltPhone"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.AltPhoneExtension"></label>
+        <input asp-for="AgencyContact.AltPhoneExtension" />
+        <span asp-validation-for="AgencyContact.AltPhoneExtension"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.Email"></label>
+        <input asp-for="AgencyContact.Email" />
+        <span asp-validation-for="AgencyContact.Email"></span>
+    </div>
+    <div>
+        <label asp-for="AgencyContact.SameAddressAsAgency"></label>
+        <input asp-for="AgencyContact.SameAddressAsAgency" type="checkbox" />
+        <span asp-validation-for="AgencyContact.SameAddressAsAgency"></span>
+    </div>
+
+    <h3>Additional Users</h3>
+    <div id="additional-users-container">
+        @for (int i = 0; i < Model.AdditionalUsers.Count; i++)
+        {
+            <div class="additional-user">
+                <div>
+                    <label asp-for="AdditionalUsers[i].Name"></label>
+                    <input asp-for="AdditionalUsers[i].Name" />
+                    <span asp-validation-for="AdditionalUsers[i].Name"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].Title"></label>
+                    <input asp-for="AdditionalUsers[i].Title" />
+                    <span asp-validation-for="AdditionalUsers[i].Title"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].Address"></label>
+                    <input asp-for="AdditionalUsers[i].Address" />
+                    <span asp-validation-for="AdditionalUsers[i].Address"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].Address2"></label>
+                    <input asp-for="AdditionalUsers[i].Address2" />
+                    <span asp-validation-for="AdditionalUsers[i].Address2"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].City"></label>
+                    <input asp-for="AdditionalUsers[i].City" />
+                    <span asp-validation-for="AdditionalUsers[i].City"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].State"></label>
+                    <input asp-for="AdditionalUsers[i].State" />
+                    <span asp-validation-for="AdditionalUsers[i].State"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].Zip"></label>
+                    <input asp-for="AdditionalUsers[i].Zip" />
+                    <span asp-validation-for="AdditionalUsers[i].Zip"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].Phone"></label>
+                    <input asp-for="AdditionalUsers[i].Phone" />
+                    <span asp-validation-for="AdditionalUsers[i].Phone"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].Email"></label>
+                    <input asp-for="AdditionalUsers[i].Email" />
+                    <span asp-validation-for="AdditionalUsers[i].Email"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalUsers[i].SameAddressAsAgency"></label>
+                    <input asp-for="AdditionalUsers[i].SameAddressAsAgency" type="checkbox" />
+                    <span asp-validation-for="AdditionalUsers[i].SameAddressAsAgency"></span>
+                </div>
+            </div>
+        }
+    </div>
+    <button type="button" id="add-additional-user">Add Additional User</button>
+
+    <h3>Shipping Information</h3>
+    <div>
+        <label asp-for="ShipInformation.ShipToName"></label>
+        <input asp-for="ShipInformation.ShipToName" />
+        <span asp-validation-for="ShipInformation.ShipToName"></span>
+    </div>
+    <div>
+        <label asp-for="ShipInformation.ShipToEmail"></label>
+        <input asp-for="ShipInformation.ShipToEmail" />
+        <span asp-validation-for="ShipInformation.ShipToEmail"></span>
+    </div>
+    <div>
+        <label asp-for="ShipInformation.ShipToAddress"></label>
+        <input asp-for="ShipInformation.ShipToAddress" />
+        <span asp-validation-for="ShipInformation.ShipToAddress"></span>
+    </div>
+    <div>
+        <label asp-for="ShipInformation.ShipToAddress2"></label>
+        <input asp-for="ShipInformation.ShipToAddress2" />
+        <span asp-validation-for="ShipInformation.ShipToAddress2"></span>
+    </div>
+    <div>
+        <label asp-for="ShipInformation.ShipToCity"></label>
+        <input asp-for="ShipInformation.ShipToCity" />
+        <span asp-validation-for="ShipInformation.ShipToCity"></span>
+    </div>
+    <div>
+        <label asp-for="ShipInformation.ShipToState"></label>
+        <input asp-for="ShipInformation.ShipToState" />
+        <span asp-validation-for="ShipInformation.ShipToState"></span>
+    </div>
+    <div>
+        <label asp-for="ShipInformation.ShipToZip"></label>
+        <input asp-for="ShipInformation.ShipToZip" />
+        <span asp-validation-for="ShipInformation.ShipToZip"></span>
+    </div>
+    <div>
+        <label asp-for="ShipInformation.SameAsSite"></label>
+        <input asp-for="ShipInformation.SameAsSite" type="checkbox" />
+        <span asp-validation-for="ShipInformation.SameAsSite"></span>
+    </div>
+
+    <h3>Counties Served by the Agency</h3>
+    @for (int i = 0; i < Model.CountiesServed.Count; i++)
+    {
+        <div>
+            <label asp-for="CountiesServed[i]"></label>
+            <select asp-for="CountiesServed[i]" asp-items="Model.CountyList"></select>
+        </div>
+    }
+
+    <button type="submit">Submit</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>document.getElementById("add-additional-user").addEventListener("click", function () {
+            const container = document.getElementById("additional-users-container");
+            const index = container.children.length;
+            const newUser = document.createElement("div");
+            newUser.classList.add("additional-user");
+            newUser.innerHTML = `
+                    <div>
+                        <label for="AdditionalUsers_${index}__Name">Name</label>
+                        <input type="text" id="AdditionalUsers_${index}__Name" name="AdditionalUsers[${index}].Name" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__Title">Title</label>
+                        <input type="text" id="AdditionalUsers_${index}__Title" name="AdditionalUsers[${index}].Title" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__Address">Address</label>
+                        <input type="text" id="AdditionalUsers_${index}__Address" name="AdditionalUsers[${index}].Address" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__Address2">Address2</label>
+                        <input type="text" id="AdditionalUsers_${index}__Address2" name="AdditionalUsers[${index}].Address2" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__City">City</label>
+                        <input type="text" id="AdditionalUsers_${index}__City" name="AdditionalUsers[${index}].City" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__State">State</label>
+                        <input type="text" id="AdditionalUsers_${index}__State" name="AdditionalUsers[${index}].State" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__Zip">Zip</label>
+                        <input type="text" id="AdditionalUsers_${index}__Zip" name="AdditionalUsers[${index}].Zip" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__Phone">Phone</label>
+                        <input type="text" id="AdditionalUsers_${index}__Phone" name="AdditionalUsers[${index}].Phone" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__Email">Email</label>
+                        <input type="text" id="AdditionalUsers_${index}__Email" name="AdditionalUsers[${index}].Email" />
+                    </div>
+                    <div>
+                        <label for="AdditionalUsers_${index}__SameAddressAsAgency">Same Address As Agency</label>
+                        <input type="checkbox" id="AdditionalUsers_${index}__SameAddressAsAgency" name="AdditionalUsers[${index}].SameAddressAsAgency" />
+                    </div>
+                `;
+            container.appendChild(newUser);
+        });
+
+        document.querySelector('input[name="ShipInformation.SameAsSite"]').addEventListener("change", function () {
+            if (this.checked) {
+                document.querySelector('input[name="ShipInformation.ShipToAddress"]').value = document.querySelector('[name="EaspSepsRegistration.Address"]').value;
+                document.querySelector('input[name="ShipInformation.ShipToAddress2"]').value = document.querySelector('[name="EaspSepsRegistration.Address2"]').value;
+                document.querySelector('input[name="ShipInformation.ShipToCity"]').value = document.querySelector('[name="EaspSepsRegistration.City"]').value;
+                document.querySelector('input[name="ShipInformation.ShipToState"]').value = document.querySelector('[name="EaspSepsRegistration.State"]').value;
+                document.querySelector('input[name="ShipInformation.ShipToZip"]').value = document.querySelector('[name="EaspSepsRegistration.Zip"]').value;
+            }
+        });</script>
+}
