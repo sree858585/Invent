@@ -18,6 +18,7 @@ namespace WebApplication1.Data
         public DbSet<ShipInformation> ShipInformations { get; set; }
         public DbSet<County> Counties { get; set; }
         public DbSet<EaspSepsRegistrationCounty> EaspSepsRegistrationCounties { get; set; }
+        public DbSet<Suffix> Suffixes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
