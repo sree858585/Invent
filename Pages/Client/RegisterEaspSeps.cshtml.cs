@@ -29,6 +29,7 @@ public class RegisterEaspSepsModel : PageModel
     public List<int> CountiesServed { get; set; } = new List<int>();
 
     public List<SelectListItem> CountyList { get; set; }
+    public List<SelectListItem> SuffixList { get; set; }
 
     public string SuccessMessage { get; set; }
 
@@ -40,9 +41,16 @@ public class RegisterEaspSepsModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         CountyList = await _context.Counties
-            .Where(c => c.Is_Active)
+            .Where(c => c.is_active)
             .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
             .ToListAsync();
+
+        SuffixList = await _context.Suffixes
+            .Where(s => s.IsActive)
+            .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Sufix })
+            .ToListAsync();
+
+        CountiesServed = Enumerable.Repeat(0, 10).ToList();
 
         return Page();
     }
@@ -52,13 +60,25 @@ public class RegisterEaspSepsModel : PageModel
         if (!ModelState.IsValid)
         {
             CountyList = await _context.Counties
-                .Where(c => c.Is_Active)
+                .Where(c => c.is_active)
                 .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
                 .ToListAsync();
-            //return Page();
+
+            SuffixList = await _context.Suffixes
+                .Where(s => s.IsActive)
+                .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Sufix })
+                .ToListAsync();
+
+           // return Page();
         }
 
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            ModelState.AddModelError(string.Empty, "User is not logged in");
+            return Page();
+        }
+
         EaspSepsRegistration.UserId = userId;
 
         _context.EaspSepsRegistrations.Add(EaspSepsRegistration);
@@ -79,18 +99,31 @@ public class RegisterEaspSepsModel : PageModel
         _context.ShipInformations.Add(ShipInformation);
         await _context.SaveChangesAsync();
 
-        foreach (var countyId in CountiesServed)
+        foreach (var countyId in CountiesServed.Distinct())
         {
-            _context.EaspSepsRegistrationCounties.Add(new EaspSepsRegistrationCounty
+            if (countyId > 0)
             {
-                EaspSepsRegistrationId = EaspSepsRegistration.Id,
-                CountyId = countyId
-            });
+                var entity = new EaspSepsRegistrationCounty
+                {
+                    EaspSepsRegistrationId = EaspSepsRegistration.Id,
+                    CountyId = countyId
+                };
+
+                var trackedEntity = _context.EaspSepsRegistrationCounties.Local.FirstOrDefault(e =>
+                    e.EaspSepsRegistrationId == entity.EaspSepsRegistrationId && e.CountyId == entity.CountyId);
+
+                if (trackedEntity != null)
+                {
+                    _context.Entry(trackedEntity).State = EntityState.Detached;
+                }
+
+                _context.EaspSepsRegistrationCounties.Add(entity);
+            }
         }
 
         await _context.SaveChangesAsync();
 
         SuccessMessage = "Registration successful!";
-        return RedirectToPage();
+        return RedirectToPage("/Index");
     }
 }

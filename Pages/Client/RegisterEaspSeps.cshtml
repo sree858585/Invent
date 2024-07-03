@@ -69,6 +69,7 @@
     <div>
         <label asp-for="AgencyContact.ProgramDirector"></label>
         <input asp-for="AgencyContact.ProgramDirector" />
+        <select asp-for="AgencyContact.SuffixId" asp-items="Model.SuffixList"></select>
         <span asp-validation-for="AgencyContact.ProgramDirector"></span>
     </div>
     <div>
