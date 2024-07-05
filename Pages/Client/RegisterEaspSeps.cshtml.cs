@@ -20,16 +20,23 @@ public class RegisterEaspSepsModel : PageModel
     public AgencyContact AgencyContact { get; set; }
 
     [BindProperty]
-    public List<AdditionalUser> AdditionalUsers { get; set; } = new List<AdditionalUser>();
+    public List<AdditionalUser> AdditionalUsers { get; set; } = new List<AdditionalUser> { new AdditionalUser() };
 
     [BindProperty]
     public ShipInformation ShipInformation { get; set; }
+    [BindProperty]
+    public List<ShipToSite> AdditionalShipToSites { get; set; } = new List<ShipToSite>();
+
 
     [BindProperty]
     public List<int> CountiesServed { get; set; } = new List<int>();
 
+    [BindProperty]
+    public List<int[]> ShipToSiteCounties { get; set; } = new List<int[]>();
+
     public List<SelectListItem> CountyList { get; set; }
     public List<SelectListItem> SuffixList { get; set; }
+    public List<SelectListItem> PrefixList { get; set; }
 
     public string SuccessMessage { get; set; }
 
@@ -50,7 +57,16 @@ public class RegisterEaspSepsModel : PageModel
             .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Sufix })
             .ToListAsync();
 
+        PrefixList = await _context.Prefixes
+            .Where(s => s.IsActive)
+            .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Prefx })
+            .ToListAsync();
+
         CountiesServed = Enumerable.Repeat(0, 10).ToList();
+
+        //ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };
+
+  //ß      AdditionalShipToSites.Add(new ShipToSite());
 
         return Page();
     }
@@ -67,6 +83,11 @@ public class RegisterEaspSepsModel : PageModel
             SuffixList = await _context.Suffixes
                 .Where(s => s.IsActive)
                 .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Sufix })
+                .ToListAsync();
+
+            PrefixList = await _context.Prefixes
+                .Where(s => s.IsActive)
+                .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Prefx })
                 .ToListAsync();
 
            // return Page();
@@ -98,6 +119,17 @@ public class RegisterEaspSepsModel : PageModel
         ShipInformation.EaspSepsRegistrationId = EaspSepsRegistration.Id;
         _context.ShipInformations.Add(ShipInformation);
         await _context.SaveChangesAsync();
+
+        foreach (var shipToSite in AdditionalShipToSites)
+        {
+            shipToSite.EaspSepsRegistrationId = EaspSepsRegistration.Id;
+            _context.ShipToSites.Add(shipToSite);
+        }
+        await _context.SaveChangesAsync();
+
+        //await _context.SaveChangesAsync();
+
+        //await _context.SaveChangesAsync();
 
         foreach (var countyId in CountiesServed.Distinct())
         {
