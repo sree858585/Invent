@@ -19,6 +19,9 @@ namespace WebApplication1.Data
         public DbSet<County> Counties { get; set; }
         public DbSet<EaspSepsRegistrationCounty> EaspSepsRegistrationCounties { get; set; }
         public DbSet<Suffix> Suffixes { get; set; }
+        public DbSet<Prefix> Prefixes { get; set; }
+        public DbSet<ShipToSite> ShipToSites { get; set; }
+        public DbSet<ShipToSiteCounty> ShipToSiteCounties { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -63,12 +66,38 @@ namespace WebApplication1.Data
             modelBuilder.Entity<EaspSepsRegistrationCounty>()
                 .HasOne(e => e.EaspSepsRegistration)
                 .WithMany(e => e.CountiesServed)
-                .HasForeignKey(e => e.EaspSepsRegistrationId);
+                .HasForeignKey(e => e.EaspSepsRegistrationId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<EaspSepsRegistrationCounty>()
                 .HasOne(e => e.County)
                 .WithMany()
-                .HasForeignKey(e => e.CountyId);
+                .HasForeignKey(e => e.CountyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Suffix>().ToTable("lk_Suffix");
+            modelBuilder.Entity<Prefix>().ToTable("lk_Prefix");
+
+            modelBuilder.Entity<ShipToSite>()
+                .HasOne(e => e.EaspSepsRegistration)
+                .WithMany(e => e.ShipToSites)
+                .HasForeignKey(e => e.EaspSepsRegistrationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ShipToSiteCounty>()
+                .HasKey(s => new { s.ShipToSiteId, s.CountyId });
+
+            modelBuilder.Entity<ShipToSiteCounty>()
+                .HasOne(s => s.ShipToSite)
+                .WithMany(s => s.PrimaryCountiesServed)
+                .HasForeignKey(s => s.ShipToSiteId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ShipToSiteCounty>()
+                .HasOne(s => s.County)
+                .WithMany()
+                .HasForeignKey(s => s.CountyId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
             modelBuilder.Entity<IdentityRole>().ToTable("AspNetRoles");
