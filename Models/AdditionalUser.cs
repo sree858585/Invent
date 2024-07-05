@@ -5,19 +5,28 @@ namespace WebApplication1.Models
     public class AdditionalUser
     {
         public int Id { get; set; }
+
+        public int? PrefixId { get; set; }
+        public Prefix Prefix { get; set; }
+
+        [Required]
         public string Name { get; set; }
+
+        public int? SuffixId { get; set; }
+        public Suffix Suffix { get; set; }
+
         public string Title { get; set; }
         public string Address { get; set; }
-        public string Address2 { get; set; } // Add this line
+        public string Address2 { get; set; }
         public string City { get; set; }
-        public string State { get; set; } // Add this line
-        public string Zip { get; set; } // Add this line
+        public string State { get; set; }
+        public string Zip { get; set; }
         public string Phone { get; set; }
         public string Email { get; set; }
-        public bool SameAddressAsAgency { get; set; } // Add this line
+        public bool SameAddressAsAgency { get; set; }
 
+        // Foreign Key to EaspSepsRegistration
         [Required]
         public int EaspSepsRegistrationId { get; set; }
     }
 }
-

@@ -23,13 +23,11 @@ namespace WebApplication1.Models
         public string Zip { get; set; }
         [Required]
         public string RegistrationType { get; set; }
-
-        // Foreign Key to ApplicationUser
         [Required]
         public string UserId { get; set; }
-        public List<EaspSepsRegistrationCounty> CountiesServed { get; set; } = new List<EaspSepsRegistrationCounty>(); // Updated property
-
-
+        public List<EaspSepsRegistrationCounty> CountiesServed { get; set; } = new List<EaspSepsRegistrationCounty>();
+        public ICollection<ShipToSite> ShipToSites { get; set; }
     }
+
 
 }
