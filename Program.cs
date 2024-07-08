@@ -54,6 +54,12 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+//password hasher
+var passwordHasher = new PasswordHasher<IdentityUser>();
+var hashedPassword = passwordHasher.HashPassword(null, "Hemanth@85");
+Console.WriteLine("password is :" +hashedPassword);
+    
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
