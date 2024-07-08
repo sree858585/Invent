@@ -15,6 +15,7 @@ namespace WebApplication1.Models
         public string Zip { get; set; }
         public string Phone { get; set; }
         public string PhoneExtension { get; set; }
+        public string SiteType { get; set; } // New field
         public string ShipToName { get; set; }
         public string ShipToEmail { get; set; }
         public string ShipToAddress { get; set; }
