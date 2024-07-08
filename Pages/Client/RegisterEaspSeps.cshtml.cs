@@ -24,9 +24,9 @@ public class RegisterEaspSepsModel : PageModel
 
     [BindProperty]
     public ShipInformation ShipInformation { get; set; }
+
     [BindProperty]
     public List<ShipToSite> AdditionalShipToSites { get; set; } = new List<ShipToSite>();
-
 
     [BindProperty]
     public List<int> CountiesServed { get; set; } = new List<int>();
@@ -63,10 +63,7 @@ public class RegisterEaspSepsModel : PageModel
             .ToListAsync();
 
         CountiesServed = Enumerable.Repeat(0, 10).ToList();
-
-        //ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };
-
-  //ß      AdditionalShipToSites.Add(new ShipToSite());
+        ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };
 
         return Page();
     }
@@ -127,10 +124,6 @@ public class RegisterEaspSepsModel : PageModel
         }
         await _context.SaveChangesAsync();
 
-        //await _context.SaveChangesAsync();
-
-        //await _context.SaveChangesAsync();
-
         foreach (var countyId in CountiesServed.Distinct())
         {
             if (countyId > 0)
@@ -153,9 +146,30 @@ public class RegisterEaspSepsModel : PageModel
             }
         }
 
+        foreach (var shipToSite in AdditionalShipToSites)
+        {
+            var shipToSiteIndex = AdditionalShipToSites.IndexOf(shipToSite);
+            var counties = ShipToSiteCounties[shipToSiteIndex];
+
+            foreach (var countyId in counties.Distinct())
+            {
+                if (countyId > 0)
+                {
+                    var shipToSiteCounty = new ShipToSiteCounty
+                    {
+                        ShipToSiteId = shipToSite.Id,
+                        CountyId = countyId
+                    };
+                    _context.ShipToSiteCounties.Add(shipToSiteCounty);
+                }
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         SuccessMessage = "Registration successful!";
         return RedirectToPage("/Index");
     }
+
 }
+

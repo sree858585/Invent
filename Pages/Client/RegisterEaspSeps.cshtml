@@ -242,13 +242,11 @@
     </div>
     <button type="button" id="add-additional-ship-to-site">Add Additional Ship to Site</button>
 
-
     <div id="additional-ship-to-sites-container">
         @for (int i = 0; i < Model.AdditionalShipToSites.Count; i++)
         {
-            <div class="add-additional-ship-to-site">
+            <div class="additional-ship-to-site">
                 <h4>Additional Ship to Site @i</h4>
-
                 <div>
                     <label asp-for="AdditionalShipToSites[i].Name"></label>
                     <input asp-for="AdditionalShipToSites[i].Name" />
@@ -290,6 +288,12 @@
                     <span asp-validation-for="AdditionalShipToSites[i].PhoneExtension"></span>
                 </div>
                 <div>
+                    <label asp-for="AdditionalShipToSites[i].SiteType">Site Type</label>
+                    <input type="radio" asp-for="AdditionalShipToSites[i].SiteType" value="Business" /> Business
+                    <input type="radio" asp-for="AdditionalShipToSites[i].SiteType" value="Personal" /> Personal
+                    <span asp-validation-for="AdditionalShipToSites[i].SiteType"></span>
+                </div>
+                <div>
                     <label asp-for="AdditionalShipToSites[i].ShipToName"></label>
                     <input asp-for="AdditionalShipToSites[i].ShipToName" />
                     <span asp-validation-for="AdditionalShipToSites[i].ShipToName"></span>
@@ -303,6 +307,11 @@
                     <label asp-for="AdditionalShipToSites[i].ShipToAddress"></label>
                     <input asp-for="AdditionalShipToSites[i].ShipToAddress" />
                     <span asp-validation-for="AdditionalShipToSites[i].ShipToAddress"></span>
+                </div>
+                <div>
+                    <label asp-for="AdditionalShipToSites[i].ShipToAddress2"></label>
+                    <input asp-for="AdditionalShipToSites[i].ShipToAddress2" />
+                    <span asp-validation-for="AdditionalShipToSites[i].ShipToAddress2"></span>
                 </div>
                 <div>
                     <label asp-for="AdditionalShipToSites[i].ShipToCity"></label>
@@ -324,7 +333,6 @@
                     <input asp-for="AdditionalShipToSites[i].SameAsSite" type="checkbox" />
                     <span asp-validation-for="AdditionalShipToSites[i].SameAsSite"></span>
                 </div>
-
                 <div>
                     <label>Primary Counties Served by Site</label>
                     @for (int j = 0; j < 5; j++)
@@ -332,7 +340,6 @@
                         <select asp-for="ShipToSiteCounties[i][j]" asp-items="Model.CountyList"></select>
                     }
                 </div>
-
             </div>
         }
     </div>
@@ -343,11 +350,14 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+            const countyList = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.CountyList));
+        console.log("countyList:", countyList); // Debug log
 
-        // script for ship to sites
         document.getElementById("add-additional-ship-to-site").addEventListener("click", function () {
+            console.log("Add Additional Ship to Site button clicked"); // Debug log
             const container = document.getElementById("additional-ship-to-sites-container");
             const index = container.children.length;
+            console.log("Current number of additional ship to sites:", index); // Debug log
 
             if (index < 2) { // Limit to 2 additional ship-to sites
                 const newShipToSite = document.createElement("div");
@@ -387,6 +397,11 @@
                         <input type="text" id="AdditionalShipToSites_${index}__PhoneExtension" name="AdditionalShipToSites[${index}].PhoneExtension" />
                     </div>
                     <div>
+                    <label for="AdditionalShipToSites_${index}__SiteType">Site Type</label>
+                    <input type="radio" id="AdditionalShipToSites_${index}__SiteType_Business" name="AdditionalShipToSites[${index}].SiteType" value="Business" /> Business
+                    <input type="radio" id="AdditionalShipToSites_${index}__SiteType_Personal" name="AdditionalShipToSites[${index}].SiteType" value="Personal" /> Personal
+                </div>
+                    <div>
                         <label for="AdditionalShipToSites_${index}__ShipToName">Ship To Name</label>
                         <input type="text" id="AdditionalShipToSites_${index}__ShipToName" name="AdditionalShipToSites[${index}].ShipToName" />
                     </div>
@@ -399,8 +414,8 @@
                         <input type="text" id="AdditionalShipToSites_${index}__ShipToAddress" name="AdditionalShipToSites[${index}].ShipToAddress" />
                     </div>
                     <div>
-                        <label for="AdditionalShipToSites_${index}__SameAsSite">Same As Site</label>
-                        <input type="checkbox" id="AdditionalShipToSites_${index}__SameAsSite" name="AdditionalShipToSites[${index}].SameAsSite" />
+                        <label for="AdditionalShipToSites_${index}__ShipToAddress2">Ship To Address2</label>
+                        <input type="text" id="AdditionalShipToSites_${index}__ShipToAddress2" name="AdditionalShipToSites[${index}].ShipToAddress2" />
                     </div>
                     <div>
                         <label for="AdditionalShipToSites_${index}__ShipToCity">Ship To City</label>
@@ -414,12 +429,15 @@
                         <label for="AdditionalShipToSites_${index}__ShipToZip">Ship To Zip</label>
                         <input type="text" id="AdditionalShipToSites_${index}__ShipToZip" name="AdditionalShipToSites[${index}].ShipToZip" />
                     </div>
-
                     <div>
+                        <label for="AdditionalShipToSites_${index}__SameAsSite">Same As Site</label>
+                        <input type="checkbox" id="AdditionalShipToSites_${index}__SameAsSite" name="AdditionalShipToSites[${index}].SameAsSite" />
+                    </div>
+                   <div>
                         <label>Primary Counties Served by Site</label>
                         ${Array.from({ length: 5 }).map((_, j) => `
                             <select id="ShipToSiteCounties_${index}__${j}" name="ShipToSiteCounties[${index}][${j}]">
-                                ${Model.CountyList.map(county => `
+                                ${countyList.map(county => `
                                     <option value="${county.Value}">${county.Text}</option>
                                 `).join('')}
                             </select>
@@ -427,24 +445,25 @@
                     </div>
                 `;
                 container.appendChild(newShipToSite);
+                console.log("Added new ship to site:", newShipToSite); // Debug log
 
-               /*document.querySelector(`#AdditionalShipToSites_${index}__SameAsSite`).addEventListener("change", function () {
-                    if (this.checked) {
-                document.querySelector('input[name="ShipInformation.ShipToAddress"]').value = document.querySelector('[name="EaspSepsRegistration.Address"]').value;
-                document.querySelector('input[name="ShipInformation.ShipToAddress2"]').value = document.querySelector('[name="EaspSepsRegistration.Address2"]').value;
-                document.querySelector('input[name="ShipInformation.ShipToCity"]').value = document.querySelector('[name="EaspSepsRegistration.City"]').value;
-                document.querySelector('input[name="ShipInformation.ShipToState"]').value = document.querySelector('[name="EaspSepsRegistration.State"]').value;
-                document.querySelector('input[name="ShipInformation.ShipToZip"]').value = document.querySelector('[name="EaspSepsRegistration.Zip"]').value;
-            }
-                });
+
+                //document.querySelector(`#AdditionalShipToSites_${index}__SameAsSite`).addEventListener("change", function () {
+                //    if (this.checked) {
+                //        document.querySelector(`#AdditionalShipToSites_${index}__ShipToAddress`).value = document.querySelector('[name="EaspSepsRegistration.Address"]').value;
+                //        document.querySelector(`#AdditionalShipToSites_${index}__ShipToAddress2`).value = document.querySelector('[name="EaspSepsRegistration.Address2"]').value;
+                //        document.querySelector(`#AdditionalShipToSites_${index}__ShipToCity`).value = document.querySelector('[name="EaspSepsRegistration.City"]').value;
+                //        document.querySelector(`#AdditionalShipToSites_${index}__ShipToState`).value = document.querySelector('[name="EaspSepsRegistration.State"]').value;
+                //        document.querySelector(`#AdditionalShipToSites_${index}__ShipToZip`).value = document.querySelector('[name="EaspSepsRegistration.Zip"]').value;
+                //    }
+                //});
             } else {
                 alert("You can only add up to 2 additional ship to sites.");
-            }*/
             }
         });
 
 
-        // cript for additional users       
+        // script for additional users
         let additionalUserIndex = @Model.AdditionalUsers.Count;
 
         document.getElementById("add-additional-user").addEventListener("click", function () {

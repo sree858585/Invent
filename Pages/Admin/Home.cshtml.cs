@@ -1,14 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace WebApplication1.Pages.Admin
+[Authorize(Roles = "Admin")]
+public class AdminIndexModel : PageModel
 {
-    public class HomeModel : PageModel
+    public void OnGet()
     {
-        [TempData]
-        public string Successmessage { get; set; }
-        public void OnGet()
-        {
-        }
     }
 }
