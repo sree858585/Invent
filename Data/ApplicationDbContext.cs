@@ -79,10 +79,10 @@ namespace WebApplication1.Data
             modelBuilder.Entity<Prefix>().ToTable("lk_Prefix");
 
             modelBuilder.Entity<ShipToSite>()
-                .HasOne(e => e.EaspSepsRegistration)
-                .WithMany(e => e.ShipToSites)
-                .HasForeignKey(e => e.EaspSepsRegistrationId)
-                .OnDelete(DeleteBehavior.Cascade);
+        .HasOne(e => e.EaspSepsRegistration)
+        .WithMany(e => e.ShipToSites)
+        .HasForeignKey(e => e.EaspSepsRegistrationId)
+        .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ShipToSiteCounty>()
                 .HasKey(s => new { s.ShipToSiteId, s.CountyId });
@@ -91,13 +91,13 @@ namespace WebApplication1.Data
                 .HasOne(s => s.ShipToSite)
                 .WithMany(s => s.PrimaryCountiesServed)
                 .HasForeignKey(s => s.ShipToSiteId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<ShipToSiteCounty>()
                 .HasOne(s => s.County)
                 .WithMany()
                 .HasForeignKey(s => s.CountyId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
             modelBuilder.Entity<IdentityRole>().ToTable("AspNetRoles");
