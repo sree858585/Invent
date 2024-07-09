@@ -34,9 +34,25 @@ public class RegisterEaspSepsModel : PageModel
     [BindProperty]
     public List<int[]> ShipToSiteCounties { get; set; } = new List<int[]>();
 
+    [BindProperty]
+    public bool IsSyringeExchangeProgram { get; set; }
+
+    [BindProperty]
+    public bool IsESAPTier1 { get; set; }
+
+    [BindProperty]
+    public bool IsESAPTier2 { get; set; }
+
+    [BindProperty]
+    public bool IsOther { get; set; }
+
+    [BindProperty]
+    public string OtherClassificationText { get; set; }
+
     public List<SelectListItem> CountyList { get; set; }
     public List<SelectListItem> SuffixList { get; set; }
     public List<SelectListItem> PrefixList { get; set; }
+    public List<SelectListItem> AgencyClassifications { get; set; }
 
     public string SuccessMessage { get; set; }
 
@@ -62,6 +78,11 @@ public class RegisterEaspSepsModel : PageModel
             .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Prefx })
             .ToListAsync();
 
+        AgencyClassifications = await _context.LkAgencyClassifications
+            .Where(c => c.is_active)
+            .Select(c => new SelectListItem { Value = c.agency_classification_id.ToString(), Text = c.classifcation_description })
+            .ToListAsync();
+
         CountiesServed = Enumerable.Repeat(0, 10).ToList();
         ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };
 
@@ -72,22 +93,8 @@ public class RegisterEaspSepsModel : PageModel
     {
         if (!ModelState.IsValid)
         {
-            CountyList = await _context.Counties
-                .Where(c => c.is_active)
-                .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
-                .ToListAsync();
-
-            SuffixList = await _context.Suffixes
-                .Where(s => s.IsActive)
-                .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Sufix })
-                .ToListAsync();
-
-            PrefixList = await _context.Prefixes
-                .Where(s => s.IsActive)
-                .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Prefx })
-                .ToListAsync();
-
-           // return Page();
+            await OnGetAsync();
+            //return Page();
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -99,7 +106,34 @@ public class RegisterEaspSepsModel : PageModel
 
         EaspSepsRegistration.UserId = userId;
 
+        var selectedClassifications = new List<string>();
+        if (IsSyringeExchangeProgram) selectedClassifications.Add("Syringe exchange program");
+        if (IsESAPTier1) selectedClassifications.Add("ESAP Tier 1");
+        if (IsESAPTier2) selectedClassifications.Add("ESAP Tier 2");
+        if (IsOther) selectedClassifications.Add("Other: " + OtherClassificationText);
+
+        EaspSepsRegistration.RegistrationType = string.Join(", ", selectedClassifications);
+
         _context.EaspSepsRegistrations.Add(EaspSepsRegistration);
+        await _context.SaveChangesAsync();
+
+        var classificationIds = new List<int>();
+        if (IsSyringeExchangeProgram) classificationIds.Add(1);
+        if (IsESAPTier1) classificationIds.Add(2);
+        if (IsESAPTier2) classificationIds.Add(3);
+        if (IsOther) classificationIds.Add(4);
+
+        foreach (var id in classificationIds)
+        {
+            var agentClassificationData = new AgentClassificationData
+            {
+                Category = id,
+                Other = IsOther && id == 4,
+                EaspSepsRegistrationID = EaspSepsRegistration.Id,
+                OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null
+            };
+            _context.AgentClassificationData.Add(agentClassificationData);
+        }
         await _context.SaveChangesAsync();
 
         AgencyContact.EaspSepsRegistrationId = EaspSepsRegistration.Id;
@@ -170,6 +204,4 @@ public class RegisterEaspSepsModel : PageModel
         SuccessMessage = "Registration successful!";
         return RedirectToPage("/Index");
     }
-
 }
-

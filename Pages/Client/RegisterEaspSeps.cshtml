@@ -56,14 +56,24 @@
         <input asp-for="EaspSepsRegistration.Zip" />
         <span asp-validation-for="EaspSepsRegistration.Zip"></span>
     </div>
+
     <div>
-        <label asp-for="EaspSepsRegistration.RegistrationType"></label>
+        <label>Agency/Facility Classification</label>
         <div>
-            <input type="radio" asp-for="EaspSepsRegistration.RegistrationType" value="ESAP" /> ESAP Registration
-            <input type="radio" asp-for="EaspSepsRegistration.RegistrationType" value="SEPS" /> SEPS Registration
+            <input type="checkbox" asp-for="IsSyringeExchangeProgram" /> Syringe exchange program
         </div>
-        <span asp-validation-for="EaspSepsRegistration.RegistrationType"></span>
+        <div>
+            <input type="checkbox" asp-for="IsESAPTier1" /> ESAP Tier 1
+        </div>
+        <div>
+            <input type="checkbox" asp-for="IsESAPTier2" /> ESAP Tier 2
+        </div>
+        <div>
+            <input type="checkbox" asp-for="IsOther" id="IsOtherCheckbox" /> Other
+            <input type="text" asp-for="OtherClassificationText" id="OtherClassificationText" placeholder="Please specify" />
+        </div>
     </div>
+
 
     <h3>Agency Contacts/Users</h3>
     <div>
@@ -350,6 +360,25 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        document.getElementById("IsOtherCheckbox").addEventListener("change", function () {
+            var otherText = document.getElementById("OtherClassificationText");
+            otherText.disabled = !this.checked;
+            otherText.required = this.checked;
+            if (!this.checked) {
+                otherText.value = "";
+            }
+        });
+        // Ensure the initial state is correctly set
+        window.addEventListener("load", function () {
+            var otherCheckbox = document.getElementById("IsOtherCheckbox");
+            var otherText = document.getElementById("OtherClassificationText");
+            otherText.disabled = !otherCheckbox.checked;
+            otherText.required = otherCheckbox.checked;
+            if (!otherCheckbox.checked) {
+                otherText.value = "";
+            }
+        });
+
             const countyList = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.CountyList));
         console.log("countyList:", countyList); // Debug log
 
