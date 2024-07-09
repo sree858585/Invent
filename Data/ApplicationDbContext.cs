@@ -22,6 +22,8 @@ namespace WebApplication1.Data
         public DbSet<Prefix> Prefixes { get; set; }
         public DbSet<ShipToSite> ShipToSites { get; set; }
         public DbSet<ShipToSiteCounty> ShipToSiteCounties { get; set; }
+        public DbSet<LkAgencyClassification> LkAgencyClassifications { get; set; }
+        public DbSet<AgentClassificationData> AgentClassificationData { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -79,10 +81,10 @@ namespace WebApplication1.Data
             modelBuilder.Entity<Prefix>().ToTable("lk_Prefix");
 
             modelBuilder.Entity<ShipToSite>()
-        .HasOne(e => e.EaspSepsRegistration)
-        .WithMany(e => e.ShipToSites)
-        .HasForeignKey(e => e.EaspSepsRegistrationId)
-        .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(e => e.EaspSepsRegistration)
+                .WithMany(e => e.ShipToSites)
+                .HasForeignKey(e => e.EaspSepsRegistrationId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ShipToSiteCounty>()
                 .HasKey(s => new { s.ShipToSiteId, s.CountyId });
@@ -98,6 +100,17 @@ namespace WebApplication1.Data
                 .WithMany()
                 .HasForeignKey(s => s.CountyId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
+
+            modelBuilder.Entity<LkAgencyClassification>().ToTable("lk_agency_classification")
+                .HasKey(c => c.agency_classification_id);
+
+            // Add this configuration for AgentClassificationData
+            modelBuilder.Entity<AgentClassificationData>()
+                .HasKey(a => a.Id);
+
+            modelBuilder.Entity<AgentClassificationData>()
+                .Property(a => a.OtherClassificationText)
+                .HasMaxLength(300);
 
             modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
             modelBuilder.Entity<IdentityRole>().ToTable("AspNetRoles");
