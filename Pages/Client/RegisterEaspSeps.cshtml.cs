@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -12,6 +13,7 @@ using WebApplication1.Models;
 public class RegisterEaspSepsModel : PageModel
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILogger<RegisterEaspSepsModel> _logger;
 
     [BindProperty]
     public EaspSepsRegistration EaspSepsRegistration { get; set; }
@@ -56,9 +58,10 @@ public class RegisterEaspSepsModel : PageModel
 
     public string SuccessMessage { get; set; }
 
-    public RegisterEaspSepsModel(ApplicationDbContext context)
+    public RegisterEaspSepsModel(ApplicationDbContext context, ILogger<RegisterEaspSepsModel> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<IActionResult> OnGetAsync()
@@ -158,8 +161,10 @@ public class RegisterEaspSepsModel : PageModel
         }
         await _context.SaveChangesAsync();
 
+        // Save CountiesServed
         foreach (var countyId in CountiesServed.Distinct())
         {
+            _logger.LogInformation($"Processing CountyId: {countyId}");
             if (countyId > 0)
             {
                 var entity = new EaspSepsRegistrationCounty
@@ -167,26 +172,20 @@ public class RegisterEaspSepsModel : PageModel
                     EaspSepsRegistrationId = EaspSepsRegistration.Id,
                     CountyId = countyId
                 };
-
-                var trackedEntity = _context.EaspSepsRegistrationCounties.Local.FirstOrDefault(e =>
-                    e.EaspSepsRegistrationId == entity.EaspSepsRegistrationId && e.CountyId == entity.CountyId);
-
-                if (trackedEntity != null)
-                {
-                    _context.Entry(trackedEntity).State = EntityState.Detached;
-                }
-
+                _logger.LogInformation($"Adding EaspSepsRegistrationCounty: {entity.EaspSepsRegistrationId}, {entity.CountyId}");
                 _context.EaspSepsRegistrationCounties.Add(entity);
             }
         }
 
-        foreach (var shipToSite in AdditionalShipToSites)
+        // Save ShipToSiteCounties
+        for (var i = 0; i < AdditionalShipToSites.Count; i++)
         {
-            var shipToSiteIndex = AdditionalShipToSites.IndexOf(shipToSite);
-            var counties = ShipToSiteCounties[shipToSiteIndex];
+            var shipToSite = AdditionalShipToSites[i];
+            var counties = ShipToSiteCounties[i];
 
             foreach (var countyId in counties.Distinct())
             {
+                _logger.LogInformation($"Processing ShipToSiteId: {shipToSite.Id}, CountyId: {countyId}");
                 if (countyId > 0)
                 {
                     var shipToSiteCounty = new ShipToSiteCounty
@@ -194,12 +193,17 @@ public class RegisterEaspSepsModel : PageModel
                         ShipToSiteId = shipToSite.Id,
                         CountyId = countyId
                     };
+                    _logger.LogInformation($"Adding ShipToSiteCounty: {shipToSiteCounty.ShipToSiteId}, {shipToSiteCounty.CountyId}");
                     _context.ShipToSiteCounties.Add(shipToSiteCounty);
                 }
             }
         }
 
         await _context.SaveChangesAsync();
+        _logger.LogInformation($"EaspSepsRegistration Id: {EaspSepsRegistration.Id}");
+        _logger.LogInformation($"CountiesServed Count: {CountiesServed.Count}");
+        _logger.LogInformation($"ShipToSiteCounties Count: {ShipToSiteCounties.Count}");
+
 
         SuccessMessage = "Registration successful!";
         return RedirectToPage("/Index");

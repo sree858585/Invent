@@ -1,10 +1,13 @@
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-[Authorize(Roles = "Admin")]
-public class AdminIndexModel : PageModel
+namespace WebApplication1.Pages.Admin
 {
-    public void OnGet()
+    //[Authorize(Roles = "Admin")]
+    public class AdminHomeModel : PageModel
     {
+        public void OnGet()
+        {
+        }
     }
 }

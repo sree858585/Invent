@@ -1,0 +1,386 @@
+﻿@page
+@model WebApplication1.Pages.Admin.ManageUsersModel
+@{
+    ViewData["Title"] = "Manage Users";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Manage Users</h1>
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
+
+<form method="get" class="mb-3">
+    <div class="form-group">
+        <label for="Email">Email:</label>
+        <input type="email" asp-for="Email" class="form-control" />
+        <button type="submit" class="btn btn-primary mt-2">Search</button>
+    </div>
+</form>
+
+@if (Model.User != null && Model.Registrations != null && Model.Registrations.Any())
+{
+    <h2>Select Registration to Edit</h2>
+    <div class="list-group">
+        @foreach (var registration in Model.Registrations)
+        {
+            <div class="list-group-item">
+                <h5>@registration.AgencyName - @registration.UniqueId</h5>
+                <p>Registration Type: @registration.RegistrationType</p>
+                <form method="post" asp-page-handler="Edit" class="d-inline">
+                    <input type="hidden" name="registrationId" value="@registration.Id" />
+                    <button type="submit" class="btn btn-primary">Edit</button>
+                </form>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.Registration != null)
+{
+    <h2>Edit Registration</h2>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="easpseps-tab" data-bs-toggle="tab" href="#easpseps" role="tab" aria-controls="easpseps" aria-selected="true">EaspSeps Registration</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="agencycontact-tab" data-bs-toggle="tab" href="#agencycontact" role="tab" aria-controls="agencycontact" aria-selected="false">Agency Contact</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="additionalusers-tab" data-bs-toggle="tab" href="#additionalusers" role="tab" aria-controls="additionalusers" aria-selected="false">Additional Users</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="shippinginfo-tab" data-bs-toggle="tab" href="#shippinginfo" role="tab" aria-controls="shippinginfo" aria-selected="false">Shipping Information</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="shiptosites-tab" data-bs-toggle="tab" href="#shiptosites" role="tab" aria-controls="shiptosites" aria-selected="false">Ship To Sites</a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" id="countiesserved-tab" data-bs-toggle="tab" href="#countiesserved" role="tab" aria-controls="countiesserved" aria-selected="false">Counties Served</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="easpseps" role="tabpanel" aria-labelledby="easpseps-tab">
+            <form method="post" asp-page-handler="UpdateEaspSepsRegistration">
+                <input type="hidden" asp-for="Registration.Id" />
+                <div class="form-group">
+                    <label asp-for="Registration.AgencyName"></label>
+                    <input asp-for="Registration.AgencyName" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.AlternateName"></label>
+                    <input asp-for="Registration.AlternateName" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.County"></label>
+                    <input asp-for="Registration.County" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.UniqueId"></label>
+                    <input asp-for="Registration.UniqueId" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.Address"></label>
+                    <input asp-for="Registration.Address" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.Address2"></label>
+                    <input asp-for="Registration.Address2" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.City"></label>
+                    <input asp-for="Registration.City" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.State"></label>
+                    <input asp-for="Registration.State" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.Zip"></label>
+                    <input asp-for="Registration.Zip" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Registration.RegistrationType"></label>
+                    <input asp-for="Registration.RegistrationType" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+        <div class="tab-pane fade" id="agencycontact" role="tabpanel" aria-labelledby="agencycontact-tab">
+            <form method="post" asp-page-handler="UpdateAgencyContact">
+                <input type="hidden" asp-for="AgencyContact.EaspSepsRegistrationId" />
+                <div class="form-group">
+                    <label asp-for="AgencyContact.ProgramDirector"></label>
+                    <input asp-for="AgencyContact.ProgramDirector" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="AgencyContact.SuffixId"></label>
+                    <input asp-for="AgencyContact.SuffixId" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="AgencyContact.Address"></label>
+                    <input asp-for="AgencyContact.Address" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="AgencyContact.Address2"></label>
+                    <input asp-for="AgencyContact.Address2" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="AgencyContact.City"></label>
+                    <input asp-for="AgencyContact.City" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="AgencyContact.State"></label>
+                    <input asp-for="AgencyContact.State" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="AgencyContact.Zip"></label>
+                    <input asp-for="AgencyContact.Zip" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+        <div class="tab-pane fade" id="additionalusers" role="tabpanel" aria-labelledby="additionalusers-tab">
+            <div id="additionalUsersList">
+                @foreach (var user in Model.AdditionalUsers)
+                {
+                    <div class="list-group-item">
+                        <p>@user.Name - @user.Title</p>
+                        <button type="button" class="btn btn-primary" onclick="showAdditionalUserForm(@user.Id)">Edit</button>
+                    </div>
+                }
+            </div>
+            <div id="additionalUserForm" style="display:none;">
+                <form method="post" asp-page-handler="UpdateAdditionalUser">
+                    <input type="hidden" asp-for="AdditionalUserToEdit.Id" />
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.Name"></label>
+                        <input asp-for="AdditionalUserToEdit.Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.Title"></label>
+                        <input asp-for="AdditionalUserToEdit.Title" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.Address"></label>
+                        <input asp-for="AdditionalUserToEdit.Address" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.Address2"></label>
+                        <input asp-for="AdditionalUserToEdit.Address2" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.City"></label>
+                        <input asp-for="AdditionalUserToEdit.City" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.State"></label>
+                        <input asp-for="AdditionalUserToEdit.State" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.Zip"></label>
+                        <input asp-for="AdditionalUserToEdit.Zip" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.Phone"></label>
+                        <input asp-for="AdditionalUserToEdit.Phone" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="AdditionalUserToEdit.Email"></label>
+                        <input asp-for="AdditionalUserToEdit.Email" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="shippinginfo" role="tabpanel" aria-labelledby="shippinginfo-tab">
+            <form method="post" asp-page-handler="UpdateShippingInfo">
+                <input type="hidden" asp-for="ShipInformation.EaspSepsRegistrationId" />
+                <div class="form-group">
+                    <label asp-for="ShipInformation.ShipToName"></label>
+                    <input asp-for="ShipInformation.ShipToName" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShipInformation.ShipToEmail"></label>
+                    <input asp-for="ShipInformation.ShipToEmail" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShipInformation.ShipToAddress"></label>
+                    <input asp-for="ShipInformation.ShipToAddress" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShipInformation.ShipToAddress2"></label>
+                    <input asp-for="ShipInformation.ShipToAddress2" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShipInformation.ShipToCity"></label>
+                    <input asp-for="ShipInformation.ShipToCity" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShipInformation.ShipToState"></label>
+                    <input asp-for="ShipInformation.ShipToState" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShipInformation.ShipToZip"></label>
+                    <input asp-for="ShipInformation.ShipToZip" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+        <div class="tab-pane fade" id="shiptosites" role="tabpanel" aria-labelledby="shiptosites-tab">
+            <div id="shipToSitesList">
+                @foreach (var site in Model.AdditionalShipToSites)
+                {
+                    <div class="list-group-item">
+                        <p>@site.Name - @site.City</p>
+                        <button type="button" class="btn btn-primary" onclick="showShipToSiteForm(@site.Id)">Edit</button>
+                    </div>
+                }
+            </div>
+            <div id="shipToSiteForm" style="display:none;">
+                <form method="post" asp-page-handler="UpdateShipToSite">
+                    <input type="hidden" asp-for="ShipToSiteToEdit.Id" />
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.Name"></label>
+                        <input asp-for="ShipToSiteToEdit.Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.Address"></label>
+                        <input asp-for="ShipToSiteToEdit.Address" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.Address2"></label>
+                        <input asp-for="ShipToSiteToEdit.Address2" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.City"></label>
+                        <input asp-for="ShipToSiteToEdit.City" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.State"></label>
+                        <input asp-for="ShipToSiteToEdit.State" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.Zip"></label>
+                        <input asp-for="ShipToSiteToEdit.Zip" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.Phone"></label>
+                        <input asp-for="ShipToSiteToEdit.Phone" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.PhoneExtension"></label>
+                        <input asp-for="ShipToSiteToEdit.PhoneExtension" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.SiteType"></label>
+                        <input asp-for="ShipToSiteToEdit.SiteType" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.ShipToName"></label>
+                        <input asp-for="ShipToSiteToEdit.ShipToName" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.ShipToEmail"></label>
+                        <input asp-for="ShipToSiteToEdit.ShipToEmail" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.ShipToAddress"></label>
+                        <input asp-for="ShipToSiteToEdit.ShipToAddress" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.ShipToAddress2"></label>
+                        <input asp-for="ShipToSiteToEdit.ShipToAddress2" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.ShipToCity"></label>
+                        <input asp-for="ShipToSiteToEdit.ShipToCity" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.ShipToState"></label>
+                        <input asp-for="ShipToSiteToEdit.ShipToState" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.ShipToZip"></label>
+                        <input asp-for="ShipToSiteToEdit.ShipToZip" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="ShipToSiteToEdit.SameAsSite"></label>
+                        <input asp-for="ShipToSiteToEdit.SameAsSite" type="checkbox" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="countiesserved" role="tabpanel" aria-labelledby="countiesserved-tab">
+            <form method="post" asp-page-handler="UpdateCountiesServed">
+                <input type="hidden" asp-for="Registration.Id" />
+                @for (int i = 0; i < Model.CountiesServed.Count; i++)
+                {
+                    <div class="form-group">
+                        <label>County @i + 1</label>
+                        <select asp-for="CountiesServed[i]" asp-items="Model.CountyList" class="form-control"></select>
+                    </div>
+                }
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+        </div>
+
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>function showAdditionalUserForm(id) {
+            fetch(`/Admin/ManageUsers?handler=AdditionalUser&id=${id}`)
+                .then(response => response.json())
+                .then(additionalUser => {
+                    if (additionalUser) {
+                        document.getElementById("additionalUserForm").style.display = "block";
+                        document.getElementById("AdditionalUserToEdit_Id").value = additionalUser.id || '';
+                        document.getElementById("AdditionalUserToEdit_Name").value = additionalUser.name || '';
+                        document.getElementById("AdditionalUserToEdit_Title").value = additionalUser.title || '';
+                        document.getElementById("AdditionalUserToEdit_Address").value = additionalUser.address || '';
+                        document.getElementById("AdditionalUserToEdit_Address2").value = additionalUser.address2 || '';
+                        document.getElementById("AdditionalUserToEdit_City").value = additionalUser.city || '';
+                        document.getElementById("AdditionalUserToEdit_State").value = additionalUser.state || '';
+                        document.getElementById("AdditionalUserToEdit_Zip").value = additionalUser.zip || '';
+                        document.getElementById("AdditionalUserToEdit_Phone").value = additionalUser.phone || '';
+                        document.getElementById("AdditionalUserToEdit_Email").value = additionalUser.email || '';
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function showShipToSiteForm(id) {
+            fetch(`/Admin/ManageUsers?handler=ShipToSite&id=${id}`)
+                .then(response => response.json())
+                .then(shipToSite => {
+                    if (shipToSite) {
+                        document.getElementById("shipToSiteForm").style.display = "block";
+                        document.getElementById("ShipToSiteToEdit_Id").value = shipToSite.id || '';
+                        document.getElementById("ShipToSiteToEdit_Name").value = shipToSite.name || '';
+                        document.getElementById("ShipToSiteToEdit_Address").value = shipToSite.address || '';
+                        document.getElementById("ShipToSiteToEdit_Address2").value = shipToSite.address2 || '';
+                        document.getElementById("ShipToSiteToEdit_City").value = shipToSite.city || '';
+                        document.getElementById("ShipToSiteToEdit_State").value = shipToSite.state || '';
+                        document.getElementById("ShipToSiteToEdit_Zip").value = shipToSite.zip || '';
+                        document.getElementById("ShipToSiteToEdit_Phone").value = shipToSite.phone || '';
+                        document.getElementById("ShipToSiteToEdit_PhoneExtension").value = shipToSite.phoneExtension || '';
+                        document.getElementById("ShipToSiteToEdit_SiteType").value = shipToSite.siteType || '';
+                        document.getElementById("ShipToSiteToEdit_ShipToName").value = shipToSite.shipToName || '';
+                        document.getElementById("ShipToSiteToEdit_ShipToEmail").value = shipToSite.shipToEmail || '';
+                        document.getElementById("ShipToSiteToEdit_ShipToAddress").value = shipToSite.shipToAddress || '';
+                        document.getElementById("ShipToSiteToEdit_ShipToAddress2").value = shipToSite.shipToAddress2 || '';
+                        document.getElementById("ShipToSiteToEdit_ShipToCity").value = shipToSite.shipToCity || '';
+                        document.getElementById("ShipToSiteToEdit_ShipToState").value = shipToSite.shipToState || '';
+                        document.getElementById("ShipToSiteToEdit_ShipToZip").value = shipToSite.shipToZip || '';
+                        document.getElementById("ShipToSiteToEdit_SameAsSite").checked = shipToSite.sameAsSite || false;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }</script>
+}
+
