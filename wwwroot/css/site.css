@@ -1,0 +1,51 @@
+/* site.css */
+
+/* Styling for tabs */
+.nav-tabs .nav-link {
+    border: 1px solid #ddd;
+    border-radius: 0;
+    margin-right: -1px;
+}
+
+    .nav-tabs .nav-link.active {
+        background-color: #f8f9fa;
+        border-bottom-color: transparent;
+    }
+
+.tab-content .tab-pane {
+    padding-top: 15px;
+}
+
+/* General form styling */
+form .form-group {
+    margin-bottom: 1rem;
+}
+
+form .form-control {
+    width: 100%;
+}
+
+form .btn-primary {
+    margin-top: 1rem;
+}
+
+/* Container for registration list items */
+.list-group-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+/* Add your custom styles here */
+
+.registration-container {
+    margin: 20px 0;
+}
+
+    .registration-container h3 {
+        margin-top: 20px;
+    }
+
+.additional-user {
+    margin-bottom: 20px;
+}
