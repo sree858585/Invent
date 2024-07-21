@@ -24,7 +24,11 @@ public class Startup
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();        
         services.AddRazorPages();
-
+        services.AddControllersWithViews()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+            });
         services.Configure<IdentityOptions>(options =>
         {
             // Password settings.
@@ -87,10 +91,9 @@ public class Startup
             endpoints.MapRazorPages();
         });
 
-        CreateRoles(app.ApplicationServices).Wait();
+        CreateRolesAndAdminUser(app.ApplicationServices).Wait();
     }
-
-    private async Task CreateRoles(IServiceProvider serviceProvider)
+    private async Task CreateRolesAndAdminUser(IServiceProvider serviceProvider)
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -103,54 +106,29 @@ public class Startup
             var roleExist = await roleManager.RoleExistsAsync(roleName);
             if (!roleExist)
             {
-                try
-                {
-                    roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
-                    if (roleResult.Succeeded)
-                    {
-                        Console.WriteLine($"Role {roleName} created successfully.");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Error creating role {roleName}: {roleResult.Errors.FirstOrDefault()?.Description}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error creating role {roleName}. Exception: {ex.Message}");
-                    return;
-                }
-            }
-            else
-            {
-                Console.WriteLine($"Role {roleName} already exists.");
+                roleResult = await roleManager.CreateAsync(new IdentityRole(roleName));
             }
         }
 
-        // Here you can create a super user who will maintain the web app
+        // Here you create a super user who will maintain the web app
         var poweruser = new ApplicationUser
         {
             UserName = "admin@admin.com",
-            Email = "admin@admin.com"
+            Email = "admin@admin.com",
+            EmailConfirmed = true
         };
 
+        // Ensure you have a strong password here
         string userPWD = "Admin@123";
         var _user = await userManager.FindByEmailAsync("admin@admin.com");
+
         if (_user == null)
         {
-            try
+            var createPowerUser = await userManager.CreateAsync(poweruser, userPWD);
+            if (createPowerUser.Succeeded)
             {
-                var createPowerUser = await userManager.CreateAsync(poweruser, userPWD);
-                if (createPowerUser.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(poweruser, "Admin");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating power user. Exception: {ex.Message}");
+                await userManager.AddToRoleAsync(poweruser, "Admin");
             }
         }
     }
-
 }

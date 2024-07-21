@@ -25,6 +25,8 @@ namespace WebApplication1.Models
         public string ShipToZip { get; set; }
         public bool SameAsSite { get; set; }
         public ICollection<ShipToSiteCounty> PrimaryCountiesServed { get; set; } = new List<ShipToSiteCounty>();
+        public bool IsEditing { get; set; } // Add this property to track editing state
+
     }
 
 }
