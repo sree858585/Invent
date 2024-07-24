@@ -15,6 +15,6 @@ namespace WebApplication1.Models
         public bool SameAsSite { get; set; }
 
         [Required]
-        public int EaspSepsRegistrationId { get; set; }
+        public int AgencyRegistrationId { get; set; }
     }
 }

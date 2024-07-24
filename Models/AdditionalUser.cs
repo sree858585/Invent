@@ -27,6 +27,6 @@ namespace WebApplication1.Models
 
         // Foreign Key to EaspSepsRegistration
         [Required]
-        public int EaspSepsRegistrationId { get; set; }
+        public int AgencyRegistrationId { get; set; }
     }
 }

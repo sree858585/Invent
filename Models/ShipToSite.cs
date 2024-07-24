@@ -5,8 +5,8 @@ namespace WebApplication1.Models
     public class ShipToSite
     {
         public int Id { get; set; }
-        public int EaspSepsRegistrationId { get; set; }
-        public EaspSepsRegistration EaspSepsRegistration { get; set; }
+        public int AgencyRegistrationId { get; set; }
+        public AgencyRegistration AgencyRegistration { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
         public string Address2 { get; set; }
