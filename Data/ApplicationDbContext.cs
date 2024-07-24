@@ -12,7 +12,7 @@ namespace WebApplication1.Data
         {
         }
 
-        public DbSet<EaspSepsRegistration> EaspSepsRegistrations { get; set; }
+        public DbSet<AgencyRegistration> AgencyRegistrations { get; set; }
         public DbSet<AgencyContact> AgencyContacts { get; set; }
         public DbSet<AdditionalUser> AdditionalUsers { get; set; }
         public DbSet<ShipInformation> ShipInformations { get; set; }
@@ -24,6 +24,7 @@ namespace WebApplication1.Data
         public DbSet<ShipToSiteCounty> ShipToSiteCounties { get; set; }
         public DbSet<LkAgencyClassification> LkAgencyClassifications { get; set; }
         public DbSet<AgentClassificationData> AgentClassificationData { get; set; }
+        public DbSet<Product> Products { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,37 +39,37 @@ namespace WebApplication1.Data
             modelBuilder.Entity<County>().ToTable("lk_county")
                 .HasKey(c => c.county_id);
 
-            modelBuilder.Entity<EaspSepsRegistration>()
+            modelBuilder.Entity<AgencyRegistration>()
                 .HasOne<ApplicationUser>()
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<AgencyContact>()
-                .HasOne<EaspSepsRegistration>()
+                .HasOne<AgencyRegistration>()
                 .WithMany()
-                .HasForeignKey(a => a.EaspSepsRegistrationId)
+                .HasForeignKey(a => a.AgencyRegistrationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<AdditionalUser>()
-                .HasOne<EaspSepsRegistration>()
+                .HasOne<AgencyRegistration>()
                 .WithMany()
-                .HasForeignKey(a => a.EaspSepsRegistrationId)
+                .HasForeignKey(a => a.AgencyRegistrationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ShipInformation>()
-                .HasOne<EaspSepsRegistration>()
+                .HasOne<AgencyRegistration>()
                 .WithMany()
-                .HasForeignKey(s => s.EaspSepsRegistrationId)
+                .HasForeignKey(s => s.AgencyRegistrationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<EaspSepsRegistrationCounty>()
-                .HasKey(e => new { e.EaspSepsRegistrationId, e.CountyId });
+                .HasKey(e => new { e.AgencyRegistrationId, e.CountyId });
 
             modelBuilder.Entity<EaspSepsRegistrationCounty>()
-                .HasOne(e => e.EaspSepsRegistration)
+                .HasOne(e => e.AgencyRegistration)
                 .WithMany(e => e.CountiesServed)
-                .HasForeignKey(e => e.EaspSepsRegistrationId)
+                .HasForeignKey(e => e.AgencyRegistrationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<EaspSepsRegistrationCounty>()
@@ -81,9 +82,9 @@ namespace WebApplication1.Data
             modelBuilder.Entity<Prefix>().ToTable("lk_Prefix");
 
             modelBuilder.Entity<ShipToSite>()
-                .HasOne(e => e.EaspSepsRegistration)
+                .HasOne(e => e.AgencyRegistration)
                 .WithMany(e => e.ShipToSites)
-                .HasForeignKey(e => e.EaspSepsRegistrationId)
+                .HasForeignKey(e => e.AgencyRegistrationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ShipToSiteCounty>()
@@ -111,6 +112,12 @@ namespace WebApplication1.Data
             modelBuilder.Entity<AgentClassificationData>()
                 .Property(a => a.OtherClassificationText)
                 .HasMaxLength(300);
+
+            modelBuilder.Entity<AgentClassificationData>()
+                .Property(a => a.UniqueId)
+                .IsRequired();
+
+            modelBuilder.Entity<Product>().ToTable("lk_product");
 
             modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
             modelBuilder.Entity<IdentityRole>().ToTable("AspNetRoles");
