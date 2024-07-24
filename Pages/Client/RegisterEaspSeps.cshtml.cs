@@ -16,7 +16,7 @@ public class RegisterEaspSepsModel : PageModel
     private readonly ILogger<RegisterEaspSepsModel> _logger;
 
     [BindProperty]
-    public EaspSepsRegistration EaspSepsRegistration { get; set; }
+    public AgencyRegistration EaspSepsRegistration { get; set; }
 
     [BindProperty]
     public AgencyContact AgencyContact { get; set; }
@@ -97,7 +97,7 @@ public class RegisterEaspSepsModel : PageModel
         if (!ModelState.IsValid)
         {
             await OnGetAsync();
-            //return Page();
+           // return Page();
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -108,6 +108,8 @@ public class RegisterEaspSepsModel : PageModel
         }
 
         EaspSepsRegistration.UserId = userId;
+        EaspSepsRegistration.SubmissionDate = DateTime.Now; // Set the submission date
+
 
         var selectedClassifications = new List<string>();
         if (IsSyringeExchangeProgram) selectedClassifications.Add("Syringe exchange program");
@@ -117,7 +119,7 @@ public class RegisterEaspSepsModel : PageModel
 
         EaspSepsRegistration.RegistrationType = string.Join(", ", selectedClassifications);
 
-        _context.EaspSepsRegistrations.Add(EaspSepsRegistration);
+        _context.AgencyRegistrations.Add(EaspSepsRegistration);
         await _context.SaveChangesAsync();
 
         var classificationIds = new List<int>();
@@ -128,35 +130,46 @@ public class RegisterEaspSepsModel : PageModel
 
         foreach (var id in classificationIds)
         {
+            var uniqueIdPrefix = id switch
+            {
+                1 => "SP",
+                2 => "ET1",
+                3 => "ET2",
+                4 => "OTH",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            var uniqueId = $"{uniqueIdPrefix}{EaspSepsRegistration.Id}";
+
             var agentClassificationData = new AgentClassificationData
             {
                 Category = id,
                 Other = IsOther && id == 4,
-                EaspSepsRegistrationID = EaspSepsRegistration.Id,
-                OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null
+                AgencyRegistrationID = EaspSepsRegistration.Id,
+                OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null,
+                UniqueId = uniqueId
             };
             _context.AgentClassificationData.Add(agentClassificationData);
         }
         await _context.SaveChangesAsync();
 
-        AgencyContact.EaspSepsRegistrationId = EaspSepsRegistration.Id;
+        AgencyContact.AgencyRegistrationId = EaspSepsRegistration.Id;
         _context.AgencyContacts.Add(AgencyContact);
         await _context.SaveChangesAsync();
 
         foreach (var user in AdditionalUsers)
         {
-            user.EaspSepsRegistrationId = EaspSepsRegistration.Id;
+            user.AgencyRegistrationId = EaspSepsRegistration.Id;
             _context.AdditionalUsers.Add(user);
         }
         await _context.SaveChangesAsync();
 
-        ShipInformation.EaspSepsRegistrationId = EaspSepsRegistration.Id;
+        ShipInformation.AgencyRegistrationId = EaspSepsRegistration.Id;
         _context.ShipInformations.Add(ShipInformation);
         await _context.SaveChangesAsync();
 
         foreach (var shipToSite in AdditionalShipToSites)
         {
-            shipToSite.EaspSepsRegistrationId = EaspSepsRegistration.Id;
+            shipToSite.AgencyRegistrationId = EaspSepsRegistration.Id;
             _context.ShipToSites.Add(shipToSite);
         }
         await _context.SaveChangesAsync();
@@ -169,10 +182,10 @@ public class RegisterEaspSepsModel : PageModel
             {
                 var entity = new EaspSepsRegistrationCounty
                 {
-                    EaspSepsRegistrationId = EaspSepsRegistration.Id,
+                    AgencyRegistrationId = EaspSepsRegistration.Id,
                     CountyId = countyId
                 };
-                _logger.LogInformation($"Adding EaspSepsRegistrationCounty: {entity.EaspSepsRegistrationId}, {entity.CountyId}");
+                _logger.LogInformation($"Adding EaspSepsRegistrationCounty: {entity.AgencyRegistrationId}, {entity.CountyId}");
                 _context.EaspSepsRegistrationCounties.Add(entity);
             }
         }

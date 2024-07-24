@@ -27,8 +27,18 @@
         @foreach (var registration in Model.Registrations)
         {
             <div class="list-group-item">
-                <h5>@registration.AgencyName - @registration.UniqueId</h5>
+                <h5>
+                    @registration.AgencyName -
+                    @{
+                        var uniqueIds = registration.AgentClassificationData
+                            .Select(d => d.UniqueId ?? "N/A");
+                        @string.Join(", ", uniqueIds)
+                    }
+                </h5>
                 <p>Registration Type: @registration.RegistrationType</p>
+                <p class="card-text">
+                    <strong>Submission Date:</strong> @registration.SubmissionDate.ToString("g")
+                </p>
                 <form method="post" asp-page-handler="Edit" class="d-inline">
                     <input type="hidden" name="registrationId" value="@registration.Id" />
                     <button type="submit" class="btn btn-primary">Edit</button>
@@ -77,10 +87,7 @@
                     <label asp-for="Registration.County"></label>
                     <input asp-for="Registration.County" class="form-control" />
                 </div>
-                <div class="form-group">
-                    <label asp-for="Registration.UniqueId"></label>
-                    <input asp-for="Registration.UniqueId" class="form-control" />
-                </div>
+
                 <div class="form-group">
                     <label asp-for="Registration.Address"></label>
                     <input asp-for="Registration.Address" class="form-control" />
@@ -105,12 +112,16 @@
                     <label asp-for="Registration.RegistrationType"></label>
                     <input asp-for="Registration.RegistrationType" class="form-control" />
                 </div>
+                <div class="form-group">
+                    <label asp-for="Registration.SubmissionDate"></label>
+                    <input asp-for="Registration.SubmissionDate" class="form-control" readonly /> <!-- Make it read-only -->
+                </div>
                 <button type="submit" class="btn btn-primary">Update</button>
             </form>
         </div>
         <div class="tab-pane fade" id="agencycontact" role="tabpanel" aria-labelledby="agencycontact-tab">
             <form method="post" asp-page-handler="UpdateAgencyContact">
-                <input type="hidden" asp-for="AgencyContact.EaspSepsRegistrationId" />
+                <input type="hidden" asp-for="AgencyContact.AgencyRegistrationId" />
                 <div class="form-group">
                     <label asp-for="AgencyContact.ProgramDirector"></label>
                     <input asp-for="AgencyContact.ProgramDirector" class="form-control" />
@@ -152,52 +163,67 @@
                     </div>
                 }
             </div>
-            <div id="additionalUserForm" style="display:none;">
-                <form method="post" asp-page-handler="UpdateAdditionalUser">
-                    <input type="hidden" asp-for="AdditionalUserToEdit.Id" />
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.Name"></label>
-                        <input asp-for="AdditionalUserToEdit.Name" class="form-control" />
+            <div id="additionalUserForm" class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Additional User</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" asp-page-handler="UpdateAdditionalUser">
+                                <input type="hidden" asp-for="AdditionalUserToEdit.Id" />
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.Name"></label>
+                                    <input asp-for="AdditionalUserToEdit.Name" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.Title"></label>
+                                    <input asp-for="AdditionalUserToEdit.Title" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.Address"></label>
+                                    <input asp-for="AdditionalUserToEdit.Address" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.Address2"></label>
+                                    <input asp-for="AdditionalUserToEdit.Address2" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.City"></label>
+                                    <input asp-for="AdditionalUserToEdit.City" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.State"></label>
+                                    <input asp-for="AdditionalUserToEdit.State" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.Zip"></label>
+                                    <input asp-for="AdditionalUserToEdit.Zip" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.Phone"></label>
+                                    <input asp-for="AdditionalUserToEdit.Phone" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="AdditionalUserToEdit.Email"></label>
+                                    <input asp-for="AdditionalUserToEdit.Email" class="form-control" />
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.Title"></label>
-                        <input asp-for="AdditionalUserToEdit.Title" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.Address"></label>
-                        <input asp-for="AdditionalUserToEdit.Address" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.Address2"></label>
-                        <input asp-for="AdditionalUserToEdit.Address2" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.City"></label>
-                        <input asp-for="AdditionalUserToEdit.City" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.State"></label>
-                        <input asp-for="AdditionalUserToEdit.State" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.Zip"></label>
-                        <input asp-for="AdditionalUserToEdit.Zip" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.Phone"></label>
-                        <input asp-for="AdditionalUserToEdit.Phone" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="AdditionalUserToEdit.Email"></label>
-                        <input asp-for="AdditionalUserToEdit.Email" class="form-control" />
-                    </div>
-                    <button type="submit" class="btn btn-primary">Update</button>
-                </form>
+                </div>
             </div>
         </div>
         <div class="tab-pane fade" id="shippinginfo" role="tabpanel" aria-labelledby="shippinginfo-tab">
             <form method="post" asp-page-handler="UpdateShippingInfo">
-                <input type="hidden" asp-for="ShipInformation.EaspSepsRegistrationId" />
+                <input type="hidden" asp-for="ShipInformation.AgencyRegistrationId" />
                 <div class="form-group">
                     <label asp-for="ShipInformation.ShipToName"></label>
                     <input asp-for="ShipInformation.ShipToName" class="form-control" />
@@ -239,79 +265,94 @@
                     </div>
                 }
             </div>
-            <div id="shipToSiteForm" style="display:none;">
-                <form method="post" asp-page-handler="UpdateShipToSite">
-                    <input type="hidden" asp-for="ShipToSiteToEdit.Id" />
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.Name"></label>
-                        <input asp-for="ShipToSiteToEdit.Name" class="form-control" />
+            <div id="shipToSiteForm" class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Ship To Site</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" asp-page-handler="UpdateShipToSite">
+                                <input type="hidden" asp-for="ShipToSiteToEdit.Id" />
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.Name"></label>
+                                    <input asp-for="ShipToSiteToEdit.Name" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.Address"></label>
+                                    <input asp-for="ShipToSiteToEdit.Address" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.Address2"></label>
+                                    <input asp-for="ShipToSiteToEdit.Address2" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.City"></label>
+                                    <input asp-for="ShipToSiteToEdit.City" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.State"></label>
+                                    <input asp-for="ShipToSiteToEdit.State" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.Zip"></label>
+                                    <input asp-for="ShipToSiteToEdit.Zip" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.Phone"></label>
+                                    <input asp-for="ShipToSiteToEdit.Phone" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.PhoneExtension"></label>
+                                    <input asp-for="ShipToSiteToEdit.PhoneExtension" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.SiteType"></label>
+                                    <input asp-for="ShipToSiteToEdit.SiteType" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.ShipToName"></label>
+                                    <input asp-for="ShipToSiteToEdit.ShipToName" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.ShipToEmail"></label>
+                                    <input asp-for="ShipToSiteToEdit.ShipToEmail" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.ShipToAddress"></label>
+                                    <input asp-for="ShipToSiteToEdit.ShipToAddress" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.ShipToAddress2"></label>
+                                    <input asp-for="ShipToSiteToEdit.ShipToAddress2" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.ShipToCity"></label>
+                                    <input asp-for="ShipToSiteToEdit.ShipToCity" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.ShipToState"></label>
+                                    <input asp-for="ShipToSiteToEdit.ShipToState" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.ShipToZip"></label>
+                                    <input asp-for="ShipToSiteToEdit.ShipToZip" class="form-control" />
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ShipToSiteToEdit.SameAsSite"></label>
+                                    <input asp-for="ShipToSiteToEdit.SameAsSite" type="checkbox" class="form-control" />
+                                </div>
+                                <button type="submit" class="btn btn-primary">Update</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.Address"></label>
-                        <input asp-for="ShipToSiteToEdit.Address" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.Address2"></label>
-                        <input asp-for="ShipToSiteToEdit.Address2" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.City"></label>
-                        <input asp-for="ShipToSiteToEdit.City" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.State"></label>
-                        <input asp-for="ShipToSiteToEdit.State" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.Zip"></label>
-                        <input asp-for="ShipToSiteToEdit.Zip" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.Phone"></label>
-                        <input asp-for="ShipToSiteToEdit.Phone" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.PhoneExtension"></label>
-                        <input asp-for="ShipToSiteToEdit.PhoneExtension" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.SiteType"></label>
-                        <input asp-for="ShipToSiteToEdit.SiteType" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.ShipToName"></label>
-                        <input asp-for="ShipToSiteToEdit.ShipToName" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.ShipToEmail"></label>
-                        <input asp-for="ShipToSiteToEdit.ShipToEmail" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.ShipToAddress"></label>
-                        <input asp-for="ShipToSiteToEdit.ShipToAddress" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.ShipToAddress2"></label>
-                        <input asp-for="ShipToSiteToEdit.ShipToAddress2" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.ShipToCity"></label>
-                        <input asp-for="ShipToSiteToEdit.ShipToCity" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.ShipToState"></label>
-                        <input asp-for="ShipToSiteToEdit.ShipToState" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.ShipToZip"></label>
-                        <input asp-for="ShipToSiteToEdit.ShipToZip" class="form-control" />
-                    </div>
-                    <div class="form-group">
-                        <label asp-for="ShipToSiteToEdit.SameAsSite"></label>
-                        <input asp-for="ShipToSiteToEdit.SameAsSite" type="checkbox" class="form-control" />
-                    </div>
-                    <button type="submit" class="btn btn-primary">Update</button>
-                </form>
+                </div>
             </div>
         </div>
         <div class="tab-pane fade" id="countiesserved" role="tabpanel" aria-labelledby="countiesserved-tab">
@@ -327,18 +368,22 @@
                 <button type="submit" class="btn btn-primary">Update</button>
             </form>
         </div>
-
     </div>
 }
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script>function showAdditionalUserForm(id) {
+    <script>// Close modal on click of cancel or cross button
+        $(document).on('click', 'button[data-dismiss="modal"], button.close', function () {
+            $('#shipToSiteForm').modal('hide');
+            $('#additionalUserForm').modal('hide');
+        });
+
+        function showAdditionalUserForm(id) {
             fetch(`/Admin/ManageUsers?handler=AdditionalUser&id=${id}`)
                 .then(response => response.json())
                 .then(additionalUser => {
                     if (additionalUser) {
-                        document.getElementById("additionalUserForm").style.display = "block";
+                        $('#additionalUserForm').modal('show');
                         document.getElementById("AdditionalUserToEdit_Id").value = additionalUser.id || '';
                         document.getElementById("AdditionalUserToEdit_Name").value = additionalUser.name || '';
                         document.getElementById("AdditionalUserToEdit_Title").value = additionalUser.title || '';
@@ -359,7 +404,7 @@
                 .then(response => response.json())
                 .then(shipToSite => {
                     if (shipToSite) {
-                        document.getElementById("shipToSiteForm").style.display = "block";
+                        $('#shipToSiteForm').modal('show');
                         document.getElementById("ShipToSiteToEdit_Id").value = shipToSite.id || '';
                         document.getElementById("ShipToSiteToEdit_Name").value = shipToSite.name || '';
                         document.getElementById("ShipToSiteToEdit_Address").value = shipToSite.address || '';
@@ -383,4 +428,3 @@
                 .catch(error => console.error('Error:', error));
         }</script>
 }
-

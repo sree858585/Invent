@@ -1,0 +1,195 @@
+﻿@page
+@model WebApplication1.Pages.Admin.ManageInventoryModel
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@{
+    ViewData["Title"] = "Manage Inventory";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Manage Inventory</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="mb-4">
+    <form method="get" class="form-inline">
+        <input type="text" name="searchTerm" value="@Request.Query["searchTerm"]" class="form-control mr-2" placeholder="Search products..." />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+</div>
+
+<div class="mb-4">
+    <button type="button" class="btn btn-primary" onclick="showAddProductForm()">Add Product</button>
+</div>
+
+<table class="table table-bordered table-striped table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th>Product Item Number</th>
+            <th>Product Description</th>
+            <th>Inventory Level</th>
+            <th>Agency Type</th>
+            <th>Pieces per Case</th>
+            <th>Sort Order</th>
+            <th>Is Active</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model.Products)
+        {
+            <tr>
+                <td>@product.product_item_num</td>
+                <td>@product.product_description</td>
+                <td>@product.product_inventory_level</td>
+                <td>@product.product_agency_type</td>
+                <td>@product.product_pieces_per_case</td>
+                <td>@product.sort_order</td>
+                <td>@(product.is_active ? "Yes" : "No")</td>
+                <td>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="showEditProductForm(@product.product_id)">Edit</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct(@product.product_id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="d-flex justify-content-between">
+    @if (Model.CurrentPage > 1)
+    {
+        <a href="?pageNumber=@(Model.CurrentPage - 1)&searchTerm=@Request.Query["searchTerm"]" class="btn btn-secondary">Previous</a>
+    }
+    @if (Model.Products.Count == Model.PageSize)
+    {
+        <a href="?pageNumber=@(Model.CurrentPage + 1)&searchTerm=@Request.Query["searchTerm"]" class="btn btn-secondary">Next</a>
+    }
+</div>
+
+<!-- Modal for Add/Edit Product -->
+<div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Product</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-page-handler="SaveProduct">
+                    <input type="hidden" asp-for="Product.product_id" />
+                    <div class="form-group">
+                        <label asp-for="Product.product_item_num"></label>
+                        <input asp-for="Product.product_item_num" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Product.product_description"></label>
+                        <input asp-for="Product.product_description" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Product.product_inventory_level"></label>
+                        <input asp-for="Product.product_inventory_level" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Product.product_agency_type"></label>
+                        <input asp-for="Product.product_agency_type" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Product.product_pieces_per_case"></label>
+                        <input asp-for="Product.product_pieces_per_case" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Product.sort_order"></label>
+                        <input asp-for="Product.sort_order" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Product.is_active"></label>
+                        <select asp-for="Product.is_active" class="form-control">
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var products = @Html.Raw(JsonSerializer.Serialize(Model.Products));
+
+        function showEditProductForm(productId) {
+            var product = products.find(p => p.product_id === productId);
+            if (product) {
+                document.getElementById("productModalLabel").innerText = "Edit Product";
+                document.getElementById("Product_product_id").value = product.product_id;
+                document.getElementById("Product_product_item_num").value = product.product_item_num;
+                document.getElementById("Product_product_description").value = product.product_description;
+                document.getElementById("Product_product_inventory_level").value = product.product_inventory_level;
+                document.getElementById("Product_product_agency_type").value = product.product_agency_type;
+                document.getElementById("Product_product_pieces_per_case").value = product.product_pieces_per_case;
+                document.getElementById("Product_sort_order").value = product.sort_order;
+                document.getElementById("Product_is_active").value = product.is_active.toString();
+                $('#productModal').modal('show');
+            }
+        }
+
+        function showAddProductForm() {
+            document.getElementById("productModalLabel").innerText = "Add Product";
+            document.getElementById("Product_product_id").value = 0;
+            document.getElementById("Product_product_item_num").value = '';
+            document.getElementById("Product_product_description").value = '';
+            document.getElementById("Product_product_inventory_level").value = '';
+            document.getElementById("Product_product_agency_type").value = '';
+            document.getElementById("Product_product_pieces_per_case").value = '';
+            document.getElementById("Product_sort_order").value = '';
+            document.getElementById("Product_is_active").value = 'true';
+            $('#productModal').modal('show');
+        }
+
+        function hideProductForm() {
+            $('#productModal').modal('hide');
+        }
+
+        function deleteProduct(productId) {
+            if (confirm("Are you sure you want to delete this product?")) {
+                fetch(`/Admin/ManageInventory?handler=DeleteProduct&productId=${productId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert("Failed to delete product.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Failed to delete product.");
+                });
+            }
+        }
+
+        // Close modal on click of cancel button
+        document.querySelector('button[data-dismiss="modal"]').addEventListener('click', function() {
+            $('#productModal').modal('hide');
+        });
+
+        // Close modal on click of cross button
+        document.querySelector('button.close').addEventListener('click', function() {
+            $('#productModal').modal('hide');
+        });
+    </script>
+}
