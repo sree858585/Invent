@@ -23,7 +23,7 @@ namespace WebApplication1.Data
         public DbSet<ShipToSite> ShipToSites { get; set; }
         public DbSet<ShipToSiteCounty> ShipToSiteCounties { get; set; }
         public DbSet<LkAgencyClassification> LkAgencyClassifications { get; set; }
-        public DbSet<AgentClassificationData> AgentClassificationData { get; set; }
+        public DbSet<LnkAgencyClassificationData> Lnk_AgencyClassificationData { get; set; }
         public DbSet<Product> Products { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -105,17 +105,22 @@ namespace WebApplication1.Data
             modelBuilder.Entity<LkAgencyClassification>().ToTable("lk_agency_classification")
                 .HasKey(c => c.agency_classification_id);
 
-            // Add this configuration for AgentClassificationData
-            modelBuilder.Entity<AgentClassificationData>()
+            // Add this configuration for LnkAgencyClassificationData
+            modelBuilder.Entity<LnkAgencyClassificationData>()
                 .HasKey(a => a.Id);
 
-            modelBuilder.Entity<AgentClassificationData>()
+            modelBuilder.Entity<LnkAgencyClassificationData>()
                 .Property(a => a.OtherClassificationText)
                 .HasMaxLength(300);
 
-            modelBuilder.Entity<AgentClassificationData>()
+            modelBuilder.Entity<LnkAgencyClassificationData>()
                 .Property(a => a.UniqueId)
-                .IsRequired();
+                .IsRequired(false);
+
+            modelBuilder.Entity<LnkAgencyClassificationData>()
+                .HasOne(a => a.AgencyRegistration)
+                .WithMany(ar => ar.LnkAgencyClassificationData) // Updated property name
+                .HasForeignKey(a => a.AgencyRegistrationId);
 
             modelBuilder.Entity<Product>().ToTable("lk_product");
 
