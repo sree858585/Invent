@@ -1,5 +1,4 @@
-﻿// using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,15 +16,11 @@ namespace WebApplication1.Pages.Admin
     [Authorize(Roles = "Admin")]
     public class ManageUsersModel : PageModel
     {
-        private readonly UserManager<ApplicationUser>
-    _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<ManageUsersModel>
-            _logger;
+        private readonly ILogger<ManageUsersModel> _logger;
 
-        public ManageUsersModel(UserManager<ApplicationUser>
-            userManager, ApplicationDbContext context, ILogger<ManageUsersModel>
-                logger)
+        public ManageUsersModel(UserManager<ApplicationUser> userManager, ApplicationDbContext context, ILogger<ManageUsersModel> logger)
         {
             _userManager = userManager;
             _context = context;
@@ -37,9 +32,7 @@ namespace WebApplication1.Pages.Admin
 
         public ApplicationUser User { get; set; }
 
-        public List<AgencyRegistration>
-            Registrations
-        { get; set; }
+        public List<AgencyRegistration> Registrations { get; set; }
 
         [BindProperty]
         public AgencyRegistration Registration { get; set; }
@@ -48,9 +41,7 @@ namespace WebApplication1.Pages.Admin
         public AgencyContact AgencyContact { get; set; }
 
         [BindProperty]
-        public List<AdditionalUser>
-            AdditionalUsers
-        { get; set; }
+        public List<AdditionalUser> AdditionalUsers { get; set; }
 
         [BindProperty]
         public AdditionalUser AdditionalUserToEdit { get; set; }
@@ -59,27 +50,17 @@ namespace WebApplication1.Pages.Admin
         public ShipInformation ShipInformation { get; set; }
 
         [BindProperty]
-        public List<ShipToSite>
-            AdditionalShipToSites
-        { get; set; }
+        public List<ShipToSite> AdditionalShipToSites { get; set; }
 
         [BindProperty]
         public ShipToSite ShipToSiteToEdit { get; set; }
 
         [BindProperty]
-        public List<int>
-            CountiesServed
-        { get; set; } = new List<int>
-                (new int[10]);
+        public List<int> CountiesServed { get; set; } = new List<int>(new int[10]);
 
-        public List<SelectListItem>
-            CountyList
-        { get; set; }
+        public List<SelectListItem> CountyList { get; set; }
 
-        public List<AgentClassificationData>
-            AgentClassificationDataList
-        { get; set; }  // Add this line
-
+        public List<LnkAgencyClassificationData> LnkAgencyClassificationDataList { get; set; }  // Updated line
 
         public string SuccessMessage { get; set; }
 
@@ -95,14 +76,14 @@ namespace WebApplication1.Pages.Admin
                     try
                     {
                         Registrations = await _context.AgencyRegistrations
-                        .Include(r => r.AgentClassificationData) // Include related AgentClassificationData
-                        .Where(r => r.UserId == User.Id)
-                        .ToListAsync();
+                            .Include(r => r.LnkAgencyClassificationData) // Include related LnkAgencyClassificationData
+                            .Where(r => r.UserId == User.Id)
+                            .ToListAsync();
 
                         // Logging for debugging purposes
                         foreach (var registration in Registrations)
                         {
-                            _logger.LogInformation($"Registration ID: {registration.Id}, Unique IDs: {string.Join(", ", registration.AgentClassificationData.Select(d => d.UniqueId ?? "NULL"))}");
+                            _logger.LogInformation($"Registration ID: {registration.Id}, Unique IDs: {string.Join(", ", registration.LnkAgencyClassificationData.Select(d => d.UniqueId ?? "NULL"))}");
                         }
                     }
                     catch (Exception ex)
@@ -113,9 +94,9 @@ namespace WebApplication1.Pages.Admin
             }
 
             CountyList = await _context.Counties
-            .Where(c => c.is_active)
-            .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
-            .ToListAsync();
+                .Where(c => c.is_active)
+                .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
+                .ToListAsync();
 
             while (CountiesServed.Count < 5)
             {
@@ -123,13 +104,11 @@ namespace WebApplication1.Pages.Admin
             }
         }
 
-
-        public async Task<IActionResult>
-            OnPostEditAsync(int registrationId)
+        public async Task<IActionResult> OnPostEditAsync(int registrationId)
         {
             _logger.LogInformation($"OnPostEditAsync called with RegistrationId: {registrationId}");
             Registration = await _context.AgencyRegistrations
-            .FirstOrDefaultAsync(r => r.Id == registrationId);
+                .FirstOrDefaultAsync(r => r.Id == registrationId);
             if (Registration == null)
             {
                 _logger.LogWarning($"Registration with Id: {registrationId} not found.");
@@ -137,19 +116,19 @@ namespace WebApplication1.Pages.Admin
             }
 
             AgencyContact = await _context.AgencyContacts
-            .FirstOrDefaultAsync(ac => ac.AgencyRegistrationId == registrationId);
+                .FirstOrDefaultAsync(ac => ac.AgencyRegistrationId == registrationId);
             AdditionalUsers = await _context.AdditionalUsers
-            .Where(au => au.AgencyRegistrationId == registrationId).ToListAsync();
+                .Where(au => au.AgencyRegistrationId == registrationId).ToListAsync();
             ShipInformation = await _context.ShipInformations
-            .FirstOrDefaultAsync(si => si.AgencyRegistrationId == registrationId);
+                .FirstOrDefaultAsync(si => si.AgencyRegistrationId == registrationId);
             AdditionalShipToSites = await _context.ShipToSites
-            .Where(sts => sts.AgencyRegistrationId == registrationId).ToListAsync();
+                .Where(sts => sts.AgencyRegistrationId == registrationId).ToListAsync();
 
             CountiesServed = await _context.EaspSepsRegistrationCounties
-            .Where(c => c.AgencyRegistrationId == registrationId)
-            .Select(c => c.CountyId)
-            .Take(10)
-            .ToListAsync();
+                .Where(c => c.AgencyRegistrationId == registrationId)
+                .Select(c => c.CountyId)
+                .Take(10)
+                .ToListAsync();
 
             while (CountiesServed.Count < 10)
             {
@@ -157,15 +136,14 @@ namespace WebApplication1.Pages.Admin
             }
 
             CountyList = await _context.Counties
-            .Where(c => c.is_active)
-            .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
-            .ToListAsync();
+                .Where(c => c.is_active)
+                .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
+                .ToListAsync();
 
             return Page();
         }
 
-        public async Task<IActionResult>
-            OnPostUpdateEaspSepsRegistrationAsync()
+        public async Task<IActionResult> OnPostUpdateEaspSepsRegistrationAsync()
         {
             _logger.LogInformation("OnPostUpdateEaspSepsRegistrationAsync called");
 
@@ -175,14 +153,13 @@ namespace WebApplication1.Pages.Admin
             }
 
             var registration = await _context.AgencyRegistrations
-            .FirstOrDefaultAsync(r => r.Id == Registration.Id);
+                .FirstOrDefaultAsync(r => r.Id == Registration.Id);
 
             if (registration != null)
             {
                 registration.AgencyName = Registration.AgencyName;
                 registration.AlternateName = Registration.AlternateName;
                 registration.County = Registration.County;
-                // registration.UniqueId = Registration.UniqueId;
                 registration.Address = Registration.Address;
                 registration.Address2 = Registration.Address2;
                 registration.City = Registration.City;
@@ -210,8 +187,7 @@ namespace WebApplication1.Pages.Admin
             return RedirectToPage("/Admin/ManageUsers", new { email = email });
         }
 
-        public async Task<IActionResult>
-            OnPostUpdateAgencyContactAsync()
+        public async Task<IActionResult> OnPostUpdateAgencyContactAsync()
         {
             _logger.LogInformation("OnPostUpdateAgencyContactAsync called");
 
@@ -221,7 +197,7 @@ namespace WebApplication1.Pages.Admin
             }
 
             var agencyContact = await _context.AgencyContacts
-            .FirstOrDefaultAsync(ac => ac.AgencyRegistrationId == Registration.Id);
+                .FirstOrDefaultAsync(ac => ac.AgencyRegistrationId == Registration.Id);
 
             if (agencyContact != null)
             {
@@ -243,7 +219,7 @@ namespace WebApplication1.Pages.Admin
             }
 
             var registration = await _context.AgencyRegistrations
-            .FirstOrDefaultAsync(r => r.Id == Registration.Id);
+                .FirstOrDefaultAsync(r => r.Id == Registration.Id);
 
             User = await _userManager.FindByIdAsync(registration.UserId);
             var email = User != null ? User.Email : Email;
@@ -255,8 +231,7 @@ namespace WebApplication1.Pages.Admin
             return RedirectToPage("/Admin/ManageUsers", new { email = email });
         }
 
-        public async Task<IActionResult>
-            OnPostUpdateAdditionalUserAsync()
+        public async Task<IActionResult> OnPostUpdateAdditionalUserAsync()
         {
             _logger.LogInformation("OnPostUpdateAdditionalUserAsync called");
 
@@ -266,7 +241,7 @@ namespace WebApplication1.Pages.Admin
             }
 
             var additionalUser = await _context.AdditionalUsers
-            .FirstOrDefaultAsync(au => au.Id == AdditionalUserToEdit.Id);
+                .FirstOrDefaultAsync(au => au.Id == AdditionalUserToEdit.Id);
 
             if (additionalUser != null)
             {
@@ -291,7 +266,7 @@ namespace WebApplication1.Pages.Admin
             }
 
             var registration = await _context.AgencyRegistrations
-            .FirstOrDefaultAsync(r => r.Id == additionalUser.AgencyRegistrationId);
+                .FirstOrDefaultAsync(r => r.Id == additionalUser.AgencyRegistrationId);
 
             if (registration != null)
             {
@@ -306,8 +281,7 @@ namespace WebApplication1.Pages.Admin
             }
         }
 
-        public async Task<IActionResult>
-            OnPostUpdateShippingInfoAsync()
+        public async Task<IActionResult> OnPostUpdateShippingInfoAsync()
         {
             _logger.LogInformation("OnPostUpdateShippingInfoAsync called");
 
@@ -317,7 +291,7 @@ namespace WebApplication1.Pages.Admin
             }
 
             var shipInformation = await _context.ShipInformations
-            .FirstOrDefaultAsync(si => si.AgencyRegistrationId == Registration.Id);
+                .FirstOrDefaultAsync(si => si.AgencyRegistrationId == Registration.Id);
 
             if (shipInformation != null)
             {
@@ -339,7 +313,7 @@ namespace WebApplication1.Pages.Admin
             }
 
             var registration = await _context.AgencyRegistrations
-            .FirstOrDefaultAsync(r => r.Id == Registration.Id);
+                .FirstOrDefaultAsync(r => r.Id == Registration.Id);
 
             User = await _userManager.FindByIdAsync(registration.UserId);
             var email = User != null ? User.Email : Email;
@@ -351,8 +325,7 @@ namespace WebApplication1.Pages.Admin
             return RedirectToPage("/Admin/ManageUsers", new { email = email });
         }
 
-        public async Task<IActionResult>
-            OnPostUpdateShipToSiteAsync()
+        public async Task<IActionResult> OnPostUpdateShipToSiteAsync()
         {
             _logger.LogInformation("OnPostUpdateShipToSiteAsync called");
 
@@ -362,7 +335,7 @@ namespace WebApplication1.Pages.Admin
             }
 
             var shipToSite = await _context.ShipToSites
-            .FirstOrDefaultAsync(sts => sts.Id == ShipToSiteToEdit.Id);
+                .FirstOrDefaultAsync(sts => sts.Id == ShipToSiteToEdit.Id);
 
             if (shipToSite != null)
             {
@@ -395,7 +368,7 @@ namespace WebApplication1.Pages.Admin
             }
 
             var registration = await _context.AgencyRegistrations
-            .FirstOrDefaultAsync(r => r.Id == shipToSite.AgencyRegistrationId);
+                .FirstOrDefaultAsync(r => r.Id == shipToSite.AgencyRegistrationId);
 
             if (registration != null)
             {
@@ -410,20 +383,18 @@ namespace WebApplication1.Pages.Admin
             }
         }
 
-        public async Task<IActionResult>
-            OnPostUpdateCountiesServedAsync()
+        public async Task<IActionResult> OnPostUpdateCountiesServedAsync()
         {
             _logger.LogInformation("OnPostUpdateCountiesServedAsync called");
 
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("ModelState is invalid");
-                // return Page();
             }
 
             var existingCounties = await _context.EaspSepsRegistrationCounties
-            .Where(c => c.AgencyRegistrationId == Registration.Id)
-            .ToListAsync();
+                .Where(c => c.AgencyRegistrationId == Registration.Id)
+                .ToListAsync();
 
             _context.EaspSepsRegistrationCounties.RemoveRange(existingCounties);
 
@@ -453,8 +424,7 @@ namespace WebApplication1.Pages.Admin
             return RedirectToPage("/Admin/ManageUsers", new { email = email });
         }
 
-        public async Task<IActionResult>
-            OnGetAdditionalUserAsync(int id)
+        public async Task<IActionResult> OnGetAdditionalUserAsync(int id)
         {
             var additionalUser = await _context.AdditionalUsers.FirstOrDefaultAsync(u => u.Id == id);
             if (additionalUser == null)
@@ -464,8 +434,7 @@ namespace WebApplication1.Pages.Admin
             return new JsonResult(additionalUser);
         }
 
-        public async Task<IActionResult>
-            OnGetShipToSiteAsync(int id)
+        public async Task<IActionResult> OnGetShipToSiteAsync(int id)
         {
             var shipToSite = await _context.ShipToSites.FirstOrDefaultAsync(s => s.Id == id);
             if (shipToSite == null)

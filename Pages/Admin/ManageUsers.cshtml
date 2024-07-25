@@ -30,7 +30,7 @@
                 <h5>
                     @registration.AgencyName -
                     @{
-                        var uniqueIds = registration.AgentClassificationData
+                        var uniqueIds = registration.LnkAgencyClassificationData
                             .Select(d => d.UniqueId ?? "N/A");
                         @string.Join(", ", uniqueIds)
                     }

@@ -97,7 +97,7 @@ public class RegisterEaspSepsModel : PageModel
         if (!ModelState.IsValid)
         {
             await OnGetAsync();
-           // return Page();
+          //  return Page();
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -109,7 +109,6 @@ public class RegisterEaspSepsModel : PageModel
 
         EaspSepsRegistration.UserId = userId;
         EaspSepsRegistration.SubmissionDate = DateTime.Now; // Set the submission date
-
 
         var selectedClassifications = new List<string>();
         if (IsSyringeExchangeProgram) selectedClassifications.Add("Syringe exchange program");
@@ -140,15 +139,15 @@ public class RegisterEaspSepsModel : PageModel
             };
             var uniqueId = $"{uniqueIdPrefix}{EaspSepsRegistration.Id}";
 
-            var agentClassificationData = new AgentClassificationData
+            var lnkAgencyClassificationData = new LnkAgencyClassificationData
             {
                 Category = id,
                 Other = IsOther && id == 4,
-                AgencyRegistrationID = EaspSepsRegistration.Id,
+                AgencyRegistrationId = EaspSepsRegistration.Id,
                 OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null,
                 UniqueId = uniqueId
             };
-            _context.AgentClassificationData.Add(agentClassificationData);
+            _context.Lnk_AgencyClassificationData.Add(lnkAgencyClassificationData);
         }
         await _context.SaveChangesAsync();
 
@@ -216,7 +215,6 @@ public class RegisterEaspSepsModel : PageModel
         _logger.LogInformation($"EaspSepsRegistration Id: {EaspSepsRegistration.Id}");
         _logger.LogInformation($"CountiesServed Count: {CountiesServed.Count}");
         _logger.LogInformation($"ShipToSiteCounties Count: {ShipToSiteCounties.Count}");
-
 
         SuccessMessage = "Registration successful!";
         return RedirectToPage("/Index");
