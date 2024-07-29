@@ -6,6 +6,8 @@
     <title>@ViewData["Title"] - OrderManagement</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false) <!-- Add this line to render the Styles section -->
 </head>
 <body>
     <header>
@@ -32,6 +34,10 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            @if (!string.IsNullOrEmpty(ViewData["SuccessMessage"]?.ToString()))
+            {
+                <div class="alert alert-success">@ViewData["SuccessMessage"]</div>
+            }
             @RenderBody()
         </main>
     </div>

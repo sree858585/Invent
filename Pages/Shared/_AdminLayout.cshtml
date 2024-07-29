@@ -6,6 +6,8 @@
     <title>@ViewData["Title"] - OrderManagement</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @RenderSection("Styles", required: false) <!-- Add this line to render the Styles section -->
 </head>
 <body>
     <header>
@@ -28,7 +30,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/Admin/ApproveOrders">Approve Orders</a>
                         </li>
                         <li class="nav-item">
-                        <a class="nav-link" asp-page="/Admin/ManageInventory">Manage Inventory</a>
+                            <a class="nav-link" asp-page="/Admin/ManageInventory">Manage Inventory</a>
                         </li>
                     </ul>
                     <partial name="_LoginPartial" />
@@ -38,9 +40,9 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
-            @if (!string.IsNullOrEmpty(Model?.SuccessMessage))
+            @if (!string.IsNullOrEmpty(ViewData["SuccessMessage"]?.ToString()))
             {
-                <div class="alert alert-success">@Model.SuccessMessage</div>
+                <div class="alert alert-success">@ViewData["SuccessMessage"]</div>
             }
             @RenderBody()
         </main>

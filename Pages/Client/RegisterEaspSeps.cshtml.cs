@@ -97,7 +97,7 @@ public class RegisterEaspSepsModel : PageModel
         if (!ModelState.IsValid)
         {
             await OnGetAsync();
-          //  return Page();
+           // return Page();
         }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -109,6 +109,7 @@ public class RegisterEaspSepsModel : PageModel
 
         EaspSepsRegistration.UserId = userId;
         EaspSepsRegistration.SubmissionDate = DateTime.Now; // Set the submission date
+        EaspSepsRegistration.Status = "Pending"; // Set the status to Pending
 
         var selectedClassifications = new List<string>();
         if (IsSyringeExchangeProgram) selectedClassifications.Add("Syringe exchange program");
@@ -219,4 +220,5 @@ public class RegisterEaspSepsModel : PageModel
         SuccessMessage = "Registration successful!";
         return RedirectToPage("/Index");
     }
+
 }

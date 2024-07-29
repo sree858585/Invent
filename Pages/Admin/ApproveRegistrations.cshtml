@@ -1,0 +1,387 @@
+﻿@page
+@model WebApplication1.Pages.Admin.ApproveRegistrationsModel
+@{
+    ViewData["Title"] = "Approve Registrations";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Approve Registrations</h1>
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success">@Model.SuccessMessage</div>
+}
+
+<ul class="nav nav-tabs" id="registrationTabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="pending-tab" data-bs-toggle="tab" href="#pending" role="tab" aria-controls="pending" aria-selected="true">Pending</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="approved-tab" data-bs-toggle="tab" href="#approved" role="tab" aria-controls="approved" aria-selected="false">Approved</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="denied-tab" data-bs-toggle="tab" href="#denied" role="tab" aria-controls="denied" aria-selected="false">Denied</a>
+    </li>
+</ul>
+
+<div class="tab-content" id="registrationTabsContent">
+    <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+        <input type="text" class="form-control mb-3" id="pendingSearch" placeholder="Search Pending Registrations" onkeyup="filterPendingRegistrations()">
+        @foreach (var registration in Model.PendingRegistrations)
+        {
+            <div class="card mb-4 shadow-sm pending-registration">
+                <div class="card-body">
+                    <h2 class="card-title">@registration.AgencyName</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Alternate Name:</strong> @registration.AlternateName</p>
+                            <p><strong>County:</strong> @registration.County</p>
+                            <p><strong>Address:</strong> @registration.Address, @registration.Address2, @registration.City, @registration.State, @registration.Zip</p>
+                            <p><strong>Program Director:</strong> @(registration.AgencyContact?.ProgramDirector ?? "N/A")</p>
+                            <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
+                            <p><strong>Submission Date:</strong> @registration.SubmissionDate.ToString("g")</p>
+                            <p><strong>Status:</strong> @registration.Status</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Additional Users:</h6>
+                            @if (registration.AdditionalUsers != null && registration.AdditionalUsers.Any())
+                            {
+                                <ul>
+                                    @foreach (var user in registration.AdditionalUsers)
+                                    {
+                                        <li>@user.Name - @user.Email</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No additional users.</p>
+                            }
+
+                            <h6>Shipping Information:</h6>
+                            @if (registration.ShipInformation != null)
+                            {
+                                <p>@registration.ShipInformation.ShipToName, @registration.ShipInformation.ShipToAddress, @registration.ShipInformation.ShipToCity, @registration.ShipInformation.ShipToState, @registration.ShipInformation.ShipToZip</p>
+                            }
+                            else
+                            {
+                                <p>No shipping information.</p>
+                            }
+
+                            <h6>Additional Ship To Sites:</h6>
+                            @if (registration.AdditionalShipToSites != null && registration.AdditionalShipToSites.Any())
+                            {
+                                <ul>
+                                    @foreach (var site in registration.AdditionalShipToSites)
+                                    {
+                                        <li>@site.Name - @site.Address, @site.City, @site.State, @site.Zip</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No additional ship to sites.</p>
+                            }
+
+                            <h6>Counties Served:</h6>
+                            @if (registration.CountiesServed != null && registration.CountiesServed.Any())
+                            {
+                                <ul>
+                                    @foreach (var county in registration.CountiesServed)
+                                    {
+                                        <li>@county</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No counties served.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12 text-center">
+                            <form method="post" asp-page-handler="Approve" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-success mr-2">Approve</button>
+                            </form>
+                            <form method="post" asp-page-handler="Deny" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-danger">Deny</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="tab-pane fade" id="approved" role="tabpanel" aria-labelledby="approved-tab">
+        <input type="text" class="form-control mb-3" id="approvedSearch" placeholder="Search Approved Registrations" onkeyup="filterApprovedRegistrations()">
+        @foreach (var registration in Model.ApprovedRegistrations)
+        {
+            <div class="card mb-4 shadow-sm approved-registration">
+                <div class="card-body">
+                    <h2 class="card-title">@registration.AgencyName</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Alternate Name:</strong> @registration.AlternateName</p>
+                            <p><strong>County:</strong> @registration.County</p>
+                            <p><strong>Address:</strong> @registration.Address, @registration.Address2, @registration.City, @registration.State, @registration.Zip</p>
+                            <p><strong>Program Director:</strong> @(registration.AgencyContact?.ProgramDirector ?? "N/A")</p>
+                            <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
+                            <p><strong>Submission Date:</strong> @registration.SubmissionDate.ToString("g")</p>
+                            <p><strong>Status:</strong> @registration.Status</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Additional Users:</h6>
+                            @if (registration.AdditionalUsers != null && registration.AdditionalUsers.Any())
+                            {
+                                <ul>
+                                    @foreach (var user in registration.AdditionalUsers)
+                                    {
+                                        <li>@user.Name - @user.Email</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No additional users.</p>
+                            }
+
+                            <h6>Shipping Information:</h6>
+                            @if (registration.ShipInformation != null)
+                            {
+                                <p>@registration.ShipInformation.ShipToName, @registration.ShipInformation.ShipToAddress, @registration.ShipInformation.ShipToCity, @registration.ShipInformation.ShipToState, @registration.ShipInformation.ShipToZip</p>
+                            }
+                            else
+                            {
+                                <p>No shipping information.</p>
+                            }
+
+                            <h6>Additional Ship To Sites:</h6>
+                            @if (registration.AdditionalShipToSites != null && registration.AdditionalShipToSites.Any())
+                            {
+                                <ul>
+                                    @foreach (var site in registration.AdditionalShipToSites)
+                                    {
+                                        <li>@site.Name - @site.Address, @site.City, @site.State, @site.Zip</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No additional ship to sites.</p>
+                            }
+
+                            <h6>Counties Served:</h6>
+                            @if (registration.CountiesServed != null && registration.CountiesServed.Any())
+                            {
+                                <ul>
+                                    @foreach (var county in registration.CountiesServed)
+                                    {
+                                        <li>@county</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No counties served.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12 text-center">
+                            <form method="post" asp-page-handler="Approve" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-success mr-2">Approve</button>
+                            </form>
+                            <form method="post" asp-page-handler="Deny" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-danger">Deny</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="tab-pane fade" id="denied" role="tabpanel" aria-labelledby="denied-tab">
+        <input type="text" class="form-control mb-3" id="deniedSearch" placeholder="Search Denied Registrations" onkeyup="filterDeniedRegistrations()">
+        @foreach (var registration in Model.DeniedRegistrations)
+        {
+            <div class="card mb-4 shadow-sm denied-registration">
+                <div class="card-body">
+                    <h2 class="card-title">@registration.AgencyName</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Alternate Name:</strong> @registration.AlternateName</p>
+                            <p><strong>County:</strong> @registration.County</p>
+                            <p><strong>Address:</strong> @registration.Address, @registration.Address2, @registration.City, @registration.State, @registration.Zip</p>
+                            <p><strong>Program Director:</strong> @(registration.AgencyContact?.ProgramDirector ?? "N/A")</p>
+                            <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
+                            <p><strong>Submission Date:</strong> @registration.SubmissionDate.ToString("g")</p>
+                            <p><strong>Status:</strong> @registration.Status</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Additional Users:</h6>
+                            @if (registration.AdditionalUsers != null && registration.AdditionalUsers.Any())
+                            {
+                                <ul>
+                                    @foreach (var user in registration.AdditionalUsers)
+                                    {
+                                        <li>@user.Name - @user.Email</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No additional users.</p>
+                            }
+
+                            <h6>Shipping Information:</h6>
+                            @if (registration.ShipInformation != null)
+                            {
+                                <p>@registration.ShipInformation.ShipToName, @registration.ShipInformation.ShipToAddress, @registration.ShipInformation.ShipToCity, @registration.ShipInformation.ShipToState, @registration.ShipInformation.ShipToZip</p>
+                            }
+                            else
+                            {
+                                <p>No shipping information.</p>
+                            }
+
+                            <h6>Additional Ship To Sites:</h6>
+                            @if (registration.AdditionalShipToSites != null && registration.AdditionalShipToSites.Any())
+                            {
+                                <ul>
+                                    @foreach (var site in registration.AdditionalShipToSites)
+                                    {
+                                        <li>@site.Name - @site.Address, @site.City, @site.State, @site.Zip</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No additional ship to sites.</p>
+                            }
+
+                            <h6>Counties Served:</h6>
+                            @if (registration.CountiesServed != null && registration.CountiesServed.Any())
+                            {
+                                <ul>
+                                    @foreach (var county in registration.CountiesServed)
+                                    {
+                                        <li>@county</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p>No counties served.</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12 text-center">
+                            <form method="post" asp-page-handler="Approve" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-success mr-2">Approve</button>
+                            </form>
+                            <form method="post" asp-page-handler="Deny" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-danger">Deny</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+        }
+
+        .mr-2 {
+            margin-right: 0.5rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>function filterPendingRegistrations() {
+            var input, filter, cards, cardContainer, title, i;
+            input = document.getElementById("pendingSearch");
+            filter = input.value.toUpperCase();
+            cardContainer = document.getElementById("pending");
+            cards = cardContainer.getElementsByClassName("pending-registration");
+            for (i = 0; i < cards.length; i++) {
+                title = cards[i].getElementsByClassName("card-title")[0];
+                if (title.innerText.toUpperCase().indexOf(filter) > -1) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+
+        function filterApprovedRegistrations() {
+            var input, filter, cards, cardContainer, title, i;
+            input = document.getElementById("approvedSearch");
+            filter = input.value.toUpperCase();
+            cardContainer = document.getElementById("approved");
+            cards = cardContainer.getElementsByClassName("approved-registration");
+            for (i = 0; i < cards.length; i++) {
+                title = cards[i].getElementsByClassName("card-title")[0];
+                if (title.innerText.toUpperCase().indexOf(filter) > -1) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+
+        function filterDeniedRegistrations() {
+            var input, filter, cards, cardContainer, title, i;
+            input = document.getElementById("deniedSearch");
+            filter = input.value.toUpperCase();
+            cardContainer = document.getElementById("denied");
+            cards = cardContainer.getElementsByClassName("denied-registration");
+            for (i = 0; i < cards.length; i++) {
+                title = cards[i].getElementsByClassName("card-title")[0];
+                if (title.innerText.toUpperCase().indexOf(filter) > -1) {
+                    cards[i].style.display = "";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }</script>
+}
