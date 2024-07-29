@@ -16,5 +16,7 @@ namespace WebApplication1.Models
 
         [Required]
         public int AgencyRegistrationId { get; set; }
+        public AgencyRegistration AgencyRegistration { get; set; }
+
     }
 }

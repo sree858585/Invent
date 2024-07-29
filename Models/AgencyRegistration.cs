@@ -26,9 +26,13 @@ namespace WebApplication1.Models
         public List<EaspSepsRegistrationCounty> CountiesServed { get; set; } = new List<EaspSepsRegistrationCounty>();
         public ICollection<ShipToSite> ShipToSites { get; set; }
         public ICollection<LnkAgencyClassificationData> LnkAgencyClassificationData { get; set; } // Updated property name
+        public ICollection<AgencyContact> AgencyContacts { get; set; } // Corrected to a collection
+        public ICollection<AdditionalUser> AdditionalUsers { get; set; } // Corrected to a collection
+        public ICollection<ShipInformation> ShipInformations { get; set; } // Corrected to a collection
+
 
         public DateTime SubmissionDate { get; set; } // New property for submission date
-
+        public string Status { get; set; } = "Pending";  // Default value for status
 
     }
 
