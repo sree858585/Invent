@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
 
+
 namespace WebApplication1.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
@@ -46,20 +47,20 @@ namespace WebApplication1.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<AgencyContact>()
-                .HasOne<AgencyRegistration>()
-                .WithMany()
+                .HasOne(a => a.AgencyRegistration)
+                .WithMany(r => r.AgencyContacts)
                 .HasForeignKey(a => a.AgencyRegistrationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<AdditionalUser>()
-                .HasOne<AgencyRegistration>()
-                .WithMany()
+                .HasOne(a => a.AgencyRegistration)
+                .WithMany(r => r.AdditionalUsers)
                 .HasForeignKey(a => a.AgencyRegistrationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ShipInformation>()
-                .HasOne<AgencyRegistration>()
-                .WithMany()
+                .HasOne(s => s.AgencyRegistration)
+                .WithMany(r => r.ShipInformations)
                 .HasForeignKey(s => s.AgencyRegistrationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
