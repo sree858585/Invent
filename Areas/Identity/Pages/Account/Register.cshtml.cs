@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -59,10 +58,6 @@ public class RegisterModel : PageModel
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
-
-        [Required]
-        [Display(Name = "Role")]
-        public string Role { get; set; } = "Client"; // Default role as Client
     }
 
     public async Task OnGetAsync(string returnUrl = null)
@@ -108,7 +103,6 @@ public class RegisterModel : PageModel
         // If we got this far, something failed, redisplay form
         return Page();
     }
-
 
     private ApplicationUser CreateUser()
     {
