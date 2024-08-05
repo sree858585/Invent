@@ -23,5 +23,8 @@ namespace WebApplication1.Models
         public int? sort_order { get; set; }
 
         public bool is_active { get; set; } = true;
+
+        public bool is_deleted { get; set; } = false; 
+
     }
 }
