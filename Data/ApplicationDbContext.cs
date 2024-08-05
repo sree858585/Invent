@@ -26,7 +26,8 @@ namespace WebApplication1.Data
         public DbSet<LkAgencyClassification> LkAgencyClassifications { get; set; }
         public DbSet<LnkAgencyClassificationData> Lnk_AgencyClassificationData { get; set; }
         public DbSet<Product> Products { get; set; }
-
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderDetail> OrderDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -120,10 +121,15 @@ namespace WebApplication1.Data
 
             modelBuilder.Entity<LnkAgencyClassificationData>()
                 .HasOne(a => a.AgencyRegistration)
-                .WithMany(ar => ar.LnkAgencyClassificationData) // Updated property name
+                .WithMany(ar => ar.LnkAgencyClassificationData) 
                 .HasForeignKey(a => a.AgencyRegistrationId);
 
-            modelBuilder.Entity<Product>().ToTable("lk_product");
+            modelBuilder.Entity<Product>().ToTable("lk_product")
+            .HasQueryFilter(p => !p.is_deleted); 
+
+            modelBuilder.Entity<Order>().ToTable("orders");
+            modelBuilder.Entity<OrderDetail>().ToTable("order_details");
+
 
             modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
             modelBuilder.Entity<IdentityRole>().ToTable("AspNetRoles");
