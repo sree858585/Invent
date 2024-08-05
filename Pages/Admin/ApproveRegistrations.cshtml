@@ -108,7 +108,11 @@
                             </form>
                             <form method="post" asp-page-handler="Deny" class="d-inline">
                                 <input type="hidden" name="registrationId" value="@registration.Id" />
-                                <button type="submit" class="btn btn-danger">Deny</button>
+                                <button type="submit" class="btn btn-danger mr-2">Deny</button>
+                            </form>
+                            <form method="post" asp-page-handler="SetPending" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-warning">Pending</button>
                             </form>
                         </div>
                     </div>
@@ -200,7 +204,11 @@
                             </form>
                             <form method="post" asp-page-handler="Deny" class="d-inline">
                                 <input type="hidden" name="registrationId" value="@registration.Id" />
-                                <button type="submit" class="btn btn-danger">Deny</button>
+                                <button type="submit" class="btn btn-danger mr-2">Deny</button>
+                            </form>
+                            <form method="post" asp-page-handler="SetPending" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-warning">Pending</button>
                             </form>
                         </div>
                     </div>
@@ -292,7 +300,11 @@
                             </form>
                             <form method="post" asp-page-handler="Deny" class="d-inline">
                                 <input type="hidden" name="registrationId" value="@registration.Id" />
-                                <button type="submit" class="btn btn-danger">Deny</button>
+                                <button type="submit" class="btn btn-danger mr-2">Deny</button>
+                            </form>
+                            <form method="post" asp-page-handler="SetPending" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-warning">Pending</button>
                             </form>
                         </div>
                     </div>
@@ -322,6 +334,11 @@
         .btn-danger {
             background-color: #dc3545;
             border-color: #dc3545;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
         }
 
         .btn {

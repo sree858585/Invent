@@ -28,15 +28,24 @@ namespace WebApplication1.Pages.Admin
 
         public int PageSize { get; set; } = 10;
         public int CurrentPage { get; set; }
+        public int TotalProducts { get; set; }
+        public int TotalPages => (int)Math.Ceiling((double)TotalProducts / PageSize);
 
         public async Task OnGetAsync(string searchTerm, int pageNumber = 1)
         {
-            var query = _context.Products.AsQueryable();
+            if (pageNumber < 1)
+            {
+                pageNumber = 1;
+            }
+
+            var query = _context.Products.Where(p => !p.is_deleted).AsQueryable();
 
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 query = query.Where(p => p.product_item_num.Contains(searchTerm) || p.product_description.Contains(searchTerm));
             }
+
+            TotalProducts = await query.CountAsync();
 
             Products = await query.Skip((pageNumber - 1) * PageSize).Take(PageSize).ToListAsync();
             CurrentPage = pageNumber;
@@ -72,7 +81,7 @@ namespace WebApplication1.Pages.Admin
 
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = SuccessMessage;
-            return RedirectToPage();
+            return RedirectToPage(new { searchTerm = Request.Query["searchTerm"], pageNumber = CurrentPage });
         }
 
         public async Task<IActionResult> OnPostDeleteProductAsync(int productId)
@@ -80,12 +89,12 @@ namespace WebApplication1.Pages.Admin
             var product = await _context.Products.FindAsync(productId);
             if (product != null)
             {
-                _context.Products.Remove(product);
+                product.is_deleted = true;
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Product deleted successfully.";
             }
 
-            return RedirectToPage();
+            return RedirectToPage(new { searchTerm = Request.Query["searchTerm"], pageNumber = CurrentPage });
         }
     }
 }

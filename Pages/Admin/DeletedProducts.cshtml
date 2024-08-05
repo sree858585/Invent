@@ -1,0 +1,80 @@
+﻿@page
+@model WebApplication1.Pages.Admin.DeletedProductsModel
+@{
+    ViewData["Title"] = "Deleted Products";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h1>Deleted Products</h1>
+
+<a href="/Admin/ManageInventory" class="btn btn-primary mb-3">Back to Manage Inventory</a>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (Model.DeletedProducts.Count == 0)
+{
+    <p>No deleted products found.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped table-hover">
+        <thead class="thead-dark">
+            <tr>
+                <th>Product Item Number</th>
+                <th>Product Description</th>
+                <th>Inventory Level</th>
+                <th>Agency Type</th>
+                <th>Pieces per Case</th>
+                <th>Sort Order</th>
+                <th>Is Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Model.DeletedProducts)
+            {
+                <tr>
+                    <td>@product.product_item_num</td>
+                    <td>@product.product_description</td>
+                    <td>@product.product_inventory_level</td>
+                    <td>@product.product_agency_type</td>
+                    <td>@product.product_pieces_per_case</td>
+                    <td>@product.sort_order</td>
+                    <td>@(product.is_active ? "Yes" : "No")</td>
+                    <td>
+                        <button type="button" class="btn btn-success btn-sm" onclick="activateProduct(@product.product_id)">Activate</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>function activateProduct(productId) {
+            if (confirm("Are you sure you want to activate this product?")) {
+                fetch(`/Admin/DeletedProducts?handler=ActivateProduct&productId=${productId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert("Failed to activate product.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert("Failed to activate product.");
+                    });
+            }
+        }</script>
+}

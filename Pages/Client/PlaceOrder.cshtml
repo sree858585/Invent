@@ -1,0 +1,472 @@
+﻿@page
+@model WebApplication1.Pages.Client.PlaceOrderModel
+@{
+    Layout = "~/Pages/Shared/_ClientLayout.cshtml";
+    ViewData["Title"] = "Place Order";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<!-- Hidden field to store product data -->
+<input type="hidden" id="classification1ProductsJson" value='@Html.Raw(Model.Classification1ProductsJson ?? "[]")' />
+<input type="hidden" id="classification2ProductsJson" value='@Html.Raw(Model.Classification2ProductsJson ?? "[]")' />
+<input type="hidden" id="shipInfoJson" value='@Html.Raw(Model.ShipInfoJson ?? "{}")' />
+
+<div>
+    <ul class="nav nav-tabs" id="productTab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="classification1-tab" data-toggle="tab" href="#classification1" role="tab" aria-controls="classification1" aria-selected="true">Syringe Exchange program</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="classification2-tab" data-toggle="tab" href="#classification2" role="tab" aria-controls="classification2" aria-selected="false">ESAP Tier 1/2</a>
+        </li>
+    </ul>
+    <div class="tab-content" id="productTabContent">
+        <div class="tab-pane fade show active" id="classification1" role="tabpanel" aria-labelledby="classification1-tab">
+            @if (Model.CanAccessClassification1)
+            {
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="searchClassification1" placeholder="Search by item number or description" />
+                </div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product Item Number</th>
+                            <th>Product Description</th>
+                            <th>Pieces per Case</th>
+                            <th>Is Active</th>
+                            <th>Quantity</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="classification1Products">
+                        <!-- Products will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" id="prev-page-item">
+                            <a class="page-link" href="#" id="prev-page" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <div id="pagination-numbers" class="d-inline-flex"></div>
+                        <li class="page-item" id="next-page-item">
+                            <a class="page-link" href="#" id="next-page" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+            else
+            {
+                <p>You are not registered for Classification 1 products.</p>
+            }
+        </div>
+        <div class="tab-pane fade" id="classification2" role="tabpanel" aria-labelledby="classification2-tab">
+            @if (Model.CanAccessClassification2)
+            {
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="searchClassification2" placeholder="Search by item number or description" />
+                </div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product Item Number</th>
+                            <th>Product Description</th>
+                            <th>Pieces per Case</th>
+                            <th>Is Active</th>
+                            <th>Quantity</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="classification2Products">
+                        <!-- Products will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" id="prev-page-item">
+                            <a class="page-link" href="#" id="prev-page" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <div id="pagination-numbers" class="d-inline-flex"></div>
+                        <li class="page-item" id="next-page-item">
+                            <a class="page-link" href="#" id="next-page" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+            else
+            {
+                <p>You are not registered for Classification 2 products.</p>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="cart-summary">
+    <h4>Cart Summary</h4>
+    <div id="cart-count">Items in cart: 0</div>
+    <button type="button" class="btn btn-success mt-3" id="checkout-button">Checkout</button>
+</div>
+
+<!-- Modal for Checkout -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkoutModalLabel">Checkout</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h4>Products in Cart</h4>
+                <table class="table table-striped" id="cartItemsTable">
+                    <thead>
+                        <tr>
+                            <th>Product Item Number</th>
+                            <th>Product Description</th>
+                            <th>Quantity</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <h4>Shipping Information</h4>
+                <form id="shippingInfoForm">
+                    <div class="form-group">
+                        <label for="shipToName">Name</label>
+                        <input type="text" class="form-control" id="shipToName" name="shipToName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToEmail">Email</label>
+                        <input type="email" class="form-control" id="shipToEmail" name="shipToEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToAddress">Address</label>
+                        <input type="text" class="form-control" id="shipToAddress" name="shipToAddress" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToAddress2">Address 2</label>
+                        <input type="text" class="form-control" id="shipToAddress2" name="shipToAddress2">
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToCity">City</label>
+                        <input type="text" class="form-control" id="shipToCity" name="shipToCity" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToState">State</label>
+                        <input type="text" class="form-control" id="shipToState" name="shipToState" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToZip">Zip</label>
+                        <input type="text" class="form-control" id="shipToZip" name="shipToZip" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-button" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="place-order-button">Place Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    $(document).ready(function () {
+        var cart = [];
+        var classification1Products = [];
+        var classification2Products = [];
+        var shipInfo = {};
+
+        var currentPage = 1;
+        var productsPerPage = 10;
+
+        try {
+            classification1Products = JSON.parse($('#classification1ProductsJson').val());
+        } catch (e) {
+            console.error("Error parsing classification1ProductsJson:", e);
+        }
+
+        try {
+            classification2Products = JSON.parse($('#classification2ProductsJson').val());
+        } catch (e) {
+            console.error("Error parsing classification2ProductsJson:", e);
+        }
+
+        try {
+            shipInfo = JSON.parse($('#shipInfoJson').val());
+        } catch (e) {
+            console.error("Error parsing shipInfoJson:", e);
+        }
+
+        console.log("classification1Products:", classification1Products);
+        console.log("classification2Products:", classification2Products);
+
+        // Populate product tables
+        populateProductTable('#classification1Products', classification1Products);
+        populateProductTable('#classification2Products', classification2Products);
+
+        $('#productTab a').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+            currentPage = 1;
+            updatePagination();
+        });
+
+        $(document).on('click', '.add-to-cart', function () {
+            var productId = $(this).data('product-id');
+            var quantity = $(this).closest('tr').find('.quantity-input').val();
+            addToCart(productId, quantity);
+        });
+
+        $('#checkout-button').on('click', function () {
+            showCheckoutModal();
+        });
+
+        $('#cancel-button, .close').on('click', function () {
+            $('#checkoutModal').modal('hide');
+        });
+
+        $('#prev-page').on('click', function (e) {
+            e.preventDefault();
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
+            }
+        });
+
+        $('#next-page').on('click', function (e) {
+            e.preventDefault();
+            var activeTab = $('#productTab .active').attr('id');
+            var totalProducts = activeTab === 'classification1-tab' ? classification1Products.length : classification2Products.length;
+            var totalPages = Math.ceil(totalProducts / productsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePagination();
+            }
+        });
+
+        $(document).on('click', '.page-number', function (e) {
+            e.preventDefault();
+            var pageNumber = parseInt($(this).text());
+            currentPage = pageNumber;
+            updatePagination();
+        });
+
+        $('#place-order-button').on('click', function () {
+            placeOrder();
+        });
+
+        $('#searchClassification1').on('input', function () {
+            var query = $(this).val().toLowerCase();
+            var filteredProducts = classification1Products.filter(p =>
+                p.product_item_num.toLowerCase().includes(query) ||
+                p.product_description.toLowerCase().includes(query)
+            );
+            currentPage = 1; // Reset to the first page when searching
+            populateProductTable('#classification1Products', filteredProducts);
+        });
+
+        $('#searchClassification2').on('input', function () {
+            var query = $(this).val().toLowerCase();
+            var filteredProducts = classification2Products.filter(p =>
+                p.product_item_num.toLowerCase().includes(query) ||
+                p.product_description.toLowerCase().includes(query)
+            );
+            currentPage = 1; // Reset to the first page when searching
+            populateProductTable('#classification2Products', filteredProducts);
+        });
+
+        $(document).on('input', '.cart-quantity-input', function () {
+            var productId = $(this).data('product-id');
+            var newQuantity = parseInt($(this).val());
+            updateCartQuantity(productId, newQuantity);
+        });
+
+        $(document).on('click', '.remove-from-cart', function () {
+            var productId = $(this).data('product-id');
+            removeFromCart(productId);
+            showCheckoutModal(); // Update the modal view
+        });
+
+        function addToCart(productId, quantity) {
+            var existingItem = cart.find(item => item.productId === productId);
+            if (existingItem) {
+                existingItem.quantity += parseInt(quantity);
+            } else {
+                cart.push({ productId: productId, quantity: parseInt(quantity) });
+            }
+            updateCartCount();
+        }
+
+        function updateCartQuantity(productId, newQuantity) {
+            var existingItem = cart.find(item => item.productId === productId);
+            if (existingItem) {
+                existingItem.quantity = newQuantity;
+            }
+            updateCartCount();
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.productId !== productId);
+            updateCartCount();
+        }
+
+        function showCheckoutModal() {
+            var $cartItemsTableBody = $('#cartItemsTable tbody');
+            $cartItemsTableBody.empty();
+
+            cart.forEach(item => {
+                var product = getProductById(item.productId);
+                if (product) {
+                    var row = `<tr>
+                        <td>${product.product_item_num}</td>
+                        <td>${product.product_description}</td>
+                        <td>
+                            <input type="number" class="form-control cart-quantity-input" data-product-id="${item.productId}" value="${item.quantity}" min="1" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger remove-from-cart" data-product-id="${item.productId}">&times;</button>
+                        </td>
+                    </tr>`;
+                    $cartItemsTableBody.append(row);
+                }
+            });
+
+            populateShippingInfo(shipInfo);
+            $('#checkoutModal').modal('show');
+        }
+
+        function populateProductTable(selector, products) {
+            var $tbody = $(selector);
+            $tbody.empty();
+
+            var startIndex = (currentPage - 1) * productsPerPage;
+            var endIndex = startIndex + productsPerPage;
+            var paginatedProducts = products.slice(startIndex, endIndex);
+
+            paginatedProducts.forEach(product => {
+                var row = `<tr>
+                    <td>${product.product_item_num}</td>
+                    <td>${product.product_description}</td>
+                    <td>${product.product_pieces_per_case || 'N/A'}</td>
+                    <td>${product.is_active ? "Yes" : "No"}</td>
+                    <td>
+                        <input type="number" class="form-control quantity-input" data-product-id="${product.product_id}" value="1" min="1" />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-primary add-to-cart" data-product-id="${product.product_id}">Add to Cart</button>
+                    </td>
+                </tr>`;
+                $tbody.append(row);
+            });
+
+            updatePaginationControls(products.length);
+        }
+
+        function getProductById(productId) {
+            return classification1Products.find(p => p.product_id === productId) || classification2Products.find(p => p.product_id === productId);
+        }
+
+        function populateShippingInfo(shipInfo) {
+            if (shipInfo) {
+                $('#shipToName').val(shipInfo.ShipToName);
+                $('#shipToEmail').val(shipInfo.ShipToEmail);
+                $('#shipToAddress').val(shipInfo.ShipToAddress);
+                $('#shipToAddress2').val(shipInfo.ShipToAddress2);
+                $('#shipToCity').val(shipInfo.ShipToCity);
+                $('#shipToState').val(shipInfo.ShipToState);
+                $('#shipToZip').val(shipInfo.ShipToZip);
+            }
+        }
+
+        function placeOrder() {
+            var shippingInfo = {
+                ShipToName: $('#shipToName').val(),
+                ShipToEmail: $('#shipToEmail').val(),
+                ShipToAddress: $('#shipToAddress').val(),
+                ShipToAddress2: $('#shipToAddress2').val(),
+                ShipToCity: $('#shipToCity').val(),
+                ShipToState: $('#shipToState').val(),
+                ShipToZip: $('#shipToZip').val()
+            };
+
+            var url = '@Url.Page("/Client/PlaceOrder", new { handler = "Checkout" })';
+            console.log("URL: " + url);
+            console.log("Cart: ", cart);
+            console.log("ShippingInfo: ", shippingInfo);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ Cart: cart, ShippingInfo: shippingInfo }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.log("Response Status: " + response.status);
+                    console.log("Response Status Text: " + response.statusText);
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Response Data: ", data);
+                if (data.success) {
+                    alert('Order placed successfully!');
+                    $('#checkoutModal').modal('hide');
+                    cart = [];
+                    updateCartCount();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+                alert('An error occurred while placing the order.');
+            });
+        }
+
+        function updateCartCount() {
+            var totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            $('#cart-count').text('Items in cart: ' + totalItems);
+        }
+
+        function updatePagination() {
+            var activeTab = $('#productTab .active').attr('id');
+            if (activeTab === 'classification1-tab') {
+                populateProductTable('#classification1Products', classification1Products);
+            } else if (activeTab === 'classification2-tab') {
+                populateProductTable('#classification2Products', classification2Products);
+            }
+        }
+
+        function updatePaginationControls(totalProducts) {
+            var totalPages = Math.ceil(totalProducts / productsPerPage);
+            $('#prev-page').parent().toggleClass('disabled', currentPage <= 1);
+            $('#next-page').parent().toggleClass('disabled', currentPage >= totalPages);
+
+            var paginationNumbers = '';
+            for (var i = 1; i <= totalPages; i++) {
+                paginationNumbers += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                                        <a href="#" class="page-link page-number">${i}</a>
+                                     </li>`;
+            }
+            $('#pagination-numbers').html(paginationNumbers);
+        }
+
+        updatePagination();
+    });
+    </script>
+
+}

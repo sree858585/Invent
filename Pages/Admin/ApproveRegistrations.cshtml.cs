@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -64,13 +65,7 @@ namespace WebApplication1.Pages.Admin
             PendingRegistrations = registrations.Where(r => r.Status == "Pending").ToList();
             ApprovedRegistrations = registrations.Where(r => r.Status == "Approved").ToList();
             DeniedRegistrations = registrations.Where(r => r.Status == "Denied").ToList();
-
-            // Debug output
-            Console.WriteLine($"Pending Registrations Count: {PendingRegistrations.Count}");
-            Console.WriteLine($"Approved Registrations Count: {ApprovedRegistrations.Count}");
-            Console.WriteLine($"Denied Registrations Count: {DeniedRegistrations.Count}");
         }
-
 
         public async Task<IActionResult> OnPostApproveAsync(int registrationId)
         {
@@ -98,6 +93,20 @@ namespace WebApplication1.Pages.Admin
             await _context.SaveChangesAsync();
 
             return RedirectToPage(new { successMessage = "Registration denied successfully!" });
+        }
+
+        public async Task<IActionResult> OnPostSetPendingAsync(int registrationId)
+        {
+            var registration = await _context.AgencyRegistrations.FindAsync(registrationId);
+            if (registration == null)
+            {
+                return NotFound();
+            }
+
+            registration.Status = "Pending";
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage(new { successMessage = "Registration status set to pending successfully!" });
         }
     }
 
