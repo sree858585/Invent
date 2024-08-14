@@ -120,8 +120,8 @@ static async Task CreateRolesAndAdminUser(IServiceProvider serviceProvider)
         }
     }
 
+    // Admin User creation
     var adminConfig = configuration.GetSection("AdminUser");
-
     var adminUser = new ApplicationUser
     {
         UserName = adminConfig["UserName"],
@@ -129,11 +129,10 @@ static async Task CreateRolesAndAdminUser(IServiceProvider serviceProvider)
         Role = adminConfig["Role"]
     };
 
-    string adminPassword = adminConfig["Password"];
-    var _user = await userManager.FindByEmailAsync(adminConfig["Email"]);
-    if (_user == null)
+    var _adminUser = await userManager.FindByEmailAsync(adminConfig["Email"]);
+    if (_adminUser == null)
     {
-        var createAdminUser = await userManager.CreateAsync(adminUser, adminPassword);
+        var createAdminUser = await userManager.CreateAsync(adminUser, adminConfig["Password"]);
         if (createAdminUser.Succeeded)
         {
             await userManager.AddToRoleAsync(adminUser, adminConfig["Role"]);
@@ -141,6 +140,29 @@ static async Task CreateRolesAndAdminUser(IServiceProvider serviceProvider)
         else
         {
             throw new Exception($"Error creating admin user: {createAdminUser.Errors.FirstOrDefault()?.Description}");
+        }
+    }
+
+    // Distributor User creation
+    var distributorConfig = configuration.GetSection("DistributorUser");
+    var distributorUser = new ApplicationUser
+    {
+        UserName = distributorConfig["UserName"],
+        Email = distributorConfig["Email"],
+        Role = distributorConfig["Role"]
+    };
+
+    var _distributorUser = await userManager.FindByEmailAsync(distributorConfig["Email"]);
+    if (_distributorUser == null)
+    {
+        var createDistributorUser = await userManager.CreateAsync(distributorUser, distributorConfig["Password"]);
+        if (createDistributorUser.Succeeded)
+        {
+            await userManager.AddToRoleAsync(distributorUser, distributorConfig["Role"]);
+        }
+        else
+        {
+            throw new Exception($"Error creating distributor user: {createDistributorUser.Errors.FirstOrDefault()?.Description}");
         }
     }
 }
