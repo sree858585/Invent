@@ -82,4 +82,12 @@ form .btn-primary {
 .form-control {
     width: 100%;
 }
+.mb-3 {
+    margin-bottom: 1rem;
+}
 
+.select2-container .select2-selection--multiple {
+    min-height: 38px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
