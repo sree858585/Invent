@@ -7,6 +7,192 @@
 
 <h2>@ViewData["Title"]</h2>
 
-<div>
-    <p>Welcome to the client dashboard. Please select an option from the header bar.</p>
+<!-- Latest Order Card -->
+<div class="card shadow-lg mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Latest Order</h5>
+        @if (Model.LatestOrder != null)
+        {
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Order ID:</strong> @Model.LatestOrder.OrderId
+                </div>
+                <div class="col-md-3">
+                    <strong>Order Date:</strong> @Model.LatestOrder.OrderDate.ToString("MM/dd/yyyy")
+                </div>
+                <div class="col-md-3">
+                    <strong>Ship To:</strong> @Model.LatestOrder.ShipToName
+                </div>
+                <div class="col-md-3">
+                    <strong>Status:</strong>
+                    <span class="badge @GetStatusBadgeClass(Model.LatestOrder.OrderStatus)" style="color: #333;">
+                        @GetOrderStatusWithDate(Model.LatestOrder)
+                    </span>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="progress position-relative">
+                        <div class="progress-bar @GetProgressBarClass(Model.LatestOrder)" role="progressbar" style="width: @GetProgressPercentage(Model.LatestOrder)%" aria-valuenow="@GetProgressPercentage(Model.LatestOrder)" aria-valuemin="0" aria-valuemax="100">
+                            @if (Model.LatestOrder.OrderStatus == "ordered")
+                            {
+                                <span style="position: absolute; left: calc(@GetProgressPercentage(Model.LatestOrder)% - 10px); top: 50%; transform: translateY(-50%); color: #fff; font-size: 1.5em;">
+                                    ⏰
+                                </span>
+                            }
+                            else if (Model.LatestOrder.OrderStatus == "approved")
+                            {
+                                <span style="position: absolute; left: calc(@GetProgressPercentage(Model.LatestOrder)% - 20px); top: 50%; transform: translateY(-50%); color: #fff; font-size: 1.5em;">
+                                    📦
+                                </span>
+                            }
+                            else if (Model.LatestOrder.OrderStatus == "shipped")
+                            {
+                                <span style="position: absolute; left: calc(@GetProgressPercentage(Model.LatestOrder)% - 10px); top: 50%; transform: translateY(-50%); color: #fff; font-size: 1.5em;">
+                                    🚚
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        }
+        else
+        {
+            <p>No orders found.</p>
+        }
+    </div>
 </div>
+
+<!-- Latest Registration Card -->
+<div class="card shadow-lg mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Latest Registration</h5>
+        @if (Model.LatestRegistration != null)
+        {
+            <div class="row">
+                <div class="col-md-4">
+                    <strong>Agency Name:</strong> @Model.LatestRegistration.AgencyName
+                </div>
+                <div class="col-md-4">
+                    <strong>Registration Date:</strong> @Model.LatestRegistration.RegistrationDate.ToString("MM/dd/yyyy")
+                </div>
+                <div class="col-md-4">
+                    <strong>Status:</strong>
+                    <span class="badge @GetRegistrationStatusBadgeClass(Model.LatestRegistration.Status)" style="color: #333;">
+                        @GetRegistrationStatusWithIcon(Model.LatestRegistration.Status)
+                    </span>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <strong>Registration Type:</strong> @Model.LatestRegistration.RegistrationType
+                </div>
+                <div class="col-md-6">
+                    <strong>Unique ID(s):</strong>
+                    @if (Model.LatestRegistration.UniqueIds != null && Model.LatestRegistration.UniqueIds.Any())
+                    {
+                        @foreach (var uniqueId in Model.LatestRegistration.UniqueIds)
+                        {
+                            <span>@uniqueId</span>
+                            @if (uniqueId != Model.LatestRegistration.UniqueIds.Last())
+                            {
+                                <span>, </span> <!-- Add a comma between IDs -->
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <span>No Unique IDs available.</span>
+                    }
+                </div>
+            </div>
+
+
+            @if (Model.LatestRegistration.Status == "Approved")
+            {
+                <div class="row mt-4">
+                    <div class="col-md-12 text-center">
+                        <a href="/Client/PlaceOrder" class="btn btn-success">
+                            Place Order
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p>No registration found.</p>
+        }
+    </div>
+</div>
+
+@functions {
+    public string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "ordered" => "badge-info",
+            "approved" => "badge-warning",
+            "shipped" => "badge-success",
+            _ => "badge-secondary"
+        };
+    }
+
+    public string GetOrderStatusWithDate(WebApplication1.Pages.Client.HomeModel.OrderViewModel order)
+    {
+        return order.OrderStatus switch
+        {
+            "ordered" => $"Ordered on {order.OrderDate:MM/dd/yyyy}",
+            "approved" => $"Approved on {order.ApprovedDate:MM/dd/yyyy}",
+            "shipped" => $"Shipped on {order.ShippedDate:MM/dd/yyyy}",
+            _ => $"Status: {order.OrderStatus}"
+        };
+    }
+
+    public string GetProgressBarClass(WebApplication1.Pages.Client.HomeModel.OrderViewModel order)
+    {
+        return order.OrderStatus switch
+        {
+            "ordered" => "bg-info",
+            "approved" => "bg-warning",
+            "shipped" => "bg-success",
+            _ => "bg-secondary",
+        };
+    }
+
+    public int GetProgressPercentage(WebApplication1.Pages.Client.HomeModel.OrderViewModel order)
+    {
+        return order.OrderStatus switch
+        {
+            "ordered" => 33,
+            "approved" => 66,
+            "shipped" => 100,
+            _ => 0,
+        };
+    }
+
+    public string GetRegistrationStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Approved" => "badge-success",
+            "Pending" => "badge-warning",
+            "Denied" => "badge-danger",
+            _ => "badge-secondary"
+        };
+    }
+
+    public string GetRegistrationStatusWithIcon(string status)
+    {
+        return status switch
+        {
+            "Approved" => "✔ Approved",
+            "Pending" => "⏳ Pending",
+            "Denied" => "❌ Denied",
+            _ => $"Status: {status}"
+        };
+    }
+}

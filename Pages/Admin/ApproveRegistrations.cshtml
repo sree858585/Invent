@@ -61,7 +61,7 @@
                             <h6>Shipping Information:</h6>
                             @if (registration.ShipInformation != null)
                             {
-                                <p>@registration.ShipInformation.ShipToName, @registration.ShipInformation.ShipToAddress, @registration.ShipInformation.ShipToCity, @registration.ShipInformation.ShipToState, @registration.ShipInformation.ShipToZip</p>
+                                <p>@registration.ShipInformation.ShipToName, @registration.ShipInformation.ShipToAddress, @registration.ShipInformation.ShipToCity, @registration.ShipInformation.ShipToState, @registration.Zip</p>
                             }
                             else
                             {
@@ -102,17 +102,23 @@
 
                     <div class="row mt-3">
                         <div class="col-md-12 text-center">
+                            <div class="classification-section mb-3">
+                                <label for="classifications-@registration.Id"><strong>Agency Classifications:</strong></label>
+                                <select id="classifications-@registration.Id" class="form-control classifications-dropdown" multiple="multiple" name="SelectedClassifications">
+                                    @foreach (var classification in Model.AllClassifications)
+                                    {
+                                        <option value="@classification.agency_classification_id">@classification.classifcation_description</option>
+                                    }
+                                </select>
+                            </div>
                             <form method="post" asp-page-handler="Approve" class="d-inline">
                                 <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <input type="hidden" name="SelectedClassifications" value="" class="selected-classifications" />
                                 <button type="submit" class="btn btn-success mr-2">Approve</button>
                             </form>
                             <form method="post" asp-page-handler="Deny" class="d-inline">
                                 <input type="hidden" name="registrationId" value="@registration.Id" />
                                 <button type="submit" class="btn btn-danger mr-2">Deny</button>
-                            </form>
-                            <form method="post" asp-page-handler="SetPending" class="d-inline">
-                                <input type="hidden" name="registrationId" value="@registration.Id" />
-                                <button type="submit" class="btn btn-warning">Pending</button>
                             </form>
                         </div>
                     </div>
@@ -198,10 +204,6 @@
 
                     <div class="row mt-3">
                         <div class="col-md-12 text-center">
-                            <form method="post" asp-page-handler="Approve" class="d-inline">
-                                <input type="hidden" name="registrationId" value="@registration.Id" />
-                                <button type="submit" class="btn btn-success mr-2">Approve</button>
-                            </form>
                             <form method="post" asp-page-handler="Deny" class="d-inline">
                                 <input type="hidden" name="registrationId" value="@registration.Id" />
                                 <button type="submit" class="btn btn-danger mr-2">Deny</button>
@@ -294,13 +296,19 @@
 
                     <div class="row mt-3">
                         <div class="col-md-12 text-center">
+                            <div class="classification-section mb-3">
+                                <label for="classifications-@registration.Id"><strong>Agency Classifications:</strong></label>
+                                <select id="classifications-@registration.Id" class="form-control classifications-dropdown" multiple="multiple" name="SelectedClassifications">
+                                    @foreach (var classification in Model.AllClassifications)
+                                    {
+                                        <option value="@classification.agency_classification_id">@classification.classifcation_description</option>
+                                    }
+                                </select>
+                            </div>
                             <form method="post" asp-page-handler="Approve" class="d-inline">
                                 <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <input type="hidden" name="SelectedClassifications" value="" class="selected-classifications" />
                                 <button type="submit" class="btn btn-success mr-2">Approve</button>
-                            </form>
-                            <form method="post" asp-page-handler="Deny" class="d-inline">
-                                <input type="hidden" name="registrationId" value="@registration.Id" />
-                                <button type="submit" class="btn btn-danger mr-2">Deny</button>
                             </form>
                             <form method="post" asp-page-handler="SetPending" class="d-inline">
                                 <input type="hidden" name="registrationId" value="@registration.Id" />
@@ -315,6 +323,7 @@
 </div>
 
 @section Styles {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         .card {
             border-radius: 10px;
@@ -350,11 +359,42 @@
         .mr-2 {
             margin-right: 0.5rem;
         }
+
+        .classification-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .classifications-dropdown {
+            width: calc(100% - 150px);
+            margin-left: 10px;
+        }
     </style>
 }
 
 @section Scripts {
-    <script>function filterPendingRegistrations() {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <script>$(document).ready(function () {
+            $('.classifications-dropdown').select2();
+
+            $('form').submit(function () {
+                var selectedClassifications = $(this).closest('.card').find('.classifications-dropdown').val();
+                $(this).find('.selected-classifications').val(selectedClassifications.join(','));
+            });
+
+            $('form').on('submit', function (e) {
+                var selectedClassifications = $(this).closest('.card').find('.classifications-dropdown').val();
+                if ($(this).find('.btn-success').length > 0 && !selectedClassifications.length) {
+                    alert('Please select at least one classification before approving.');
+                    e.preventDefault();
+                }
+            });
+        });
+
+        function filterPendingRegistrations() {
             var input, filter, cards, cardContainer, title, i;
             input = document.getElementById("pendingSearch");
             filter = input.value.toUpperCase();

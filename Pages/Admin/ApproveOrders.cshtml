@@ -1,0 +1,408 @@
+﻿@page
+@model WebApplication1.Pages.Admin.ApproveOrdersModel
+@{
+    ViewData["Title"] = "Approve Orders";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<ul class="nav nav-tabs" id="orderTabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="pending-tab" data-bs-toggle="tab" href="#pending" role="tab" aria-controls="pending" aria-selected="true">Pending Orders</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="approved-tab" data-bs-toggle="tab" href="#approved" role="tab" aria-controls="approved" aria-selected="false">Approved Orders</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="cancelled-tab" data-bs-toggle="tab" href="#cancelled" role="tab" aria-controls="cancelled" aria-selected="false">Cancelled Orders</a>
+    </li>
+</ul>
+
+<div class="tab-content" id="orderTabsContent">
+    <!-- Pending Orders Section -->
+    <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+        <div class="mb-3">
+            <input type="text" class="form-control" id="pendingSearch" placeholder="Search Pending Orders" onkeyup="filterPendingOrders()">
+        </div>
+        @if (Model.PendingOrders.Any())
+        {
+            <table class="table table-striped" id="pendingOrdersTable">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Agency Name</th>
+                        <th>Order Date</th>
+                        <th>Ship To</th>
+                        <th>Products</th>
+                        <th>Order Status</th>
+                        <!-- <th>Unique IDs</th> -->
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.PendingOrders)
+                    {
+                        <tr>
+                            <td>@order.OrderId</td>
+                            <td>@order.AgencyName</td>
+                            <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <p>@order.ShipToName</p>
+                                <p>@order.ShipToAddress</p>
+                                <p>@order.ShipToCity, @order.ShipToState @order.ShipToZip</p>
+                            </td>
+                            <td>
+                                <ul>
+                                    @foreach (var product in order.Products)
+                                    {
+                                        <li>@product.ProductName (Quantity: @product.Quantity)</li>
+                                    }
+                                </ul>
+                            </td>
+                            <td>
+                                <span>Ordered on @order.OrderDate.ToString("MM/dd/yyyy")</span>
+                            </td>
+                            <!--
+                            <td>
+                                <ul>
+                                    @foreach (var uniqueId in order.UniqueIds)
+                                    {
+                                        <li>@uniqueId</li>
+                                    }
+                                </ul>
+                            </td>
+                            -->
+                            <td>
+                                <button class="btn btn-success" onclick="approveOrder(@order.OrderId)">Approve</button>
+                                <button class="btn btn-danger" onclick="rejectOrder(@order.OrderId)">Cancel</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <nav aria-label="Pending Orders Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.PendingOrdersPageNumber <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="?pendingPage=@(Model.PendingOrdersPageNumber - 1)&approvedPage=@Model.ApprovedOrdersPageNumber&cancelledPage=@Model.CancelledOrdersPageNumber" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.PendingOrdersTotalPages; i++)
+                    {
+                        <li class="page-item @(Model.PendingOrdersPageNumber == i ? "active" : "")">
+                            <a class="page-link" href="?pendingPage=@i&approvedPage=@Model.ApprovedOrdersPageNumber&cancelledPage=@Model.CancelledOrdersPageNumber">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.PendingOrdersPageNumber >= Model.PendingOrdersTotalPages ? "disabled" : "")">
+                        <a class="page-link" href="?pendingPage=@(Model.PendingOrdersPageNumber + 1)&approvedPage=@Model.ApprovedOrdersPageNumber&cancelledPage=@Model.CancelledOrdersPageNumber" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+        else
+        {
+            <p>No pending orders.</p>
+        }
+    </div>
+
+    <!-- Approved Orders Section -->
+    <div class="tab-pane fade" id="approved" role="tabpanel" aria-labelledby="approved-tab">
+        <div class="mb-3">
+            <input type="text" class="form-control" id="approvedSearch" placeholder="Search Approved Orders" onkeyup="filterApprovedOrders()">
+        </div>
+        @if (Model.ApprovedOrders.Any())
+        {
+            <table class="table table-striped" id="approvedOrdersTable">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Agency Name</th>
+                        <th>Order Date</th>
+                        <th>Ship To</th>
+                        <th>Products</th>
+                        <th>Order Status</th>
+                        <!-- <th>Unique IDs</th> -->
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.ApprovedOrders)
+                    {
+                        <tr>
+                            <td>@order.OrderId</td>
+                            <td>@order.AgencyName</td>
+                            <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <p>@order.ShipToName</p>
+                                <p>@order.ShipToAddress</p>
+                                <p>@order.ShipToCity, @order.ShipToState @order.ShipToZip</p>
+                            </td>
+                            <td>
+                                <ul>
+                                    @foreach (var product in order.Products)
+                                    {
+                                        <li>@product.ProductName (Quantity: @product.Quantity)</li>
+                                    }
+                                </ul>
+                            </td>
+                            <td>
+                                <span>Approved on @order.ApprovedDate?.ToString("MM/dd/yyyy")</span>
+                            </td>
+                            <!--
+                            <td>
+                                <ul>
+                                    @foreach (var uniqueId in order.UniqueIds)
+                                    {
+                                        <li>@uniqueId</li>
+                                    }
+                                </ul>
+                            </td>
+                            -->
+                            <td>
+                                <button class="btn btn-danger" onclick="rejectOrder(@order.OrderId)">Cancel</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <nav aria-label="Approved Orders Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.ApprovedOrdersPageNumber <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="?pendingPage=@Model.PendingOrdersPageNumber&approvedPage=@(Model.ApprovedOrdersPageNumber - 1)&cancelledPage=@Model.CancelledOrdersPageNumber" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.ApprovedOrdersTotalPages; i++)
+                    {
+                        <li class="page-item @(Model.ApprovedOrdersPageNumber == i ? "active" : "")">
+                            <a class="page-link" href="?pendingPage=@Model.PendingOrdersPageNumber&approvedPage=@i&cancelledPage=@Model.CancelledOrdersPageNumber">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.ApprovedOrdersPageNumber >= Model.ApprovedOrdersTotalPages ? "disabled" : "")">
+                        <a class="page-link" href="?pendingPage=@Model.PendingOrdersPageNumber&approvedPage=@(Model.ApprovedOrdersPageNumber + 1)&cancelledPage=@Model.CancelledOrdersPageNumber" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+        else
+        {
+            <p>No approved orders.</p>
+        }
+    </div>
+
+    <!-- Cancelled Orders Section -->
+    <div class="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
+        <div class="mb-3">
+            <input type="text" class="form-control" id="cancelledSearch" placeholder="Search Cancelled Orders" onkeyup="filterCancelledOrders()">
+        </div>
+        @if (Model.CancelledOrders.Any())
+        {
+            <table class="table table-striped" id="cancelledOrdersTable">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Agency Name</th>
+                        <th>Order Date</th>
+                        <th>Ship To</th>
+                        <th>Products</th>
+                        <th>Order Status</th>
+                        <!-- <th>Unique IDs</th> -->
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.CancelledOrders)
+                    {
+                        <tr>
+                            <td>@order.OrderId</td>
+                            <td>@order.AgencyName</td>
+                            <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <p>@order.ShipToName</p>
+                                <p>@order.ShipToAddress</p>
+                                <p>@order.ShipToCity, @order.ShipToState @order.ShipToZip</p>
+                            </td>
+                            <td>
+                                <ul>
+                                    @foreach (var product in order.Products)
+                                    {
+                                        <li>@product.ProductName (Quantity: @product.Quantity)</li>
+                                    }
+                                </ul>
+                            </td>
+                            <td>
+                                <span>Canceled on @order.CanceledDate?.ToString("MM/dd/yyyy")</span>
+                            </td>
+                            <!--
+                            <td>
+                                <ul>
+                                    @foreach (var uniqueId in order.UniqueIds)
+                                    {
+                                        <li>@uniqueId</li>
+                                    }
+                                </ul>
+                            </td>
+                            -->
+                            <td>
+                                <button class="btn btn-success" onclick="approveOrder(@order.OrderId)">Approve</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <nav aria-label="Cancelled Orders Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(Model.CancelledOrdersPageNumber <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="?pendingPage=@Model.PendingOrdersPageNumber&approvedPage=@Model.ApprovedOrdersPageNumber&cancelledPage=@(Model.CancelledOrdersPageNumber - 1)" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= Model.CancelledOrdersTotalPages; i++)
+                    {
+                        <li class="page-item @(Model.CancelledOrdersPageNumber == i ? "active" : "")">
+                            <a class="page-link" href="?pendingPage=@Model.PendingOrdersPageNumber&approvedPage=@Model.ApprovedOrdersPageNumber&cancelledPage=@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.CancelledOrdersPageNumber >= Model.CancelledOrdersTotalPages ? "disabled" : "")">
+                        <a class="page-link" href="?pendingPage=@Model.PendingOrdersPageNumber&approvedPage=@Model.ApprovedOrdersPageNumber&cancelledPage=@(Model.CancelledOrdersPageNumber + 1)" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
+        else
+        {
+            <p>No cancelled orders.</p>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>function approveOrder(orderId) {
+            if (confirm('Are you sure you want to approve this order?')) {
+                fetch(`/Admin/ApproveOrders?handler=ApproveOrder`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify({ OrderId: orderId })
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to approve order.');
+                    }
+                });
+            }
+        }
+
+        function rejectOrder(orderId) {
+            if (confirm('Are you sure you want to cancel this order?')) {
+                fetch(`/Admin/ApproveOrders?handler=CancelOrder`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify({ OrderId: orderId })
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed to cancel order.');
+                    }
+                });
+            }
+        }
+
+        function filterPendingOrders() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("pendingSearch");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("pendingOrdersTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0]; // Search by Order ID
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        td = tr[i].getElementsByTagName("td")[1]; // Search by Agency Name
+                        if (td) {
+                            txtValue = td.textContent || td.innerText;
+                            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                                tr[i].style.display = "";
+                            } else {
+                                tr[i].style.display = "none";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function filterApprovedOrders() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("approvedSearch");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("approvedOrdersTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0]; // Search by Order ID
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        td = tr[i].getElementsByTagName("td")[1]; // Search by Agency Name
+                        if (td) {
+                            txtValue = td.textContent || td.innerText;
+                            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                                tr[i].style.display = "";
+                            } else {
+                                tr[i].style.display = "none";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function filterCancelledOrders() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("cancelledSearch");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("cancelledOrdersTable");
+            tr = table.getElementsByTagName("tr");
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0]; // Search by Order ID
+                if (td) {
+                    txtValue = td.textContent || td.innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        td = tr[i].getElementsByTagName("td")[1]; // Search by Agency Name
+                        if (td) {
+                            txtValue = td.textContent || td.innerText;
+                            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                                tr[i].style.display = "";
+                            } else {
+                                tr[i].style.display = "none";
+                            }
+                        }
+                    }
+                }
+            }
+        }</script>
+}

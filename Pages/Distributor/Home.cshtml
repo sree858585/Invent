@@ -1,0 +1,17 @@
+﻿@page
+@model WebApplication1.Pages.Distributor.HomeModel
+@{
+    Layout = "~/Pages/Shared/_DistributorLayout.cshtml";
+    ViewData["Title"] = "Distributor Home";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="card shadow-lg mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Welcome, Distributor!</h5>
+        <p>Use this dashboard to manage orders and shipments.</p>
+        <a href="/Distributor/ManageOrders" class="btn btn-primary">Manage Orders</a>
+        <a href="/Distributor/ManageShipments" class="btn btn-secondary">Manage Shipments</a>
+    </div>
+</div>

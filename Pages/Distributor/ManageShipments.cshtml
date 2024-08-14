@@ -1,0 +1,36 @@
+﻿@page
+@model WebApplication1.Pages.Distributor.ManageShipmentsModel
+@{
+    Layout = "~/Pages/Shared/_DistributorLayout.cshtml";
+    ViewData["Title"] = "Manage Shipments";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Shipment ID</th>
+                <th>Order ID</th>
+                <th>Ship To</th>
+                <th>Shipped Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var shipment in Model.Shipments)
+            {
+                <tr>
+                    <td>@shipment.ShipmentId</td>
+                    <td>@shipment.OrderId</td>
+                    <td>@shipment.ShipToName</td>
+                    <td>@shipment.ShippedDate.ToString("MM/dd/yyyy")</td>
+                    <td>
+                        <a href="/Distributor/ViewShipmentDetails?id=@shipment.ShipmentId" class="btn btn-info btn-sm">View Details</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

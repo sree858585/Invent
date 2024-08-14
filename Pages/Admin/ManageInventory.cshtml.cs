@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+// using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -19,7 +21,9 @@ namespace WebApplication1.Pages.Admin
         }
 
         [BindProperty]
-        public List<Product> Products { get; set; }
+        public List<Product>
+    Products
+        { get; set; }
 
         [BindProperty]
         public Product Product { get; set; }
@@ -31,12 +35,18 @@ namespace WebApplication1.Pages.Admin
         public int TotalProducts { get; set; }
         public int TotalPages => (int)Math.Ceiling((double)TotalProducts / PageSize);
 
-        public async Task OnGetAsync(string searchTerm, int pageNumber = 1)
+        public string SortField { get; set; }
+        public string SortOrder { get; set; }
+
+        public async Task OnGetAsync(string searchTerm, int pageNumber = 1, string sortField = "product_item_num", string sortOrder = "asc")
         {
             if (pageNumber < 1)
             {
                 pageNumber = 1;
             }
+
+            SortField = sortField;
+            SortOrder = sortOrder;
 
             var query = _context.Products.Where(p => !p.is_deleted).AsQueryable();
 
@@ -45,13 +55,25 @@ namespace WebApplication1.Pages.Admin
                 query = query.Where(p => p.product_item_num.Contains(searchTerm) || p.product_description.Contains(searchTerm));
             }
 
+            // Apply sorting
+            switch (sortField)
+            {
+                case "product_agency_type":
+                    query = sortOrder == "asc" ? query.OrderBy(p => p.product_agency_type) : query.OrderByDescending(p => p.product_agency_type);
+                    break;
+                default:
+                    query = sortOrder == "asc" ? query.OrderBy(p => p.product_item_num) : query.OrderByDescending(p => p.product_item_num);
+                    break;
+            }
+
             TotalProducts = await query.CountAsync();
 
             Products = await query.Skip((pageNumber - 1) * PageSize).Take(PageSize).ToListAsync();
             CurrentPage = pageNumber;
         }
 
-        public async Task<IActionResult> OnPostSaveProductAsync()
+        public async Task<IActionResult>
+            OnPostSaveProductAsync()
         {
             if (!ModelState.IsValid)
             {
@@ -81,10 +103,11 @@ namespace WebApplication1.Pages.Admin
 
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = SuccessMessage;
-            return RedirectToPage(new { searchTerm = Request.Query["searchTerm"], pageNumber = CurrentPage });
+            return RedirectToPage(new { searchTerm = Request.Query["searchTerm"], pageNumber = CurrentPage, sortField = SortField, sortOrder = SortOrder });
         }
 
-        public async Task<IActionResult> OnPostDeleteProductAsync(int productId)
+        public async Task<IActionResult>
+            OnPostDeleteProductAsync(int productId)
         {
             var product = await _context.Products.FindAsync(productId);
             if (product != null)
@@ -94,7 +117,7 @@ namespace WebApplication1.Pages.Admin
                 TempData["SuccessMessage"] = "Product deleted successfully.";
             }
 
-            return RedirectToPage(new { searchTerm = Request.Query["searchTerm"], pageNumber = CurrentPage });
+            return RedirectToPage(new { searchTerm = Request.Query["searchTerm"], pageNumber = CurrentPage, sortField = SortField, sortOrder = SortOrder });
         }
     }
 }

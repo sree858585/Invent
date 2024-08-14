@@ -32,21 +32,25 @@
             <th>Product Item Number</th>
             <th>Product Description</th>
             <th>Inventory Level</th>
-            <th>Agency Type</th>
+            <th>
+                <a href="?searchTerm=@Request.Query["searchTerm"]&pageNumber=@Model.CurrentPage&sortField=product_agency_type&sortOrder=@(Model.SortOrder == "asc" ? "desc" : "asc")">
+                    Agency Type @(Model.SortField == "product_agency_type" ? (Model.SortOrder == "asc" ? "▲" : "▼") : "")
+                </a>
+            </th>
             <th>Pieces per Case</th>
             <th>Sort Order</th>
             <th>Is Active</th>
             <th>Actions</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="productTableBody">
         @foreach (var product in Model.Products)
         {
             <tr>
                 <td>@product.product_item_num</td>
                 <td>@product.product_description</td>
                 <td>@product.product_inventory_level</td>
-                <td>@product.product_agency_type</td>
+                <td>@(product.product_agency_type == 1 ? "SEP" : product.product_agency_type == 2 ? "ESAP" : "Unknown")</td>
                 <td>@product.product_pieces_per_case</td>
                 <td>@product.sort_order</td>
                 <td>@(product.is_active ? "Yes" : "No")</td>
@@ -62,18 +66,18 @@
 <nav aria-label="Page navigation">
     <ul class="pagination justify-content-center">
         <li class="page-item @(Model.CurrentPage <= 1 ? "disabled" : "")">
-            <a class="page-link" href="?searchTerm=@Request.Query["searchTerm"]&pageNumber=@(Model.CurrentPage - 1)" aria-label="Previous">
+            <a class="page-link" href="?searchTerm=@Request.Query["searchTerm"]&pageNumber=@(Model.CurrentPage - 1)&sortField=@Model.SortField&sortOrder=@Model.SortOrder" aria-label="Previous">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
         @for (int i = 1; i <= Model.TotalPages; i++)
         {
             <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
-                <a class="page-link" href="?searchTerm=@Request.Query["searchTerm"]&pageNumber=@i">@i</a>
+                <a class="page-link" href="?searchTerm=@Request.Query["searchTerm"]&pageNumber=@i&sortField=@Model.SortField&sortOrder=@Model.SortOrder">@i</a>
             </li>
         }
         <li class="page-item @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")">
-            <a class="page-link" href="?searchTerm=@Request.Query["searchTerm"]&pageNumber=@(Model.CurrentPage + 1)" aria-label="Next">
+            <a class="page-link" href="?searchTerm=@Request.Query["searchTerm"]&pageNumber=@(Model.CurrentPage + 1)&sortField=@Model.SortField&sortOrder=@Model.SortOrder" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
@@ -94,38 +98,41 @@
                 <form method="post" asp-page-handler="SaveProduct">
                     <input type="hidden" asp-for="Product.product_id" />
                     <div class="form-group">
-                        <label asp-for="Product.product_item_num"></label>
+                        <label asp-for="Product.product_item_num" class="control-label">Product Item Number</label>
                         <input asp-for="Product.product_item_num" class="form-control" />
                     </div>
                     <div class="form-group">
-                        <label asp-for="Product.product_description"></label>
+                        <label asp-for="Product.product_description" class="control-label">Product Description</label>
                         <input asp-for="Product.product_description" class="form-control" />
                     </div>
                     <div class="form-group">
-                        <label asp-for="Product.product_inventory_level"></label>
+                        <label asp-for="Product.product_inventory_level" class="control-label">Inventory Level</label>
                         <input asp-for="Product.product_inventory_level" class="form-control" />
                     </div>
                     <div class="form-group">
-                        <label asp-for="Product.product_agency_type"></label>
-                        <input asp-for="Product.product_agency_type" class="form-control" />
+                        <label asp-for="Product.product_agency_type" class="control-label">Agency Type</label>
+                        <select asp-for="Product.product_agency_type" class="form-control">
+                            <option value="1">SEP</option>
+                            <option value="2">ESAP</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label asp-for="Product.product_pieces_per_case"></label>
+                        <label asp-for="Product.product_pieces_per_case" class="control-label">Pieces per Case</label>
                         <input asp-for="Product.product_pieces_per_case" class="form-control" />
                     </div>
                     <div class="form-group">
-                        <label asp-for="Product.sort_order"></label>
+                        <label asp-for="Product.sort_order" class="control-label">Sort Order</label>
                         <input asp-for="Product.sort_order" class="form-control" />
                     </div>
                     <div class="form-group">
-                        <label asp-for="Product.is_active"></label>
+                        <label asp-for="Product.is_active" class="control-label">Is Active</label>
                         <select asp-for="Product.is_active" class="form-control">
                             <option value="true">Yes</option>
                             <option value="false">No</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="hideProductForm()">Cancel</button>
                 </form>
             </div>
         </div>
@@ -135,61 +142,8 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        var products = @Html.Raw(JsonSerializer.Serialize(Model.Products));
-        var currentPage = @Model.CurrentPage;
-        var productsPerPage = @Model.PageSize;
-        var totalProducts = @Model.TotalProducts;
-        var totalPages = @Model.TotalPages;
-
-        $(document).ready(function () {
-            updatePagination();
-        });
-
-        function updatePagination() {
-            populateProductTable(products);
-            updatePaginationControls();
-        }
-
-        function populateProductTable(products) {
-            var $tbody = $('#productTableBody');
-            $tbody.empty();
-
-            var startIndex = (currentPage - 1) * productsPerPage;
-            var endIndex = startIndex + productsPerPage;
-            var paginatedProducts = products.slice(startIndex, endIndex);
-
-            paginatedProducts.forEach(product => {
-                var row = `<tr>
-                    <td>${product.product_item_num}</td>
-                    <td>${product.product_description}</td>
-                    <td>${product.product_inventory_level}</td>
-                    <td>${product.product_agency_type}</td>
-                    <td>${product.product_pieces_per_case}</td>
-                    <td>${product.sort_order}</td>
-                    <td>${product.is_active ? "Yes" : "No"}</td>
-                    <td>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="showEditProductForm(${product.product_id})">Edit</button>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="deleteProduct(${product.product_id})">Delete</button>
-                    </td>
-                </tr>`;
-                $tbody.append(row);
-            });
-        }
-
-        function updatePaginationControls() {
-            $('#prev-page').parent().toggleClass('disabled', currentPage <= 1);
-            $('#next-page').parent().toggleClass('disabled', currentPage >= totalPages);
-
-            var paginationNumbers = '';
-            for (var i = 1; i <= totalPages; i++) {
-                paginationNumbers += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                                        <a href="?searchTerm=${encodeURIComponent('@Request.Query["searchTerm"]')}&pageNumber=${i}" class="page-link page-number">${i}</a>
-                                     </li>`;
-            }
-            $('#pagination-numbers').html(paginationNumbers);
-        }
-
         function showEditProductForm(productId) {
+            var products = @Html.Raw(JsonSerializer.Serialize(Model.Products));
             var product = products.find(p => p.product_id === productId);
             if (product) {
                 document.getElementById("productModalLabel").innerText = "Edit Product";

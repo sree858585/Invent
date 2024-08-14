@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
@@ -23,44 +24,37 @@ namespace WebApplication1.Pages.Client
 
         public string Classification1ProductsJson { get; set; }
         public string Classification2ProductsJson { get; set; }
-        public string ShipInfoJson { get; set; }
 
         public bool CanAccessClassification1 { get; set; }
         public bool CanAccessClassification2 { get; set; }
-
-        [BindProperty]
-        public ShipInformation ShipInfo { get; set; }
 
         [BindProperty]
         public List<CartItem> Cart { get; set; }
 
         public class CartItem
         {
-            public int ProductId { get; set; }
+            public int product_id { get; set; }
             public int Quantity { get; set; }
+        }
+
+        public class ShippingInformation
+        {
+            public string ShipToName { get; set; }
+            public string ShipToEmail { get; set; }
+            public string ShipToAddress { get; set; }
+            public string ShipToAddress2 { get; set; }
+            public string ShipToCity { get; set; }
+            public string ShipToState { get; set; }
+            public string ShipToZip { get; set; }
         }
 
         public async Task OnGetAsync()
         {
-            var email = User.Identity.Name;
-
-            // Retrieve the user based on the email
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-
-            // Check if the user was found and retrieve the userId
-            if (user == null)
-            {
-                CanAccessClassification1 = false;
-                CanAccessClassification2 = false;
-                return;
-            }
-
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var userRegistrations = await _context.AgencyRegistrations
                 .Where(ar => ar.UserId == userId && ar.Status == "Approved")
                 .Include(ar => ar.LnkAgencyClassificationData)
-                .Include(ar => ar.ShipInformations)
                 .ToListAsync();
 
             if (!userRegistrations.Any())
@@ -104,94 +98,75 @@ namespace WebApplication1.Pages.Client
                     .ToListAsync();
                 Classification2ProductsJson = JsonConvert.SerializeObject(classification2Products);
             }
-
-            var firstApprovedRegistration = userRegistrations.FirstOrDefault();
-            if (firstApprovedRegistration?.ShipInformations.Any() == true)
-            {
-                var shipInfo = firstApprovedRegistration.ShipInformations.First();
-                ShipInfoJson = JsonConvert.SerializeObject(new
-                {
-                    shipInfo.ShipToName,
-                    shipInfo.ShipToEmail,
-                    shipInfo.ShipToAddress,
-                    shipInfo.ShipToAddress2,
-                    shipInfo.ShipToCity,
-                    shipInfo.ShipToState,
-                    shipInfo.ShipToZip
-                });
-            }
         }
 
         public async Task<IActionResult> OnPostCheckoutAsync([FromBody] CheckoutRequest request)
         {
-            System.Diagnostics.Debug.WriteLine("OnPostCheckoutAsync method called");
-
-            // Log the incoming request body for debugging
-            var requestBody = JsonConvert.SerializeObject(request);
-            System.Diagnostics.Debug.WriteLine("Incoming request: " + requestBody);
-
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                System.Diagnostics.Debug.WriteLine("Model State Errors: " + string.Join(", ", errors));
-                return new JsonResult(new { success = false, message = "Invalid request data.", errors });
-            }
+                System.Diagnostics.Debug.WriteLine("OnPostCheckoutAsync method called");
 
-            if (request.Cart == null || !request.Cart.Any())
-            {
-                System.Diagnostics.Debug.WriteLine("Cart is empty.");
-                return new JsonResult(new { success = false, message = "Cart is empty." });
-            }
+                var requestBody = JsonConvert.SerializeObject(request);
+                System.Diagnostics.Debug.WriteLine("Incoming request: " + requestBody);
 
-            var email = User.Identity.Name;
-            System.Diagnostics.Debug.WriteLine("User email: " + email);
-
-            // Retrieve the user based on the email
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-
-            if (user == null)
-            {
-                System.Diagnostics.Debug.WriteLine("User not found.");
-                return new JsonResult(new { success = false, message = "User not found." });
-            }
-
-            var userId = user.Id;
-            System.Diagnostics.Debug.WriteLine("User ID: " + userId);
-
-            var order = new Order
-            {
-                UserId = userId,
-                OrderDate = DateTime.Now,
-                OrderStatus = "ordered",
-                ShipToName = request.ShippingInfo.ShipToName,
-                ShipToEmail = request.ShippingInfo.ShipToEmail,
-                ShipToAddress = request.ShippingInfo.ShipToAddress,
-                ShipToAddress2 = request.ShippingInfo.ShipToAddress2,
-                ShipToCity = request.ShippingInfo.ShipToCity,
-                ShipToState = request.ShippingInfo.ShipToState,
-                ShipToZip = request.ShippingInfo.ShipToZip
-            };
-
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-
-            foreach (var item in request.Cart)
-            {
-                var orderDetail = new OrderDetail
+                if (!ModelState.IsValid)
                 {
-                    OrderId = order.OrderId,
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                    System.Diagnostics.Debug.WriteLine("Model State Errors: " + string.Join(", ", errors));
+                    return new JsonResult(new { success = false, message = "Invalid request data.", errors });
+                }
+
+                if (request.Cart == null || !request.Cart.Any())
+                {
+                    System.Diagnostics.Debug.WriteLine("Cart is empty.");
+                    return new JsonResult(new { success = false, message = "Cart is empty." });
+                }
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                System.Diagnostics.Debug.WriteLine("User ID: " + userId);
+
+                var order = new Order
+                {
+                    UserId = userId,
+                    OrderDate = DateTime.Now,
+                    OrderStatus = "ordered",
+                    ShipToName = request.ShippingInfo.ShipToName,
+                    ShipToEmail = request.ShippingInfo.ShipToEmail,
+                    ShipToAddress = request.ShippingInfo.ShipToAddress,
+                    ShipToAddress2 = request.ShippingInfo.ShipToAddress2,
+                    ShipToCity = request.ShippingInfo.ShipToCity,
+                    ShipToState = request.ShippingInfo.ShipToState,
+                    ShipToZip = request.ShippingInfo.ShipToZip
                 };
-                _context.OrderDetails.Add(orderDetail);
+
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                foreach (var item in request.Cart)
+                {
+                    var orderDetail = new OrderDetail
+                    {
+                        OrderId = order.OrderId,
+                        product_id = item.product_id,
+                        Quantity = item.Quantity
+                    };
+                    _context.OrderDetails.Add(orderDetail);
+                }
+
+                await _context.SaveChangesAsync();
+
+                var orderConfirmation = await GetOrderConfirmationAsync(order.OrderId);
+
+                return new JsonResult(new { success = true, orderConfirmation });
             }
-
-            await _context.SaveChangesAsync();
-
-            System.Diagnostics.Debug.WriteLine("Order placed successfully. Order ID: " + order.OrderId);
-
-            return new JsonResult(new { success = true, orderId = order.OrderId });
+            catch (Exception ex)
+            {
+                // Log the exception for further analysis
+                System.Diagnostics.Debug.WriteLine("An error occurred: " + ex.Message);
+                return new JsonResult(new { success = false, message = "An internal server error occurred." });
+            }
         }
+
 
         public class CheckoutRequest
         {
@@ -199,8 +174,94 @@ namespace WebApplication1.Pages.Client
             public ShippingInformation ShippingInfo { get; set; }
         }
 
-        public class ShippingInformation
+        public async Task<OrderConfirmation> GetOrderConfirmationAsync(int orderId)
         {
+            var order = await _context.Orders
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null)
+            {
+                return null;
+            }
+
+            var orderDetailsList = new List<OrderDetailDto>();
+
+            foreach (var od in order.OrderDetails)
+            {
+                string productDescription = await GetProductDescriptionAsync(od.product_id);
+                orderDetailsList.Add(new OrderDetailDto
+                {
+                    ProductName = !string.IsNullOrEmpty(productDescription) ? productDescription : "Unknown Product",
+                    Quantity = od.Quantity
+                });
+            }
+
+            return new OrderConfirmation
+            {
+                OrderId = order.OrderId,
+                OrderDate = order.OrderDate,
+                ShipToName = order.ShipToName,
+                ShipToEmail = order.ShipToEmail,
+                ShipToAddress = order.ShipToAddress,
+                ShipToAddress2 = order.ShipToAddress2,
+                ShipToCity = order.ShipToCity,
+                ShipToState = order.ShipToState,
+                ShipToZip = order.ShipToZip,
+                OrderDetails = orderDetailsList
+            };
+        }
+
+        private async Task<string> GetProductDescriptionAsync(int productId)
+        {
+            string productDescription = null;
+
+            try
+            {
+                using (var connection = _context.Database.GetDbConnection())
+                {
+                    await connection.OpenAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "SELECT product_description FROM lk_product WHERE product_id = @ProductId";
+                        var productIdParam = command.CreateParameter();
+                        productIdParam.ParameterName = "@ProductId";
+                        productIdParam.Value = productId;
+                        command.Parameters.Add(productIdParam);
+
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                productDescription = reader.GetString(0);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Error fetching product description: {ex.Message}");
+            }
+
+            return productDescription;
+        }
+
+
+
+
+
+        public class OrderDetailDto
+        {
+            public string ProductName { get; set; }
+            public int Quantity { get; set; }
+        }
+
+        public class OrderConfirmation
+        {
+            public int OrderId { get; set; }
+            public DateTime OrderDate { get; set; }
             public string ShipToName { get; set; }
             public string ShipToEmail { get; set; }
             public string ShipToAddress { get; set; }
@@ -208,6 +269,7 @@ namespace WebApplication1.Pages.Client
             public string ShipToCity { get; set; }
             public string ShipToState { get; set; }
             public string ShipToZip { get; set; }
+            public List<OrderDetailDto> OrderDetails { get; set; }
         }
     }
 }

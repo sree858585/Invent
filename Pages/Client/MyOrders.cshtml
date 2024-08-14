@@ -1,0 +1,97 @@
+﻿@page
+@model WebApplication1.Pages.Client.MyOrdersModel
+@{
+    ViewData["Title"] = "My Orders";
+    Layout = "~/Pages/Shared/_ClientLayout.cshtml";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (!Model.Orders.Any())
+{
+    <p>You have not placed any orders yet.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var order in Model.Orders)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Order #@order.OrderId</h5>
+                        <p class="card-text">Placed on: @order.OrderDate.ToString("MM/dd/yyyy")</p>
+                        <p class="card-text">
+                            Ship To: @order.ShipToName<br />
+                            @order.ShipToAddress, @order.ShipToCity, @order.ShipToState @order.ShipToZip
+                        </p>
+                        <div class="mb-3">
+                            <strong>Order Status:</strong>
+                            <div class="progress">
+                                <div class="progress-bar @GetProgressBarClass(order)" role="progressbar" style="width: @GetProgressPercentage(order)%" aria-valuenow="@GetProgressPercentage(order)" aria-valuemin="0" aria-valuemax="100">@order.OrderStatus</div>
+                            </div>
+                        </div>
+                        <div>
+                            <ul>
+                                @foreach (var product in order.Products)
+                                {
+                                    <li>@product.ProductName (Quantity: @product.Quantity)</li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted">
+                        @GetOrderTimeline(order)
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Styles {
+    <style>
+        .progress-bar {
+            transition: width 0.6s ease;
+        }
+
+        .card-footer {
+            font-size: 0.85rem;
+        }
+    </style>
+}
+
+@functions {
+    public string GetProgressBarClass(WebApplication1.Pages.Client.MyOrdersModel.OrderViewModel order)
+    {
+        return order.OrderStatus switch
+        {
+            "ordered" => "bg-info",
+            "approved" => "bg-warning",
+            "shipped" => "bg-success",
+            _ => "bg-secondary",
+        };
+    }
+
+    public int GetProgressPercentage(WebApplication1.Pages.Client.MyOrdersModel.OrderViewModel order)
+    {
+        return order.OrderStatus switch
+        {
+            "ordered" => 33,
+            "approved" => 66,
+            "shipped" => 100,
+            _ => 0,
+        };
+    }
+
+    public string GetOrderTimeline(WebApplication1.Pages.Client.MyOrdersModel.OrderViewModel order)
+    {
+        return order.OrderStatus switch
+        {
+            "ordered" => $"Ordered on {order.OrderDate:MM/dd/yyyy}",
+            "approved" => $"Ordered on {order.OrderDate:MM/dd/yyyy}, Approved on {order.ApprovedDate:MM/dd/yyyy}",
+            "shipped" => $"Ordered on {order.OrderDate:MM/dd/yyyy}, Approved on {order.ApprovedDate:MM/dd/yyyy}, Shipped on {order.ShippedDate:MM/dd/yyyy}",
+            _ => $"Status: {order.OrderStatus}"
+        };
+    }
+}

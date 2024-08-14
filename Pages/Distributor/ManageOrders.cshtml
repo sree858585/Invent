@@ -1,0 +1,226 @@
+﻿@page
+@model WebApplication1.Pages.Distributor.ManageOrdersModel
+@{
+    Layout = "~/Pages/Shared/_DistributorLayout.cshtml";
+    ViewData["Title"] = "Manage Orders";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Agency Name</th>
+                <th>Order Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model.Orders)
+            {
+                <tr>
+                    <td>@order.OrderId</td>
+                    <td>@order.AgencyName</td>
+                    <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                    <td>@order.OrderStatus</td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="loadOrderDetails(@order.OrderId)">View Details</button>
+                        @if (order.OrderStatus == "approved")
+                        {
+                            <button class="btn btn-success btn-sm" onclick="markAsShipped(@order.OrderId)">Mark as Shipped</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Order details content will be loaded here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveOrderDetails()">Save</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>function loadOrderDetails(orderId) {
+            console.log("View Details button clicked for order ID:", orderId);
+
+            fetch('/Distributor/ManageOrders?handler=GetOrderDetails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ OrderId: orderId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.order) {
+                        const order = data.order;
+                        const products = order.products.$values || [];  // Handle the nested $values array
+
+                        $('#orderDetailsContent').html(`
+                        <h5>Order ID: ${order.orderId}</h5>
+                        <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleDateString()}</p>
+                        <p><strong>Shipping Information:</strong><br>
+                            <input type="text" id="editShipToName" class="form-control" value="${order.shipToName}">
+                            <input type="text" id="editShipToAddress" class="form-control mt-2" value="${order.shipToAddress}">
+                            <input type="text" id="editShipToCity" class="form-control mt-2" value="${order.shipToCity}">
+                            <input type="text" id="editShipToState" class="form-control mt-2" value="${order.shipToState}">
+                            <input type="text" id="editShipToZip" class="form-control mt-2" value="${order.shipToZip}">
+                        </p>
+                        <h5>Products:</h5>
+                        <ul id="productList">
+                            ${products.map(product => `
+                                <li>
+                                    <input type="text" class="form-control" value="${product.productName}" readonly>
+                                    <input type="number" class="form-control mt-2" value="${product.quantity}" min="1" id="quantity-${product.productId}">
+                                    <button class="btn btn-danger btn-sm mt-2" onclick="removeProduct(${product.productId}, ${order.orderId})">X</button>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <div>
+                            <h5>Add New Product:</h5>
+                            <select id="newProductSelect" class="form-control">
+                                <!-- Populate with available products -->
+                            </select>
+                            <input type="number" id="newProductQuantity" class="form-control mt-2" placeholder="Quantity" min="1">
+                            <button class="btn btn-primary mt-2" onclick="addProduct(${order.orderId})">Add Product</button>
+                        </div>
+                    `);
+
+                        $('#orderDetailsModal').modal('show');
+                    } else {
+                        $('#orderDetailsContent').html('<p>Error loading order details.</p>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $('#orderDetailsContent').html('<p>Error loading order details.</p>');
+                });
+        }
+        function markAsShipped(orderId) {
+            fetch('/Distributor/ManageOrders?handler=MarkAsShipped', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ OrderId: orderId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Order marked as shipped.');
+                        location.reload();
+                    } else {
+                        alert('Error marking order as shipped.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function removeProduct(productId, orderId) {
+            // Implement product removal logic here
+            $.post('/Distributor/ManageOrders?handler=RemoveProduct', { productId, orderId }, function (response) {
+                if (response.success) {
+                    loadOrderDetails(orderId); // Reload the order details to reflect the changes
+                } else {
+                    alert('Error removing product.');
+                }
+            });
+        }
+
+        function addProduct(orderId) {
+            var productId = $('#newProductSelect').val();
+            var quantity = $('#newProductQuantity').val();
+
+            if (productId && quantity) {
+                $.post('/Distributor/ManageOrders?handler=AddProduct', { orderId, productId, quantity }, function (response) {
+                    if (response.success) {
+                        loadOrderDetails(orderId); // Reload the order details to reflect the changes
+                    } else {
+                        alert('Error adding product.');
+                    }
+                });
+            }
+        }
+
+        function updateShipping(orderId) {
+            var shipToName = $('#editShipToName').val();
+            var shipToAddress = $('#editShipToAddress').val();
+            var shipToCity = $('#editShipToCity').val();
+            var shipToState = $('#editShipToState').val();
+            var shipToZip = $('#editShipToZip').val();
+
+            $.post('/Distributor/ManageOrders?handler=UpdateShipping', {
+                orderId,
+                shipToName,
+                shipToAddress,
+                shipToCity,
+                shipToState,
+                shipToZip
+            }, function (response) {
+                if (response.success) {
+                    alert('Shipping address updated.');
+                } else {
+                    alert('Error updating shipping address.');
+                }
+            });
+        }
+
+        function saveOrderDetails() {
+            var orderId = $('#orderDetailsModal h5').text().split(': ')[1];
+            var updatedProducts = [];
+
+            $('#productList li').each(function () {
+                var productId = $(this).find('button').attr('onclick').match(/\d+/)[0];
+                var quantity = $(this).find('input[type="number"]').val();
+                updatedProducts.push({ ProductId: parseInt(productId), Quantity: parseInt(quantity) });
+            });
+
+            fetch('/Distributor/ManageOrders?handler=SaveOrder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({
+                    OrderId: parseInt(orderId),
+                    UpdatedProducts: updatedProducts
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Order updated successfully.');
+                        $('#orderDetailsModal').modal('hide');
+                        location.reload();
+                    } else {
+                        alert('Error saving order details.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+</script>
+}

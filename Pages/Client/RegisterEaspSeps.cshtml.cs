@@ -48,8 +48,8 @@ public class RegisterEaspSepsModel : PageModel
     [BindProperty]
     public bool IsOther { get; set; }
 
-    [BindProperty]
-    public string OtherClassificationText { get; set; }
+   // [BindProperty]
+   // public string OtherClassificationText { get; set; }
 
     public List<SelectListItem> CountyList { get; set; }
     public List<SelectListItem> SuffixList { get; set; }
@@ -115,7 +115,7 @@ public class RegisterEaspSepsModel : PageModel
         if (IsSyringeExchangeProgram) selectedClassifications.Add("Syringe exchange program");
         if (IsESAPTier1) selectedClassifications.Add("ESAP Tier 1");
         if (IsESAPTier2) selectedClassifications.Add("ESAP Tier 2");
-        if (IsOther) selectedClassifications.Add("Other: " + OtherClassificationText);
+        if (IsOther) selectedClassifications.Add("Other");
 
         EaspSepsRegistration.RegistrationType = string.Join(", ", selectedClassifications);
 
@@ -143,9 +143,9 @@ public class RegisterEaspSepsModel : PageModel
             var lnkAgencyClassificationData = new LnkAgencyClassificationData
             {
                 Category = id,
-                Other = IsOther && id == 4,
+               // Other = IsOther && id == 4,
                 AgencyRegistrationId = EaspSepsRegistration.Id,
-                OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null,
+               // OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null,
                 UniqueId = uniqueId
             };
             _context.Lnk_AgencyClassificationData.Add(lnkAgencyClassificationData);
