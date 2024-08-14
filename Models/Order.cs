@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApplication1.Models
 {
@@ -17,7 +16,13 @@ namespace WebApplication1.Models
         public DateTime OrderDate { get; set; } = DateTime.Now;
 
         [Required]
-        public string OrderStatus { get; set; } // Can be "ordered", "approved", or "shipped"
+        public string OrderStatus { get; set; } // Can be "ordered", "approved", "cancelled" or "shipped"
+
+        public DateTime? ApprovedDate { get; set; }
+
+        public DateTime? CanceledDate { get; set; }
+
+        public DateTime? ShippedDate { get; set; }
 
         [Required]
         public string ShipToName { get; set; }
@@ -30,7 +35,7 @@ namespace WebApplication1.Models
 
         public string ShipToAddress2 { get; set; }
 
-        [Required]
+        [Required]  
         public string ShipToCity { get; set; }
 
         [Required]
@@ -41,5 +46,4 @@ namespace WebApplication1.Models
 
         public ICollection<OrderDetail> OrderDetails { get; set; }
     }
-
 }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Models;
 
-
 namespace WebApplication1.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
@@ -28,6 +27,7 @@ namespace WebApplication1.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -107,13 +107,8 @@ namespace WebApplication1.Data
             modelBuilder.Entity<LkAgencyClassification>().ToTable("lk_agency_classification")
                 .HasKey(c => c.agency_classification_id);
 
-            // Add this configuration for LnkAgencyClassificationData
             modelBuilder.Entity<LnkAgencyClassificationData>()
                 .HasKey(a => a.Id);
-
-            modelBuilder.Entity<LnkAgencyClassificationData>()
-                .Property(a => a.OtherClassificationText)
-                .HasMaxLength(300);
 
             modelBuilder.Entity<LnkAgencyClassificationData>()
                 .Property(a => a.UniqueId)
@@ -121,15 +116,27 @@ namespace WebApplication1.Data
 
             modelBuilder.Entity<LnkAgencyClassificationData>()
                 .HasOne(a => a.AgencyRegistration)
-                .WithMany(ar => ar.LnkAgencyClassificationData) 
+                .WithMany(ar => ar.LnkAgencyClassificationData)
                 .HasForeignKey(a => a.AgencyRegistrationId);
 
             modelBuilder.Entity<Product>().ToTable("lk_product")
-            .HasQueryFilter(p => !p.is_deleted); 
+                .HasQueryFilter(p => !p.is_deleted);
 
-            modelBuilder.Entity<Order>().ToTable("orders");
-            modelBuilder.Entity<OrderDetail>().ToTable("order_details");
+            modelBuilder.Entity<Order>()
+                 .ToTable("orders");
 
+            modelBuilder.Entity<OrderDetail>()
+                .ToTable("order_details")
+                .HasOne(od => od.Order)
+                .WithMany(o => o.OrderDetails)
+                .HasForeignKey(od => od.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderDetail>()
+                .HasOne(od => od.Product)
+                .WithMany()
+                .HasForeignKey(od => od.product_id)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
             modelBuilder.Entity<IdentityRole>().ToTable("AspNetRoles");

@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using WebApplication1.Models;
 
 namespace WebApplication1.Models
-{  
-public class OrderDetail
 {
+    public class OrderDetail
+    {
         [Key]
         public int OrderDetailId { get; set; }
 
@@ -16,13 +15,12 @@ public class OrderDetail
         public Order Order { get; set; }
 
         [Required]
-        public int ProductId { get; set; }
+        public int product_id { get; set; }
 
-        [ForeignKey("ProductId")]
+        [ForeignKey("product_id")]
         public Product Product { get; set; }
 
         [Required]
         public int Quantity { get; set; }
     }
-
 }
