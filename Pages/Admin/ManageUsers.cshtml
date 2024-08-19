@@ -5,73 +5,96 @@
     Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Manage Users</h1>
-
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
 {
     <div class="alert alert-success">@Model.SuccessMessage</div>
 }
 
-<form method="get" class="mb-3">
-    <div class="form-group">
-        <label for="Email">Email:</label>
-        <input type="email" asp-for="Email" class="form-control" />
-        <button type="submit" class="btn btn-primary mt-2">Search</button>
+<form method="get" class="form-inline mb-3">
+    <div class="form-row align-items-end">
+        <div class="form-group col-md-4">
+            <label for="Email">Email:</label>
+            <input type="email" name="Email" value="@Model.Email" class="form-control" placeholder="Search by email" />
+        </div>
+        <div class="form-group col-md-4">
+            <label for="AgencyName">Agency Name:</label>
+            <input type="text" name="AgencyName" value="@Model.AgencyName" class="form-control" placeholder="Search by agency name" />
+        </div>
+        <div class="form-group col-md-4">
+            <label for="UniqueId">Unique ID:</label>
+            <input type="text" name="UniqueId" value="@Model.UniqueId" class="form-control" placeholder="Search by unique ID" />
+        </div>
+        <div class="form-group col-md-2">
+            <button type="submit" class="btn btn-primary btn-block">Search</button>
+        </div>
     </div>
 </form>
 
-@if (Model.User != null && Model.Registrations != null && Model.Registrations.Any())
+@if (Model.Registrations != null && Model.Registrations.Any())
 {
-    <h2>Select Registration to Edit</h2>
-    <div class="list-group">
-        @foreach (var registration in Model.Registrations)
-        {
-            <div class="list-group-item">
-                <h5>
-                    @registration.AgencyName -
-                    @{
-                        var uniqueIds = registration.LnkAgencyClassificationData
-                            .Select(d => d.UniqueId ?? "N/A");
-                        @string.Join(", ", uniqueIds)
-                    }
-                </h5>
-                <p>Registration Type: @registration.RegistrationType</p>
-                <p class="card-text">
-                    <strong>Submission Date:</strong> @registration.SubmissionDate.ToString("g")
-                </p>
-                <form method="post" asp-page-handler="Edit" class="d-inline">
-                    <input type="hidden" name="registrationId" value="@registration.Id" />
-                    <button type="submit" class="btn btn-primary">Edit</button>
-                </form>
-            </div>
-        }
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Agency Name</th>
+                    <th>Unique IDs</th>
+                    <th>Registration Type</th>
+                    <th>Submission Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var registration in Model.Registrations)
+                {
+                    <tr>
+                        <td>@registration.AgencyName</td>
+                        <td>@string.Join(", ", registration.LnkAgencyClassificationData.Select(d => d.UniqueId ?? "N/A"))</td>
+                        <td>
+                            <div>@registration.RegistrationType</div>
+                            <div>
+                                <strong>Program Director:</strong> @registration.AgencyContacts?.FirstOrDefault()?.ProgramDirector<br />
+                                <strong>Email:</strong> @registration.AgencyContacts?.FirstOrDefault()?.Email <br />
+                                <strong>Phone:</strong> @registration.AgencyContacts?.FirstOrDefault()?.Phone
+                            </div>
+                        </td>
+                        <td>@registration.SubmissionDate.ToString("g")</td>
+                        <td>
+                            <form method="post" asp-page-handler="Edit" class="d-inline">
+                                <input type="hidden" name="registrationId" value="@registration.Id" />
+                                <button type="submit" class="btn btn-outline-primary btn-sm">View</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 }
 
 @if (Model.Registration != null)
 {
     <h2>Edit Registration</h2>
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
             <a class="nav-link active" id="easpseps-tab" data-bs-toggle="tab" href="#easpseps" role="tab" aria-controls="easpseps" aria-selected="true">EaspSeps Registration</a>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item">
             <a class="nav-link" id="agencycontact-tab" data-bs-toggle="tab" href="#agencycontact" role="tab" aria-controls="agencycontact" aria-selected="false">Agency Contact</a>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item">
             <a class="nav-link" id="additionalusers-tab" data-bs-toggle="tab" href="#additionalusers" role="tab" aria-controls="additionalusers" aria-selected="false">Additional Users</a>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item">
             <a class="nav-link" id="shippinginfo-tab" data-bs-toggle="tab" href="#shippinginfo" role="tab" aria-controls="shippinginfo" aria-selected="false">Shipping Information</a>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item">
             <a class="nav-link" id="shiptosites-tab" data-bs-toggle="tab" href="#shiptosites" role="tab" aria-controls="shiptosites" aria-selected="false">Ship To Sites</a>
         </li>
-        <li class="nav-item" role="presentation">
+        <li class="nav-item">
             <a class="nav-link" id="countiesserved-tab" data-bs-toggle="tab" href="#countiesserved" role="tab" aria-controls="countiesserved" aria-selected="false">Counties Served</a>
         </li>
     </ul>
-    <div class="tab-content" id="myTabContent">
+    <div class="tab-content">
         <div class="tab-pane fade show active" id="easpseps" role="tabpanel" aria-labelledby="easpseps-tab">
             <form method="post" asp-page-handler="UpdateEaspSepsRegistration">
                 <input type="hidden" asp-for="Registration.Id" />
@@ -87,7 +110,6 @@
                     <label asp-for="Registration.County"></label>
                     <input asp-for="Registration.County" class="form-control" />
                 </div>
-
                 <div class="form-group">
                     <label asp-for="Registration.Address"></label>
                     <input asp-for="Registration.Address" class="form-control" />
@@ -159,7 +181,7 @@
                 {
                     <div class="list-group-item">
                         <p>@user.Name - @user.Title</p>
-                        <button type="button" class="btn btn-primary" onclick="showAdditionalUserForm(@user.Id)">Edit</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showAdditionalUserForm(@user.Id)">Edit</button>
                     </div>
                 }
             </div>
@@ -261,7 +283,7 @@
                 {
                     <div class="list-group-item">
                         <p>@site.Name - @site.City</p>
-                        <button type="button" class="btn btn-primary" onclick="showShipToSiteForm(@site.Id)">Edit</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="showShipToSiteForm(@site.Id)">Edit</button>
                     </div>
                 }
             </div>
@@ -370,6 +392,7 @@
         </div>
     </div>
 }
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>// Close modal on click of cancel or cross button

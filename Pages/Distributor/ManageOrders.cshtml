@@ -23,8 +23,19 @@
             {
                 <tr>
                     <td>@order.OrderId</td>
-                    <td>@order.AgencyName</td>
-                    <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                    <td>
+                        @order.AgencyName
+                        <br />
+                        <small>
+                            <strong>Director:</strong> @(order.ProgramDirector ?? "N/A")<br />
+                            <strong>Email:</strong> @(order.Email ?? "N/A")<br />
+                            <strong>Phone:</strong> @(order.Phone ?? "N/A")
+                        </small>
+                    </td>
+                    <td>
+                        <strong>Ordered on:</strong> @order.OrderDate.ToString("MM/dd/yyyy")<br />
+                        <strong>Approved on:</strong> @order.ApprovedDate?.ToString("MM/dd/yyyy")
+                    </td>
                     <td>@order.OrderStatus</td>
                     <td>
                         <button class="btn btn-info btn-sm" onclick="loadOrderDetails(@order.OrderId)">View Details</button>
@@ -32,6 +43,7 @@
                         {
                             <button class="btn btn-success btn-sm" onclick="markAsShipped(@order.OrderId)">Mark as Shipped</button>
                         }
+                        <button class="btn btn-secondary btn-sm" onclick="loadOrderHistory('@order.UserId')">View History</button>
                     </td>
                 </tr>
             }
@@ -60,6 +72,27 @@
     </div>
 </div>
 
+<!-- Order History Modal -->
+<div class="modal fade" id="orderHistoryModal" tabindex="-1" aria-labelledby="orderHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderHistoryModalLabel">Order History</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="orderHistoryContent">
+                <!-- Order history content will be loaded here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 @section Scripts {
     <script>function loadOrderDetails(orderId) {
             console.log("View Details button clicked for order ID:", orderId);
@@ -76,37 +109,39 @@
                 .then(data => {
                     if (data.success && data.order) {
                         const order = data.order;
-                        const products = order.products.$values || [];  // Handle the nested $values array
+                        const products = order.products.$values || [];
 
                         $('#orderDetailsContent').html(`
-                        <h5>Order ID: ${order.orderId}</h5>
-                        <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleDateString()}</p>
-                        <p><strong>Shipping Information:</strong><br>
-                            <input type="text" id="editShipToName" class="form-control" value="${order.shipToName}">
-                            <input type="text" id="editShipToAddress" class="form-control mt-2" value="${order.shipToAddress}">
-                            <input type="text" id="editShipToCity" class="form-control mt-2" value="${order.shipToCity}">
-                            <input type="text" id="editShipToState" class="form-control mt-2" value="${order.shipToState}">
-                            <input type="text" id="editShipToZip" class="form-control mt-2" value="${order.shipToZip}">
-                        </p>
-                        <h5>Products:</h5>
-                        <ul id="productList">
-                            ${products.map(product => `
-                                <li>
-                                    <input type="text" class="form-control" value="${product.productName}" readonly>
-                                    <input type="number" class="form-control mt-2" value="${product.quantity}" min="1" id="quantity-${product.productId}">
-                                    <button class="btn btn-danger btn-sm mt-2" onclick="removeProduct(${product.productId}, ${order.orderId})">X</button>
-                                </li>
-                            `).join('')}
-                        </ul>
-                        <div>
-                            <h5>Add New Product:</h5>
-                            <select id="newProductSelect" class="form-control">
-                                <!-- Populate with available products -->
-                            </select>
-                            <input type="number" id="newProductQuantity" class="form-control mt-2" placeholder="Quantity" min="1">
-                            <button class="btn btn-primary mt-2" onclick="addProduct(${order.orderId})">Add Product</button>
-                        </div>
-                    `);
+                                        <h5>Order ID: ${order.orderId}</h5>
+                                        <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleDateString()}</p>
+                                        <p><strong>Shipping Information:</strong><br>
+                                            <input type="text" id="editShipToName" class="form-control" value="${order.shipToName}">
+                                            <input type="text" id="editShipToAddress" class="form-control mt-2" value="${order.shipToAddress}">
+                                            <input type="text" id="editShipToCity" class="form-control mt-2" value="${order.shipToCity}">
+                                            <input type="text" id="editShipToState" class="form-control mt-2" value="${order.shipToState}">
+                                            <input type="text" id="editShipToZip" class="form-control mt-2" value="${order.shipToZip}">
+                                        </p>
+                                        <h5>Products:</h5>
+                                        <ul id="productList">
+                                            ${products.map(product => `
+                                                <li>
+                                                    <input type="text" class="form-control" value="${product.productName}" readonly>
+                                                    <input type="number" class="form-control mt-2" value="${product.quantity}" min="1" id="quantity-${product.productId}">
+                                                    <button class="btn btn-danger btn-sm mt-2" onclick="removeProduct(${product.productId}, ${order.orderId})">X</button>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                        <div>
+                                            <h5>Add New Product:</h5>
+                                            <select id="newProductSelect" class="form-control">
+                                                <!-- Populate with available products -->
+                                            </select>
+                                            <input type="number" id="newProductQuantity" class="form-control mt-2" placeholder="Quantity" min="1">
+                                            <button class="btn btn-primary mt-2" onclick="addProduct(${order.orderId})">Add Product</button>
+                                        </div>
+                                    `);
+
+                        loadAvailableProducts(orderId);
 
                         $('#orderDetailsModal').modal('show');
                     } else {
@@ -118,6 +153,7 @@
                     $('#orderDetailsContent').html('<p>Error loading order details.</p>');
                 });
         }
+
         function markAsShipped(orderId) {
             fetch('/Distributor/ManageOrders?handler=MarkAsShipped', {
                 method: 'POST',
@@ -140,58 +176,167 @@
         }
 
         function removeProduct(productId, orderId) {
-            // Implement product removal logic here
             $.post('/Distributor/ManageOrders?handler=RemoveProduct', { productId, orderId }, function (response) {
                 if (response.success) {
-                    loadOrderDetails(orderId); // Reload the order details to reflect the changes
+                    loadOrderDetails(orderId);
                 } else {
                     alert('Error removing product.');
                 }
             });
         }
 
+        function loadAvailableProducts(orderId) {
+            fetch('/Distributor/ManageOrders?handler=GetAvailableProducts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const productSelect = document.getElementById('newProductSelect');
+                        productSelect.innerHTML = data.products.map(product => `
+                                        <option value="${product.productId}">${product.productName}</option>
+                                    `).join('');
+                    } else {
+                        alert('Error loading available products.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
         function addProduct(orderId) {
             var productId = $('#newProductSelect').val();
             var quantity = $('#newProductQuantity').val();
 
-            if (productId && quantity) {
-                $.post('/Distributor/ManageOrders?handler=AddProduct', { orderId, productId, quantity }, function (response) {
-                    if (response.success) {
-                        loadOrderDetails(orderId); // Reload the order details to reflect the changes
-                    } else {
-                        alert('Error adding product.');
-                    }
-                });
+            if (productId && quantity > 0) {
+                fetch('/Distributor/ManageOrders?handler=AddProduct', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify({ OrderId: orderId, ProductId: parseInt(productId), Quantity: parseInt(quantity) })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadOrderDetails(orderId);
+                        } else {
+                            alert('Error adding product.');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                alert('Please select a product and enter a valid quantity.');
             }
         }
 
-        function updateShipping(orderId) {
+        function loadOrderHistory(userId) {
+            fetch('/Distributor/ManageOrders?handler=GetOrderHistory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ UserId: userId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.history) {
+                        console.log('Order History Data:', data.history);  // Log the data structure
+
+                        const history = data.history.$values || data.history;
+                        const uniqueOrders = new Set();
+
+                        if (Array.isArray(history)) {
+                            // Clear previous content to prevent repeated data
+                            $('#orderHistoryContent').html('');
+
+                            $('#orderHistoryContent').html(`
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Agency Name</th>
+                                <th>Program Director</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Ship Date</th>
+                                <th>Shipping Address</th>
+                                <th>Products</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${history.map(order => {
+                                // To avoid duplicate data, use a Set or other structure to track unique orders
+                                if (!uniqueOrders.has(order.OrderId)) {
+                                    uniqueOrders.add(order.OrderId);
+
+                                    const shippingInfo = order.ShipToAddress || {};
+                                    const products = Array.isArray(order.Products) ? order.Products : [];
+
+                                    return `
+                                        <tr>
+                                            <td>${order.OrderId || 'N/A'}</td>
+                                            <td>${order.AgencyName || 'N/A'}</td>
+                                            <td>${order.ProgramDirector || 'N/A'}</td>
+                                            <td>${order.Email || 'N/A'}</td>
+                                            <td>${order.Phone || 'N/A'}</td>
+                                            <td>${order.ShipDate ? new Date(order.ShipDate).toLocaleDateString() : 'N/A'}</td>
+                                            <td>
+                                                ${shippingInfo.ShipToName || 'N/A'}, 
+                                                ${shippingInfo.ShipToAddress || 'N/A'}, 
+                                                ${shippingInfo.ShipToAddress2 || ''}, 
+                                                ${shippingInfo.ShipToCity || 'N/A'}, 
+                                                ${shippingInfo.ShipToState || 'N/A'}, 
+                                                ${shippingInfo.ShipToZip || 'N/A'}
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    ${products.map(product => `
+                                                        <li>${product.ProductName || 'N/A'} - Quantity: ${product.Quantity || 'N/A'}</li>
+                                                    `).join('')}
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `);
+                        } else {
+                            $('#orderHistoryContent').html('<p>No history available.</p>');
+                        }
+
+                        $('#orderHistoryModal').modal('show');
+                    } else {
+                        $('#orderHistoryContent').html('<p>No history available.</p>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $('#orderHistoryContent').html('<p>Error loading order history.</p>');
+                });
+        }
+
+
+
+        function saveOrderDetails() {
+            var orderId = $('#orderDetailsModal h5').text().split(': ')[1];
+
+            // Gather updated shipping information
             var shipToName = $('#editShipToName').val();
             var shipToAddress = $('#editShipToAddress').val();
             var shipToCity = $('#editShipToCity').val();
             var shipToState = $('#editShipToState').val();
             var shipToZip = $('#editShipToZip').val();
 
-            $.post('/Distributor/ManageOrders?handler=UpdateShipping', {
-                orderId,
-                shipToName,
-                shipToAddress,
-                shipToCity,
-                shipToState,
-                shipToZip
-            }, function (response) {
-                if (response.success) {
-                    alert('Shipping address updated.');
-                } else {
-                    alert('Error updating shipping address.');
-                }
-            });
-        }
-
-        function saveOrderDetails() {
-            var orderId = $('#orderDetailsModal h5').text().split(': ')[1];
+            // Gather updated product quantities
             var updatedProducts = [];
-
             $('#productList li').each(function () {
                 var productId = $(this).find('button').attr('onclick').match(/\d+/)[0];
                 var quantity = $(this).find('input[type="number"]').val();
@@ -206,6 +351,11 @@
                 },
                 body: JSON.stringify({
                     OrderId: parseInt(orderId),
+                    ShipToName: shipToName,
+                    ShipToAddress: shipToAddress,
+                    ShipToCity: shipToCity,
+                    ShipToState: shipToState,
+                    ShipToZip: shipToZip,
                     UpdatedProducts: updatedProducts
                 })
             })
@@ -220,7 +370,6 @@
                     }
                 })
                 .catch(error => console.error('Error:', error));
-        }
-
-</script>
+        }</script>
 }
+

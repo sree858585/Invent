@@ -23,15 +23,19 @@ namespace WebApplication1.Pages.Admin
         public List<OrderViewModel> PendingOrders { get; set; }
         public List<OrderViewModel> ApprovedOrders { get; set; }
         public List<OrderViewModel> CancelledOrders { get; set; }
+        public List<OrderViewModel> ShippedOrders { get; set; } // Add this property for shipped orders
         public int PendingOrdersPageNumber { get; set; }
         public int PendingOrdersTotalPages { get; set; }
         public int ApprovedOrdersPageNumber { get; set; }
         public int ApprovedOrdersTotalPages { get; set; }
         public int CancelledOrdersPageNumber { get; set; }
         public int CancelledOrdersTotalPages { get; set; }
-
-        public async Task OnGetAsync(int pendingPage = 1, int approvedPage = 1, int cancelledPage = 1)
+        public int ShippedOrdersPageNumber { get; set; }
+        public int ShippedOrdersTotalPages { get; set; }
+        public async Task OnGetAsync(int pendingPage = 1, int approvedPage = 1, int cancelledPage = 1, int shippedPage = 1, string currentTab = "pending")
         {
+            ViewData["CurrentTab"] = currentTab;
+
             var ordersQuery = _context.Orders
                 .Include(o => o.OrderDetails)
                 .ThenInclude(od => od.Product)
@@ -52,6 +56,7 @@ namespace WebApplication1.Pages.Admin
                     OrderStatus = group.First().Order.OrderStatus,
                     ApprovedDate = group.First().Order.ApprovedDate,
                     CanceledDate = group.First().Order.CanceledDate,
+                    ShippedDate = group.First().Order.ShippedDate,
                     ShipToName = group.First().Order.ShipToName,
                     ShipToAddress = group.First().Order.ShipToAddress,
                     ShipToCity = group.First().Order.ShipToCity,
@@ -90,12 +95,22 @@ namespace WebApplication1.Pages.Admin
                 .Skip((cancelledPage - 1) * PageSize)
                 .Take(PageSize)
                 .ToListAsync();
+
+            // Shipped Orders
+            ShippedOrdersPageNumber = shippedPage;
+            ShippedOrdersTotalPages = (int)Math.Ceiling(await ordersQuery.CountAsync(o => o.OrderStatus == "shipped") / (double)PageSize);
+            ShippedOrders = await ordersQuery
+                .Where(o => o.OrderStatus == "shipped")
+                .Skip((shippedPage - 1) * PageSize)
+                .Take(PageSize)
+                .ToListAsync();
         }
+
 
         public async Task<IActionResult> OnPostApproveOrderAsync([FromBody] OrderRequest request)
         {
             var order = await _context.Orders.FindAsync(request.OrderId);
-            if (order != null && order.OrderStatus == "ordered")
+            if (order != null && (order.OrderStatus == "ordered" || order.OrderStatus == "canceled"))
             {
                 order.OrderStatus = "approved";
                 order.ApprovedDate = DateTime.Now;
@@ -104,6 +119,7 @@ namespace WebApplication1.Pages.Admin
             }
             return new JsonResult(new { success = false });
         }
+
 
         public async Task<IActionResult> OnPostCancelOrderAsync([FromBody] OrderRequest request)
         {

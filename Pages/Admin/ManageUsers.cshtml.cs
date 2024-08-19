@@ -30,6 +30,12 @@ namespace WebApplication1.Pages.Admin
         [BindProperty(SupportsGet = true)]
         public string Email { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string AgencyName { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string UniqueId { get; set; }
+
         public ApplicationUser User { get; set; }
 
         public List<AgencyRegistration> Registrations { get; set; }
@@ -66,43 +72,45 @@ namespace WebApplication1.Pages.Admin
 
         public async Task OnGetAsync()
         {
-            _logger.LogInformation($"OnGetAsync called with Email: {Email}");
+            // Start with a base query that includes related entities
+            var query = _context.AgencyRegistrations
+                .Include(r => r.AgencyContacts)
+                .Include(r => r.LnkAgencyClassificationData)
+                .AsQueryable();
 
+            // Apply filters based on the search criteria
             if (!string.IsNullOrEmpty(Email))
             {
-                User = await _userManager.FindByEmailAsync(Email);
-                if (User != null)
-                {
-                    try
-                    {
-                        Registrations = await _context.AgencyRegistrations
-                            .Include(r => r.LnkAgencyClassificationData) // Include related LnkAgencyClassificationData
-                            .Where(r => r.UserId == User.Id)
-                            .ToListAsync();
-
-                        // Logging for debugging purposes
-                        foreach (var registration in Registrations)
-                        {
-                            _logger.LogInformation($"Registration ID: {registration.Id}, Unique IDs: {string.Join(", ", registration.LnkAgencyClassificationData.Select(d => d.UniqueId ?? "NULL"))}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError($"Error fetching data: {ex.Message}");
-                    }
-                }
+                query = query.Where(r => r.AgencyContacts.Any(c => c.Email == Email));
             }
 
+            if (!string.IsNullOrEmpty(AgencyName))
+            {
+                query = query.Where(r => r.AgencyName.Contains(AgencyName));
+            }
+
+            if (!string.IsNullOrEmpty(UniqueId))
+            {
+                query = query.Where(r => r.LnkAgencyClassificationData.Any(d => d.UniqueId == UniqueId));
+            }
+
+            // Fetch the filtered results
+            Registrations = await query.ToListAsync();
+
+            // Populate the CountyList for dropdowns, etc.
             CountyList = await _context.Counties
                 .Where(c => c.is_active)
                 .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
                 .ToListAsync();
 
-            while (CountiesServed.Count < 5)
+            // Ensure the CountiesServed list has a minimum number of items for display
+            while (CountiesServed.Count < 10)
             {
                 CountiesServed.Add(0);
             }
         }
+
+
 
         public async Task<IActionResult> OnPostEditAsync(int registrationId)
         {

@@ -5,8 +5,6 @@
     Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Approve Registrations</h1>
-
 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
 {
     <div class="alert alert-success">@Model.SuccessMessage</div>
@@ -377,7 +375,8 @@
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
-    <script>$(document).ready(function () {
+    <script>
+        $(document).ready(function () {
             $('.classifications-dropdown').select2();
 
             $('form').submit(function () {
@@ -440,5 +439,6 @@
                     cards[i].style.display = "none";
                 }
             }
-        }</script>
+        }
+    </script>
 }
