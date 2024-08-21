@@ -184,8 +184,9 @@ namespace WebApplication1.Pages.Distributor
                 })
                 .ToListAsync();
 
-            return new JsonResult(new { success = true, products });
+            return new JsonResult(new { success = true, products = products }); // Ensure 'products' is an array
         }
+
 
         public async Task<IActionResult> OnPostGetOrderHistoryAsync([FromBody] UserRequest request)
         {
