@@ -27,6 +27,8 @@ namespace WebApplication1.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
+        public DbSet<QuarterlyReport> QuarterlyReports { get; set; }
+        public DbSet<CollectionDetail> CollectionDetails { get; set; } // New DbSet for CollectionDetails
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -137,6 +139,12 @@ namespace WebApplication1.Data
                 .WithMany()
                 .HasForeignKey(od => od.product_id)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CollectionDetail>()
+     .HasOne(cd => cd.QuarterlyReport)
+     .WithMany(qr => qr.CollectionDetails)
+     .HasForeignKey(cd => cd.QuarterlyReportId)
+     .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
             modelBuilder.Entity<IdentityRole>().ToTable("AspNetRoles");
