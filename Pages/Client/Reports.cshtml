@@ -1,0 +1,299 @@
+﻿@page
+@model WebApplication1.Pages.Client.ReportsModel
+@{
+    ViewData["Title"] = "Quarterly Reports";
+    Layout = "~/Pages/Shared/_ClientLayout.cshtml";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+{
+    <div class="alert alert-success" role="alert">
+        @Model.SuccessMessage
+    </div>
+}
+
+<div class="card shadow-lg mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Quarterly Reports</h5>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Quarter</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var quarter in Model.UpcomingQuarters)
+                {
+                    <tr>
+                        <td>@quarter.QuarterName @DateTime.Now.Year</td>
+                        <td>@quarter.DueDate.ToString("MM/dd/yyyy")</td>
+                        <td>
+                            <span class="badge badge-@((quarter.Status == "Submitted") ? "success" : "warning")" style="background-color:@((quarter.Status == "Submitted") ? "#28a745" : "#ffc107");">
+                                @(quarter.Status == "Submitted" ? "Submitted" : "Pending")
+                            </span>
+                        </td>
+                        <td>
+                            @if (quarter.Status == "Submitted")
+                            {
+                                <button class="btn btn-secondary" onclick="editReport(@quarter.ReportId)">
+                                    Edit Report
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-primary" onclick="showReportForm('@quarter.QuarterName', '@quarter.DueDate')">
+                                    Submit Report
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+    </div>
+</div>
+
+<!-- Report Form Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reportModalLabel">Submit Quarterly Report</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="reportForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="QuarterlyReport_Id" asp-for="QuarterlyReport.Id" />
+                    <input type="hidden" id="Quarter" name="QuarterlyReport.Quarter" />
+                    <input type="hidden" id="DueDate" name="QuarterlyReport.DueDate" />
+
+                    <div class="form-group">
+                        <label for="FacilityName">Facility Name</label>
+                        <input asp-for="QuarterlyReport.FacilityName" class="form-control" id="FacilityName" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="CompletedBy">Completed By</label>
+                        <input asp-for="QuarterlyReport.CompletedBy" class="form-control" id="CompletedBy" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Address">Address</label>
+                        <input asp-for="QuarterlyReport.Address" class="form-control" id="Address" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Phone">Phone</label>
+                        <input asp-for="QuarterlyReport.Phone" class="form-control" id="Phone" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Fax">Fax</label>
+                        <input asp-for="QuarterlyReport.Fax" class="form-control" id="Fax" />
+                    </div>
+
+                    <!-- Table for Sharps Collection Site, Collection Dates, Pounds Collected -->
+                    <div class="form-group">
+                        <label>Collection Details</label>
+                        <table class="table table-bordered" id="collectionDetailsTable">
+                            <thead>
+                                <tr>
+                                    <th>Sharps Collection Site</th>
+                                    <th>Collection Dates</th>
+                                    <th>Pounds Collected</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.QuarterlyReport.CollectionDetails != null && Model.QuarterlyReport.CollectionDetails.Any())
+                                {
+                                    @for (int i = 0; i < Model.QuarterlyReport.CollectionDetails.Count; i++)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[@i].SharpsCollectionSite" value="@Model.QuarterlyReport.CollectionDetails[i].SharpsCollectionSite" />
+                                            </td>
+                                            <td>
+                                                <input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[@i].CollectionDates" value="@Model.QuarterlyReport.CollectionDetails[i].CollectionDates.ToString("yyyy-MM-dd")" required />
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control" name="QuarterlyReport.CollectionDetails[@i].PoundsCollected" value="@Model.QuarterlyReport.CollectionDetails[i].PoundsCollected" required />
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger remove-row">Remove</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+
+                        </table>
+                        <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+                    </div>
+
+                    <!-- Additional Form Fields -->
+                    <div class="form-group">
+                        <label for="SyringesProvidedUnits">Syringes Provided (Units)</label>
+                        <input asp-for="QuarterlyReport.SyringesProvidedUnits" class="form-control" id="SyringesProvidedUnits" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="SyringesProvidedSessions">Syringes Provided (Sessions)</label>
+                        <input asp-for="QuarterlyReport.SyringesProvidedSessions" class="form-control" id="SyringesProvidedSessions" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="PharmacyVouchersUnits">Pharmacy Vouchers (Units)</label>
+                        <input asp-for="QuarterlyReport.PharmacyVouchersUnits" class="form-control" id="PharmacyVouchersUnits" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="PharmacyVouchersSessions">Pharmacy Vouchers (Sessions)</label>
+                        <input asp-for="QuarterlyReport.PharmacyVouchersSessions" class="form-control" id="PharmacyVouchersSessions" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ReportedVouchersUnits">Reported Vouchers (Units)</label>
+                        <input asp-for="QuarterlyReport.ReportedVouchersUnits" class="form-control" id="ReportedVouchersUnits" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ReportedVouchersSessions">Reported Vouchers (Sessions)</label>
+                        <input asp-for="QuarterlyReport.ReportedVouchersSessions" class="form-control" id="ReportedVouchersSessions" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="FitpacksProvidedUnits">Fitpacks Provided (Units)</label>
+                        <input asp-for="QuarterlyReport.FitpacksProvidedUnits" class="form-control" id="FitpacksProvidedUnits" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="FitpacksProvidedSessions">Fitpacks Provided (Sessions)</label>
+                        <input asp-for="QuarterlyReport.FitpacksProvidedSessions" class="form-control" id="FitpacksProvidedSessions" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="QuartContainersProvidedUnits">Quart Containers Provided (Units)</label>
+                        <input asp-for="QuarterlyReport.QuartContainersProvidedUnits" class="form-control" id="QuartContainersProvidedUnits" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="QuartContainersProvidedSessions">Quart Containers Provided (Sessions)</label>
+                        <input asp-for="QuarterlyReport.QuartContainersProvidedSessions" class="form-control" id="QuartContainersProvidedSessions" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="GallonContainersProvidedUnits">Gallon Containers Provided (Units)</label>
+                        <input asp-for="QuarterlyReport.GallonContainersProvidedUnits" class="form-control" id="GallonContainersProvidedUnits" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="GallonContainersProvidedSessions">Gallon Containers Provided (Sessions)</label>
+                        <input asp-for="QuarterlyReport.GallonContainersProvidedSessions" class="form-control" id="GallonContainersProvidedSessions" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="OtherSuccessesConcernsIssues">Other Successes, Concerns, Issues</label>
+                        <textarea asp-for="QuarterlyReport.OtherSuccessesConcernsIssues" class="form-control" id="OtherSuccessesConcernsIssues"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>function showReportForm(quarter, dueDate) {
+            $('#Quarter').val(quarter);
+            $('#DueDate').val(dueDate);
+            $('#reportModal').modal('show');
+        }
+
+        function editReport(reportId) {
+            $.get('/Client/Reports?handler=LoadReport', { id: reportId }, function (data) {
+                // Load data into the form
+                $('#QuarterlyReport_Id').val(data.id);
+                $('#Quarter').val(data.quarter);
+                $('#DueDate').val(data.dueDate);
+                $('#FacilityName').val(data.facilityName);
+                $('#CompletedBy').val(data.completedBy);
+                $('#Address').val(data.address);
+                $('#Phone').val(data.phone);
+                $('#Fax').val(data.fax);
+                $('#SyringesProvidedUnits').val(data.syringesProvidedUnits);
+                $('#SyringesProvidedSessions').val(data.syringesProvidedSessions);
+                $('#PharmacyVouchersUnits').val(data.pharmacyVouchersUnits);
+                $('#PharmacyVouchersSessions').val(data.pharmacyVouchersSessions);
+                $('#ReportedVouchersUnits').val(data.reportedVouchersUnits);
+                $('#ReportedVouchersSessions').val(data.reportedVouchersSessions);
+                $('#FitpacksProvidedUnits').val(data.fitpacksProvidedUnits);
+                $('#FitpacksProvidedSessions').val(data.fitpacksProvidedSessions);
+                $('#QuartContainersProvidedUnits').val(data.quartContainersProvidedUnits);
+                $('#QuartContainersProvidedSessions').val(data.quartContainersProvidedSessions);
+                $('#GallonContainersProvidedUnits').val(data.gallonContainersProvidedUnits);
+                $('#GallonContainersProvidedSessions').val(data.gallonContainersProvidedSessions);
+                $('#OtherSuccessesConcernsIssues').val(data.otherSuccessesConcernsIssues);
+
+                // Clear existing rows in the table
+                $('#collectionDetailsTable tbody').empty();
+
+                // Check if collectionDetails is an array before iterating
+                if (Array.isArray(data.collectionDetails)) {
+                    data.collectionDetails.forEach(function (detail) {
+                        addCollectionDetailRow(detail.sharpsCollectionSite, detail.collectionDates, detail.poundsCollected);
+                    });
+                }
+
+                // Show the modal
+                $('#reportModal').modal('show');
+            });
+        }
+
+        function addCollectionDetailRow(sharpsCollectionSite = '', collectionDates = '', poundsCollected = '') {
+            const index = $('#collectionDetailsTable tbody tr').length;
+            const row = `
+        <tr>
+            <td><input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].SharpsCollectionSite" value="${sharpsCollectionSite}" required /></td>
+            <td><input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].CollectionDates" value="${collectionDates}" required /></td>
+            <td><input type="number" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].PoundsCollected" value="${poundsCollected}" required /></td>
+            <td><button type="button" class="btn btn-danger remove-row">Remove</button></td>
+        </tr>
+    `;
+            $('#collectionDetailsTable tbody').append(row);
+        }
+
+        $('#addRow').click(function () {
+            addCollectionDetailRow();
+        });
+
+        $(document).on('click', '.remove-row', function () {
+            $(this).closest('tr').remove();
+        });
+
+
+
+        function removeCollectionDetailRow(button) {
+            $(button).closest('tr').remove();
+        }
+
+        // Add new row functionality
+        $('#addRow').click(function () {
+            addCollectionDetailRow();
+        });
+
+        // Remove row functionality
+        $(document).on('click', '.remove-row', function () {
+            $(this).closest('tr').remove();
+        });</script>
+}

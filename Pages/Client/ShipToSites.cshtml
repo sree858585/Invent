@@ -1,0 +1,223 @@
+﻿@page
+@model WebApplication1.Pages.Client.ShipToSitesModel
+@{
+    Layout = "~/Pages/Shared/_ClientLayout.cshtml";
+    ViewData["Title"] = "Ship to Sites";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Zip</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var site in Model.ShipToSites)
+            {
+                <tr>
+                    <td>@site.Name</td>
+                    <td>@site.Address</td>
+                    <td>@site.City</td>
+                    <td>@site.State</td>
+                    <td>@site.Zip</td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="viewShipToSiteDetails(@site.Id)">View Details</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<button class="btn btn-primary" onclick="addNewShipToSite()">Add Ship To Site</button>
+
+<!-- View/Edit ShipToSite Modal -->
+<div class="modal fade" id="shipToSiteModal" tabindex="-1" aria-labelledby="shipToSiteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shipToSiteModalLabel">Ship To Site Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- ShipToSite details form -->
+                <form id="shipToSiteForm">
+                    <input type="hidden" id="shipToSiteId" name="shipToSiteId" />
+                    <div class="form-group">
+                        <label for="shipToSiteName">Name</label>
+                        <input type="text" class="form-control" id="shipToSiteName" name="shipToSiteName" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteAddress">Address</label>
+                        <input type="text" class="form-control" id="shipToSiteAddress" name="shipToSiteAddress" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteAddress2">Address 2</label>
+                        <input type="text" class="form-control" id="shipToSiteAddress2" name="shipToSiteAddress2" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteCity">City</label>
+                        <input type="text" class="form-control" id="shipToSiteCity" name="shipToSiteCity" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteState">State</label>
+                        <input type="text" class="form-control" id="shipToSiteState" name="shipToSiteState" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteZip">Zip</label>
+                        <input type="text" class="form-control" id="shipToSiteZip" name="shipToSiteZip" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSitePhone">Phone</label>
+                        <input type="text" class="form-control" id="shipToSitePhone" name="shipToSitePhone" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSitePhoneExtension">Phone Extension</label>
+                        <input type="text" class="form-control" id="shipToSitePhoneExtension" name="shipToSitePhoneExtension" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteEmail">Email</label>
+                        <input type="email" class="form-control" id="shipToSiteEmail" name="shipToSiteEmail" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteSiteType">Site Type</label>
+                        <select class="form-control" id="shipToSiteSiteType" name="shipToSiteSiteType">
+                            <option value="Business">Business</option>
+                            <option value="Personal">Personal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteShipToName">Ship To Name</label>
+                        <input type="text" class="form-control" id="shipToSiteShipToName" name="shipToSiteShipToName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteShipToAddress">Ship To Address</label>
+                        <input type="text" class="form-control" id="shipToSiteShipToAddress" name="shipToSiteShipToAddress" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteShipToAddress2">Ship To Address 2</label>
+                        <input type="text" class="form-control" id="shipToSiteShipToAddress2" name="shipToSiteShipToAddress2" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteShipToCity">Ship To City</label>
+                        <input type="text" class="form-control" id="shipToSiteShipToCity" name="shipToSiteShipToCity" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteShipToState">Ship To State</label>
+                        <input type="text" class="form-control" id="shipToSiteShipToState" name="shipToSiteShipToState" />
+                    </div>
+                    <div class="form-group">
+                        <label for="shipToSiteShipToZip">Ship To Zip</label>
+                        <input type="text" class="form-control" id="shipToSiteShipToZip" name="shipToSiteShipToZip" />
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveShipToSite()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>function viewShipToSiteDetails(siteId) {
+            // Fetch and display ship to site details in the modal
+            fetch(`/Client/ShipToSites?handler=ShipToSiteDetails&id=${siteId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.shipToSite) {
+                        const site = data.shipToSite;
+                        $('#shipToSiteId').val(site.id);
+                        $('#shipToSiteName').val(site.name);
+                        $('#shipToSiteAddress').val(site.address);
+                        $('#shipToSiteAddress2').val(site.address2);
+                        $('#shipToSiteCity').val(site.city);
+                        $('#shipToSiteState').val(site.state);
+                        $('#shipToSiteZip').val(site.zip);
+                        $('#shipToSitePhone').val(site.phone);
+                        $('#shipToSitePhoneExtension').val(site.phoneExtension);
+                        $('#shipToSiteEmail').val(site.shipToEmail);
+                        $('#shipToSiteSiteType').val(site.siteType);
+                        $('#shipToSiteShipToName').val(site.shipToName);
+                        $('#shipToSiteShipToAddress').val(site.shipToAddress);
+                        $('#shipToSiteShipToAddress2').val(site.shipToAddress2);
+                        $('#shipToSiteShipToCity').val(site.shipToCity);
+                        $('#shipToSiteShipToState').val(site.shipToState);
+                        $('#shipToSiteShipToZip').val(site.shipToZip);
+                        $('#shipToSiteModal').modal('show');
+                    } else {
+                        alert('Error loading ship to site details.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function addNewShipToSite() {
+            // Clear the form for adding a new ship to site
+            $('#shipToSiteForm')[0].reset();
+            $('#shipToSiteId').val(0); // Indicate this is a new entry
+            $('#shipToSiteModal').modal('show');
+        }
+
+        function saveShipToSite() {
+            const formData = {
+                id: $('#shipToSiteId').val(),
+                name: $('#shipToSiteName').val(),
+                address: $('#shipToSiteAddress').val(),
+                address2: $('#shipToSiteAddress2').val(),
+                city: $('#shipToSiteCity').val(),
+                state: $('#shipToSiteState').val(),
+                zip: $('#shipToSiteZip').val(),
+                phone: $('#shipToSitePhone').val(),
+                phoneExtension: $('#shipToSitePhoneExtension').val(),
+                shipToEmail: $('#shipToSiteEmail').val(),
+                siteType: $('#shipToSiteSiteType').val(),
+                shipToName: $('#shipToSiteShipToName').val(),
+                shipToAddress: $('#shipToSiteShipToAddress').val(),
+                shipToAddress2: $('#shipToSiteShipToAddress2').val(),
+                shipToCity: $('#shipToSiteShipToCity').val(),
+                shipToState: $('#shipToSiteShipToState').val(),
+                shipToZip: $('#shipToSiteShipToZip').val(),
+            };
+
+            console.log('Form Data:', formData); // Log the data to inspect
+
+            fetch('/Client/ShipToSites?handler=SaveShipToSite', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify(formData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Ship to site saved successfully.');
+                        location.reload(); // Reload the page to reflect changes
+                    } else {
+                        alert('Error saving ship to site.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+</script>
+}

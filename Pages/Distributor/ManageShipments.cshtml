@@ -27,10 +27,88 @@
                     <td>@shipment.ShipToName</td>
                     <td>@shipment.ShippedDate.ToString("MM/dd/yyyy")</td>
                     <td>
-                        <a href="/Distributor/ViewShipmentDetails?id=@shipment.ShipmentId" class="btn btn-info btn-sm">View Details</a>
+                        <button class="btn btn-info btn-sm" onclick="loadOrderDetails(@shipment.ShipmentId)">View Details</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Order details content will be loaded here dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>function loadOrderDetails(shipmentId) {
+            fetch(`/Distributor/ManageShipments?handler=ViewShipmentDetails&id=${shipmentId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.order) {
+                        const order = data.order;
+                        const products = order.products.$values || []; // Use products.$values
+
+                        $('#orderDetailsContent').html(`
+                    <h5>Order ID: ${order.orderId}</h5>
+                    <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleDateString()}</p>
+                    <p><strong>Shipping Information:</strong><br>
+                        <strong>Name:</strong> ${order.shipToName}<br>
+                        <strong>Address:</strong> ${order.shipToAddress}, ${order.shipToCity}, ${order.shipToState} ${order.shipToZip}
+                    </p>
+                    <p><strong>Program Director:</strong> ${order.programDirector || 'N/A'}<br>
+                        <strong>Email:</strong> ${order.email || 'N/A'}<br>
+                        <strong>Phone:</strong> ${order.phone || 'N/A'}
+                    </p>
+                    <h5>Products:</h5>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${products.map(product => `
+                                <tr>
+                                    <td>${product.product_description}</td>
+                                    <td>${product.quantity}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `);
+
+                        $('#orderDetailsModal').modal('show');
+                    } else {
+                        $('#orderDetailsContent').html('<p>Error loading order details.</p>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    $('#orderDetailsContent').html('<p>Error loading order details.</p>');
+                });
+        }
+
+</script>
+}
