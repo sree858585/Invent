@@ -37,9 +37,26 @@ namespace WebApplication1.Pages.Client
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var reports = await _context.QuarterlyReports
-                                        .Where(qr => qr.UserId == userId && qr.Year == currentYear)
-                                        .Include(qr => qr.CollectionDetails)
-                                        .ToListAsync();
+                            .Where(qr => qr.UserId == userId && qr.Year == currentYear)
+                            .Include(qr => qr.CollectionDetails)
+                            .Select(qr => new {
+                                qr.Id,
+                                qr.UserId,
+                                qr.Year,
+                                qr.Quarter,
+                                qr.DueDate,
+                                qr.SubmissionDate,
+                                qr.EditedDate,
+                                qr.FacilityName,
+                                qr.CompletedBy,
+                                qr.Address,
+                                qr.Phone,
+                                qr.Fax,
+                                qr.Status,
+                                qr.CollectionDetails
+                            })
+                            .ToListAsync();
+
 
             var quarterData = new List<QuarterViewModel>
     {
@@ -66,13 +83,12 @@ namespace WebApplication1.Pages.Client
             }
         }
 
-
-
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
             {
-                //return Page();
+                // Handle validation errors
+              //  return Page();
             }
 
             if (QuarterlyReport.CollectionDetails == null)
@@ -86,7 +102,7 @@ namespace WebApplication1.Pages.Client
                 if (detail.CollectionDates == default(DateTime))
                 {
                     ModelState.AddModelError(string.Empty, "Please provide a valid Collection Date.");
-                    //return Page();
+                   // return Page();
                 }
             }
 
@@ -96,12 +112,27 @@ namespace WebApplication1.Pages.Client
                 var existingReport = await _context.QuarterlyReports.Include(q => q.CollectionDetails).FirstOrDefaultAsync(q => q.Id == QuarterlyReport.Id);
                 if (existingReport != null)
                 {
-                    // Update existing report
+                    // Update all fields in the existing report
                     existingReport.FacilityName = QuarterlyReport.FacilityName;
                     existingReport.CompletedBy = QuarterlyReport.CompletedBy;
                     existingReport.Address = QuarterlyReport.Address;
                     existingReport.Phone = QuarterlyReport.Phone;
                     existingReport.Fax = QuarterlyReport.Fax;
+
+                    // Update additional fields
+                    existingReport.SyringesProvidedUnits = QuarterlyReport.SyringesProvidedUnits;
+                    existingReport.SyringesProvidedSessions = QuarterlyReport.SyringesProvidedSessions;
+                    existingReport.PharmacyVouchersUnits = QuarterlyReport.PharmacyVouchersUnits;
+                    existingReport.PharmacyVouchersSessions = QuarterlyReport.PharmacyVouchersSessions;
+                    existingReport.ReportedVouchersUnits = QuarterlyReport.ReportedVouchersUnits;
+                    existingReport.ReportedVouchersSessions = QuarterlyReport.ReportedVouchersSessions;
+                    existingReport.FitpacksProvidedUnits = QuarterlyReport.FitpacksProvidedUnits;
+                    existingReport.FitpacksProvidedSessions = QuarterlyReport.FitpacksProvidedSessions;
+                    existingReport.QuartContainersProvidedUnits = QuarterlyReport.QuartContainersProvidedUnits;
+                    existingReport.QuartContainersProvidedSessions = QuarterlyReport.QuartContainersProvidedSessions;
+                    existingReport.GallonContainersProvidedUnits = QuarterlyReport.GallonContainersProvidedUnits;
+                    existingReport.GallonContainersProvidedSessions = QuarterlyReport.GallonContainersProvidedSessions;
+                    existingReport.OtherSuccessesConcernsIssues = QuarterlyReport.OtherSuccessesConcernsIssues;
 
                     // Clear and update collection details
                     existingReport.CollectionDetails.Clear();
@@ -118,6 +149,7 @@ namespace WebApplication1.Pages.Client
                     existingReport.EditedDate = DateTime.Now; // Capture edited date
                 }
             }
+
             else
             {
                 // Creating a new report
@@ -136,15 +168,27 @@ namespace WebApplication1.Pages.Client
 
         public async Task<IActionResult> OnGetLoadReportAsync(int id)
         {
-            QuarterlyReport = await _context.QuarterlyReports.Include(qr => qr.CollectionDetails).FirstOrDefaultAsync(qr => qr.Id == id);
-
-            if (QuarterlyReport == null)
+            try
             {
-                return NotFound();
-            }
+                var quarterlyReport = await _context.QuarterlyReports
+                                                    .Include(qr => qr.CollectionDetails)
+                                                    .FirstOrDefaultAsync(qr => qr.Id == id);
 
-            return new JsonResult(QuarterlyReport);
+                if (quarterlyReport == null)
+                {
+                    return NotFound();
+                }
+
+                return new JsonResult(quarterlyReport);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details (e.g., to a file or console)
+                Console.WriteLine($"Error loading report: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
         }
+
 
         public class QuarterViewModel
         {

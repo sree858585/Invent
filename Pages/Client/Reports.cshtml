@@ -120,10 +120,10 @@
                                     {
                                         <tr>
                                             <td>
-                                                <input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[@i].SharpsCollectionSite" value="@Model.QuarterlyReport.CollectionDetails[i].SharpsCollectionSite" />
+                                                <input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[@i].SharpsCollectionSite" value="@Model.QuarterlyReport.CollectionDetails[i].SharpsCollectionSite" required />
                                             </td>
                                             <td>
-                                                <input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[@i].CollectionDates" value="@Model.QuarterlyReport.CollectionDetails[i].CollectionDates.ToString("yyyy-MM-dd")" required />
+                                                <input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[@i].CollectionDates" value="@Model.QuarterlyReport.CollectionDetails[i].CollectionDates?.ToString("yyyy-MM-dd")" required />
                                             </td>
                                             <td>
                                                 <input type="number" class="form-control" name="QuarterlyReport.CollectionDetails[@i].PoundsCollected" value="@Model.QuarterlyReport.CollectionDetails[i].PoundsCollected" required />
@@ -135,7 +135,6 @@
                                     }
                                 }
                             </tbody>
-
                         </table>
                         <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
                     </div>
@@ -217,11 +216,17 @@
     <script>function showReportForm(quarter, dueDate) {
             $('#Quarter').val(quarter);
             $('#DueDate').val(dueDate);
+
+            // Ensure two rows are always present by default
+            ensureDefaultRows();
+
             $('#reportModal').modal('show');
         }
 
         function editReport(reportId) {
             $.get('/Client/Reports?handler=LoadReport', { id: reportId }, function (data) {
+                console.log('Data received:', data);  // Debugging: Log the received data
+
                 // Load data into the form
                 $('#QuarterlyReport_Id').val(data.id);
                 $('#Quarter').val(data.quarter);
@@ -248,24 +253,41 @@
                 // Clear existing rows in the table
                 $('#collectionDetailsTable tbody').empty();
 
-                // Check if collectionDetails is an array before iterating
-                if (Array.isArray(data.collectionDetails)) {
-                    data.collectionDetails.forEach(function (detail) {
+                // Populate CollectionDetails if available
+                if (data.collectionDetails && Array.isArray(data.collectionDetails.$values)) {
+                    data.collectionDetails.$values.forEach(function (detail) {
+                        console.log('Adding row with details:', detail);  // Debugging: Log each detail
                         addCollectionDetailRow(detail.sharpsCollectionSite, detail.collectionDates, detail.poundsCollected);
                     });
                 }
+
+                // Ensure at least two rows are present
+                ensureDefaultRows();
 
                 // Show the modal
                 $('#reportModal').modal('show');
             });
         }
 
+        function ensureDefaultRows() {
+            const currentRows = $('#collectionDetailsTable tbody tr').length;
+            const rowsNeeded = 2 - currentRows;
+
+            for (let i = 0; i < rowsNeeded; i++) {
+                addCollectionDetailRow();
+            }
+        }
+
         function addCollectionDetailRow(sharpsCollectionSite = '', collectionDates = '', poundsCollected = '') {
             const index = $('#collectionDetailsTable tbody tr').length;
+
+            // Format the date correctly
+            const formattedDate = collectionDates ? new Date(collectionDates).toISOString().split('T')[0] : '';
+
             const row = `
         <tr>
             <td><input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].SharpsCollectionSite" value="${sharpsCollectionSite}" required /></td>
-            <td><input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].CollectionDates" value="${collectionDates}" required /></td>
+            <td><input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].CollectionDates" value="${formattedDate}" required /></td>
             <td><input type="number" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].PoundsCollected" value="${poundsCollected}" required /></td>
             <td><button type="button" class="btn btn-danger remove-row">Remove</button></td>
         </tr>
@@ -281,8 +303,6 @@
             $(this).closest('tr').remove();
         });
 
-
-
         function removeCollectionDetailRow(button) {
             $(button).closest('tr').remove();
         }
@@ -297,3 +317,4 @@
             $(this).closest('tr').remove();
         });</script>
 }
+

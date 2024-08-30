@@ -1,0 +1,61 @@
+﻿@page
+@model WebApplication1.Pages.Admin.AdminReportViewModel
+@{
+    ViewData["Title"] = "Admin Quarterly Reports";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="accordion" id="yearAccordion">
+    @foreach (var year in Model.Years)
+    {
+        <div class="card">
+            <div class="card-header" id="heading@year">
+                <h5 class="mb-0">
+                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse@year" aria-expanded="false" aria-controls="collapse@year">
+                        @year
+                    </button>
+                </h5>
+            </div>
+
+            <div id="collapse@year" class="collapse" aria-labelledby="heading@year" data-parent="#yearAccordion">
+                <div class="card-body">
+                    <div class="accordion" id="quarterAccordion@year">
+                        @foreach (var quarter in Model.Quarters.Where(q => q.Year == year))
+                        {
+                            <div class="card">
+                                <div class="card-header" id="heading@year@quarter.QuarterName">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse@year@quarter.QuarterName" aria-expanded="false" aria-controls="collapse@year@quarter.QuarterName">
+                                            @quarter.QuarterName (@quarter.StartMonth.ToString("MMM") - @quarter.EndMonth.ToString("MMM")) - Due: @quarter.DueDate.ToString("MMMM dd, yyyy")
+                                        </button>
+                                    </h5>
+                                </div>
+
+                                <div id="collapse@year@quarter.QuarterName" class="collapse" aria-labelledby="heading@year@quarter.QuarterName" data-parent="#quarterAccordion@year">
+                                    <div class="card-body">
+                                        <form method="post" asp-page-handler="DownloadReport">
+                                            <input type="hidden" name="quarter" value="@quarter.QuarterName" />
+                                            <button type="submit" class="btn btn-primary">Download Report</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Ensure Bootstrap JS and jQuery are included -->
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script>$(document).ready(function () {
+            // Initialize any required JavaScript here
+            $('.collapse').collapse(); // Initialize all collapsible elements
+        });</script>
+}
