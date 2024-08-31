@@ -44,9 +44,7 @@
                         <label asp-for="EaspSepsRegistration.Address" class="form-label font-weight-bold">Address</label>
                         <input asp-for="EaspSepsRegistration.Address" class="form-control" />
                         <span asp-validation-for="EaspSepsRegistration.Address" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="EaspSepsRegistration.Address2" class="form-label font-weight-bold">Address 2</label>
+                 
                         <input asp-for="EaspSepsRegistration.Address2" class="form-control" />
                         <span asp-validation-for="EaspSepsRegistration.Address2" class="text-danger"></span>
                     </div>
@@ -101,11 +99,8 @@
                             <label asp-for="AgencyContact.SameAddressAsAgency" class="form-check-label">Same Address As Agency</label>
                         </div>
                     </div>
-                </div>
 
-                <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="AgencyContact.Address2" class="form-label font-weight-bold">Address 2</label>
                         <input asp-for="AgencyContact.Address2" class="form-control" />
                         <span asp-validation-for="AgencyContact.Address2" class="text-danger"></span>
                     </div>
@@ -140,6 +135,10 @@
                         <input asp-for="AgencyContact.PhoneExtension" class="form-control" />
                         <span asp-validation-for="AgencyContact.PhoneExtension" class="text-danger"></span>
                     </div>
+
+                </div>
+
+                <div class="row">
                     <div class="col-md-4 mb-3">
                         <label asp-for="AgencyContact.AltPhone" class="form-label font-weight-bold">Alt Phone</label>
                         <input asp-for="AgencyContact.AltPhone" class="form-control" />
@@ -150,15 +149,15 @@
                         <input asp-for="AgencyContact.AltPhoneExtension" class="form-control" />
                         <span asp-validation-for="AgencyContact.AltPhoneExtension" class="text-danger"></span>
                     </div>
-                </div>
+                    </div>
 
-                <div class="mb-3">
-                    <label asp-for="AgencyContact.Email" class="form-label font-weight-bold">Email</label>
-                    <input asp-for="AgencyContact.Email" class="form-control" />
-                    <span asp-validation-for="AgencyContact.Email" class="text-danger"></span>
+                    <div class="mb-3">
+                        <label asp-for="AgencyContact.Email" class="form-label font-weight-bold">Email</label>
+                        <input asp-for="AgencyContact.Email" class="form-control" />
+                        <span asp-validation-for="AgencyContact.Email" class="text-danger"></span>
+                    </div>
                 </div>
             </div>
-        </div>
 
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-primary text-white">
@@ -558,36 +557,11 @@
                         <div class="col-md-4">
                             <label for="AdditionalShipToSites_${index}__ShipToZip" class="form-label font-weight-bold">Ship To Zip</label>
                             <input type="text" id="AdditionalShipToSites_${index}__ShipToZip" name="AdditionalShipToSites[${index}].ShipToZip" class="form-control" />
-                            <label for="AdditionalShipToSites_${index}__ShipToAddress" class="form-label font-weight-bold">Ship To Address</label>
-                            <input type="text" id="AdditionalShipToSites_${index}__ShipToAddress" name="AdditionalShipToSites[${index}].ShipToAddress" class="form-control" />
-                        </div>
-                        <div class="col-md-3 d-flex align-items-center">
-                            <input type="checkbox" id="AdditionalShipToSites_${index}__SameAsSite" name="AdditionalShipToSites[${index}].SameAsSite" class="form-check-input" />
-                            <label class="form-check-label ml-2" for="AdditionalShipToSites_${index}__SameAsSite">Same As Site</label>
-                        </div>
+                             </div>
+                        
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="AdditionalShipToSites_${index}__ShipToAddress2" class="form-label font-weight-bold">Address 2</label>
-                            <input type="text" id="AdditionalShipToSites_${index}__ShipToAddress2" name="AdditionalShipToSites[${index}].ShipToAddress2" class="form-control" />
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="AdditionalShipToSites_${index}__ShipToCity" class="form-label font-weight-bold">City</label>
-                            <input type="text" id="AdditionalShipToSites_${index}__ShipToCity" name="AdditionalShipToSites[${index}].ShipToCity" class="form-control" />
-                        </div>
-                        <div class="col-md-4">
-                            <label for="AdditionalShipToSites_${index}__ShipToState" class="form-label font-weight-bold">State</label>
-                            <input type="text" id="AdditionalShipToSites_${index}__ShipToState" name="AdditionalShipToSites[${index}].ShipToState" class="form-control" />
-                        </div>
-                        <div class="col-md-4">
-                            <label for="AdditionalShipToSites_${index}__ShipToZip" class="form-label font-weight-bold">Zip</label>
-                            <input type="text" id="AdditionalShipToSites_${index}__ShipToZip" name="AdditionalShipToSites[${index}].ShipToZip" class="form-control" />
-                        </div>
-                    </div>
+               
                 `;
                 container.appendChild(newShipToSite);
             } else {

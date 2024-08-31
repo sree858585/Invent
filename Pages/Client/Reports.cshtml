@@ -271,7 +271,7 @@
 
         function ensureDefaultRows() {
             const currentRows = $('#collectionDetailsTable tbody tr').length;
-            const rowsNeeded = 2 - currentRows;
+            const rowsNeeded = 1 - currentRows;
 
             for (let i = 0; i < rowsNeeded; i++) {
                 addCollectionDetailRow();
@@ -307,10 +307,7 @@
             $(button).closest('tr').remove();
         }
 
-        // Add new row functionality
-        $('#addRow').click(function () {
-            addCollectionDetailRow();
-        });
+      
 
         // Remove row functionality
         $(document).on('click', '.remove-row', function () {
