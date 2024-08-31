@@ -9,12 +9,12 @@ namespace WebApplication1.Models
         public int Id { get; set; }
         [Required]
         public string AgencyName { get; set; }
-        public string AlternateName { get; set; }
+        public string? AlternateName { get; set; }
         [Required]
         public string County { get; set; }
         [Required]
         public string Address { get; set; }
-        public string Address2 { get; set; }
+        public string? Address2 { get; set; }
         [Required]
         public string City { get; set; }
         public string State { get; set; } = "NY";

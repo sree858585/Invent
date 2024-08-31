@@ -7,14 +7,14 @@ namespace WebApplication1.Models
         public int Id { get; set; }
         public string ProgramDirector { get; set; }
         public string Address { get; set; }
-        public string Address2 { get; set; }
+        public string? Address2 { get; set; }
         public string City { get; set; }
         public string State { get; set; }
         public string Zip { get; set; }
         public string Phone { get; set; }
-        public string PhoneExtension { get; set; }
-        public string AltPhone { get; set; }
-        public string AltPhoneExtension { get; set; }
+        public string? PhoneExtension { get; set; }
+        public string? AltPhone { get; set; }
+        public string? AltPhoneExtension { get; set; }
         public string Email { get; set; }
 
         public int? SuffixId { get; set; }  // Update here
