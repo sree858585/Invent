@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.Models;
@@ -172,6 +173,51 @@ namespace WebApplication1.Pages.Distributor
 
             return new JsonResult(new { success = true });
         }
+        public async Task<IActionResult> OnPostGetOrderHistoryCsvAsync([FromBody] UserRequest request)
+        {
+            // Log the incoming User ID
+            Console.WriteLine($"Fetching order history for UserId: {request.UserId}");
+
+            var orderHistory = await _context.Orders
+                .Where(o => o.UserId == request.UserId) // Removed the IsDeleted condition
+                .Include(o => o.OrderDetails)
+                .ThenInclude(od => od.Product)
+                .Join(_context.AgencyRegistrations,
+                      order => order.UserId,
+                      registration => registration.UserId,
+                      (order, registration) => new { order, registration })
+                .Join(_context.AgencyContacts,
+                      reg => reg.registration.Id,
+                      contact => contact.AgencyRegistrationId,
+                      (reg, contact) => new { reg.order, reg.registration, contact })
+                .OrderByDescending(o => o.order.ShippedDate)
+                .ToListAsync();
+
+            // Log the number of orders retrieved
+            Console.WriteLine($"Order history count: {orderHistory.Count}");
+
+            if (orderHistory == null || !orderHistory.Any())
+            {
+                return new JsonResult(new { success = false, message = "No order history available." });
+            }
+
+            // Generate CSV data
+            var csvData = new StringBuilder();
+            csvData.AppendLine("Order ID,Agency Name,Program Director,Email,Phone,Ship Date,Shipping Address,Product Name,Quantity");
+
+            foreach (var entry in orderHistory)
+            {
+                foreach (var detail in entry.order.OrderDetails)
+                {
+                    var shippingInfo = $"{entry.order.ShipToAddress}, {entry.order.ShipToCity}, {entry.order.ShipToState}, {entry.order.ShipToZip}";
+                    csvData.AppendLine($"{entry.order.OrderId},{entry.registration.AgencyName},{entry.contact.ProgramDirector},{entry.contact.Email},{entry.contact.Phone},{entry.order.ShippedDate?.ToString("MM/dd/yyyy")},{shippingInfo},{detail.Product.product_description},{detail.Quantity}");
+                }
+            }
+
+            return new JsonResult(new { success = true, csv = csvData.ToString() });
+        }
+
+
 
         public async Task<IActionResult> OnPostGetAvailableProductsAsync()
         {
@@ -194,11 +240,11 @@ namespace WebApplication1.Pages.Distributor
                 .Where(o => o.UserId == request.UserId)
                 .Include(o => o.OrderDetails)
                 .ThenInclude(od => od.Product)
-                .Join(_context.AgencyRegistrations,
+                .Join(_context.AgencyRegistrations, // Assuming AgencyRegistration contains AgencyName
                       order => order.UserId,
                       registration => registration.UserId,
                       (order, registration) => new { order, registration })
-                .Join(_context.AgencyContacts,
+                .Join(_context.AgencyContacts, // Assuming AgencyContacts contains ProgramDirector, Email, Phone
                       reg => reg.registration.Id,
                       contact => contact.AgencyRegistrationId,
                       (reg, contact) => new { reg.order, reg.registration, contact })
@@ -208,10 +254,10 @@ namespace WebApplication1.Pages.Distributor
                     OrderId = o.order.OrderId,
                     ShipDate = o.order.ShippedDate,
                     OrderStatus = o.order.OrderStatus,
-                    AgencyName = o.registration.AgencyName,
-                    ProgramDirector = o.contact.ProgramDirector,
-                    Email = o.contact.Email,
-                    Phone = o.contact.Phone,
+                    AgencyName = o.registration.AgencyName, // Access AgencyName from AgencyRegistration
+                    ProgramDirector = o.contact.ProgramDirector, // Access ProgramDirector from AgencyContacts
+                    Email = o.contact.Email, // Access Email from AgencyContacts
+                    Phone = o.contact.Phone, // Access Phone from AgencyContacts
                     ShipToAddress = new ShippingInfoViewModel
                     {
                         ShipToName = o.order.ShipToName,
@@ -229,8 +275,14 @@ namespace WebApplication1.Pages.Distributor
                 })
                 .ToListAsync();
 
+            if (orderHistory == null || !orderHistory.Any())
+            {
+                return new JsonResult(new { success = false, message = "No order history available." });
+            }
+
             return new JsonResult(new { success = true, history = orderHistory });
         }
+
 
         public async Task<IActionResult> OnPostSaveOrderAsync([FromBody] SaveOrderRequest request)
         {
