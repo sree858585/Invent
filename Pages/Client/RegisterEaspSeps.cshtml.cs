@@ -99,6 +99,11 @@ public class RegisterEaspSepsModel : PageModel
             await OnGetAsync();
            // return Page();
         }
+        _logger.LogInformation("CountiesServed count: " + CountiesServed.Count);
+        foreach (var county in CountiesServed)
+        {
+            _logger.LogInformation("CountyId: " + county);
+        }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))

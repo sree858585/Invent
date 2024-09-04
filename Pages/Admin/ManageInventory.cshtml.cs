@@ -52,7 +52,9 @@ namespace WebApplication1.Pages.Admin
 
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                query = query.Where(p => p.product_item_num.Contains(searchTerm) || p.product_description.Contains(searchTerm));
+                query = query.Where(p => p.product_item_num.Contains(searchTerm) || p.product_description.Contains(searchTerm) || (searchTerm == "sep" && p.product_agency_type == 1) ||  // Assuming "1" is SEP
+            (searchTerm == "esap" && p.product_agency_type == 2));   // Assuming "2" is ESAP
+    
             }
 
             // Apply sorting

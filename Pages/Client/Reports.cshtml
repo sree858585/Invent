@@ -126,7 +126,7 @@
                                                 <input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[@i].CollectionDates" value="@Model.QuarterlyReport.CollectionDetails[i].CollectionDates?.ToString("yyyy-MM-dd")" required />
                                             </td>
                                             <td>
-                                                <input type="number" class="form-control" name="QuarterlyReport.CollectionDetails[@i].PoundsCollected" value="@Model.QuarterlyReport.CollectionDetails[i].PoundsCollected" required />
+                                                <input type="text" class="form-control pounds-collected" name="QuarterlyReport.CollectionDetails[@i].PoundsCollected" value="@Model.QuarterlyReport.CollectionDetails[i].PoundsCollected" required />
                                             </td>
                                             <td>
                                                 <button type="button" class="btn btn-danger remove-row">Remove</button>
@@ -285,13 +285,13 @@
             const formattedDate = collectionDates ? new Date(collectionDates).toISOString().split('T')[0] : '';
 
             const row = `
-        <tr>
-            <td><input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].SharpsCollectionSite" value="${sharpsCollectionSite}" required /></td>
-            <td><input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].CollectionDates" value="${formattedDate}" required /></td>
-            <td><input type="number" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].PoundsCollected" value="${poundsCollected}" required /></td>
-            <td><button type="button" class="btn btn-danger remove-row">Remove</button></td>
-        </tr>
-    `;
+            <tr>
+                <td><input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].SharpsCollectionSite" value="${sharpsCollectionSite}" required /></td>
+                <td><input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].CollectionDates" value="${formattedDate}" required /></td>
+                <td><input type="number" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].PoundsCollected" value="${poundsCollected}" required /></td>
+                <td><button type="button" class="btn btn-danger remove-row">Remove</button></td>
+            </tr>
+        `;
             $('#collectionDetailsTable tbody').append(row);
         }
 
@@ -307,11 +307,35 @@
             $(button).closest('tr').remove();
         }
 
-      
+        document.addEventListener('DOMContentLoaded', function () {
+            const poundInputs = document.querySelectorAll('.pounds-collected');
+
+            poundInputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    // Remove any non-digit characters except for a single dot (.)
+                    this.value = this.value.replace(/[^0-9.]/g, '');
+
+                    // Convert value to float and ensure it's not less than 0
+                    let numValue = parseFloat(this.value);
+                    if (isNaN(numValue) || numValue < 0) {
+                        this.value = 0;
+                    } else {
+                        this.value = numValue.toString();
+                    }
+                });
+
+                input.addEventListener('blur', function () {
+                    // If the value is empty or NaN after user leaves the input, set it to 0
+                    if (this.value === '' || isNaN(parseFloat(this.value))) {
+                        this.value = 0;
+                    }
+                });
+            });
+        });
+
 
         // Remove row functionality
         $(document).on('click', '.remove-row', function () {
             $(this).closest('tr').remove();
         });</script>
 }
-

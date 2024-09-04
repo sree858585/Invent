@@ -1,4 +1,4 @@
-@page
+﻿@page
 @model WebApplication1.Pages.Distributor.ManageOrdersModel
 @{
     Layout = "~/Pages/Shared/_DistributorLayout.cshtml";
@@ -332,13 +332,11 @@
                                                     <td>${email}</td>
                                                     <td>${phone}</td>
                                                     <td>${shipDate}</td>
-                                                    <td>
-                                                        ${shippingInfo.shipToName || ''},
-                                                        ${shippingInfo.shipToAddress || ''},
-                                                        ${shippingInfo.shipToAddress2 || ''},
-                                                        ${shippingInfo.shipToCity || ''},
-                                                        ${shippingInfo.shipToState || ''},
-                                                        ${shippingInfo.shipToZip || ''}
+                                                   <td>
+                                                        ${shippingInfo.shipToName || ''}<br />
+                                                        ${shippingInfo.shipToAddress || ''}<br />
+                                                        ${shippingInfo.shipToAddress2 || ''}<br />
+                                                        ${shippingInfo.shipToCity || ''}, ${shippingInfo.shipToState || ''} ${shippingInfo.shipToZip || ''}
                                                     </td>
                                                     <td>
                                                         <ul>
