@@ -58,7 +58,7 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label asp-for="EaspSepsRegistration.State" class="form-label font-weight-bold">State</label>
-                        <input asp-for="EaspSepsRegistration.State" class="form-control" />
+                        <input asp-for="EaspSepsRegistration.State" class="form-control" value="NY" readonly="readonly" />
                         <span asp-validation-for="EaspSepsRegistration.State" class="text-danger"></span>
                     </div>
                     <div class="col-md-4 mb-3">
@@ -114,7 +114,7 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label asp-for="AgencyContact.State" class="form-label font-weight-bold">State</label>
-                        <input asp-for="AgencyContact.State" class="form-control" />
+                        <input asp-for="AgencyContact.State" class="form-control" value="NY" readonly="readonly" />
                         <span asp-validation-for="AgencyContact.State" class="text-danger"></span>
                     </div>
                     <div class="col-md-4 mb-3">
@@ -127,7 +127,8 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label asp-for="AgencyContact.Phone" class="form-label font-weight-bold">Phone</label>
-                        <input asp-for="AgencyContact.Phone" class="form-control" />
+                        <input asp-for="AgencyContact.Phone" class="form-control phone-format" placeholder="(XXX)XXX-XXXX" />
+                        <span asp-validation-for="AgencyContact.Phone" class="text-danger"></span>
                         <span asp-validation-for="AgencyContact.Phone" class="text-danger"></span>
                     </div>
                     <div class="col-md-4 mb-3">
@@ -141,7 +142,7 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label asp-for="AgencyContact.AltPhone" class="form-label font-weight-bold">Alt Phone</label>
-                        <input asp-for="AgencyContact.AltPhone" class="form-control" />
+                        <input asp-for="AgencyContact.Phone" class="form-control phone-format" placeholder="(XXX)XXX-XXXX" />
                         <span asp-validation-for="AgencyContact.AltPhone" class="text-danger"></span>
                     </div>
                     <div class="col-md-4 mb-3">
@@ -151,11 +152,11 @@
                     </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="AgencyContact.Email" class="form-label font-weight-bold">Email</label>
-                        <input asp-for="AgencyContact.Email" class="form-control" />
-                        <span asp-validation-for="AgencyContact.Email" class="text-danger"></span>
-                    </div>
+                <div class="mb-3">
+                    <label asp-for="AgencyContact.Email" class="form-label font-weight-bold">Email</label>
+                    <input asp-for="AgencyContact.Email" class="form-control" value="@Model.LoggedInUserEmail" readonly="readonly" />
+                    <span asp-validation-for="AgencyContact.Email" class="text-danger"></span>
+                </div>
                 </div>
             </div>
 
@@ -225,7 +226,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label asp-for="AdditionalUsers[i].State" class="form-label font-weight-bold">State</label>
-                                <input asp-for="AdditionalUsers[i].State" class="form-control" />
+                                <input asp-for="AdditionalUsers[i].State" class="form-control" value="NY" readonly="readonly" />
                                 <span asp-validation-for="AdditionalUsers[i].State" class="text-danger"></span>
                             </div>
                             <div class="col-md-4">
@@ -238,7 +239,7 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label asp-for="AdditionalUsers[i].Phone" class="form-label font-weight-bold">Phone</label>
-                                <input asp-for="AdditionalUsers[i].Phone" class="form-control" />
+                                <input asp-for="AdditionalUsers[i].Phone" class="form-control phone-format" id="phoneInput" placeholder="(XXX)XXX-XXXX" />
                                 <span asp-validation-for="AdditionalUsers[i].Phone" class="text-danger"></span>
                             </div>
                         </div>
@@ -337,7 +338,7 @@
                     </div>
                     <div class="col-md-4">
                         <label asp-for="ShipInformation.ShipToState" class="form-label font-weight-bold">State</label>
-                        <input asp-for="ShipInformation.ShipToState" class="form-control" />
+                        <input asp-for="ShipInformation.ShipToState" class="form-control" value="NY" readonly="readonly" />
                         <span asp-validation-for="ShipInformation.ShipToState" class="text-danger"></span>
                     </div>
                     <div class="col-md-4">
@@ -386,7 +387,7 @@
                         </div>
                         <div class="col-md-4">
                             <label asp-for="AdditionalShipToSites[i].State" class="form-label font-weight-bold">State</label>
-                            <input asp-for="AdditionalShipToSites[i].State" class="form-control" />
+                            <input asp-for="AdditionalShipToSites[i].State" class="form-control" value="NY" readonly="readonly" />
                             <span asp-validation-for="AdditionalShipToSites[i].State" class="text-danger"></span>
                         </div>
                         <div class="col-md-4">
@@ -398,7 +399,7 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label asp-for="AdditionalShipToSites[i].Phone" class="form-label font-weight-bold">Phone</label>
-                            <input asp-for="AdditionalShipToSites[i].Phone" class="form-control" />
+                            <input asp-for="AdditionalShipToSites[i].Phone" class="form-control phone-format" id="phoneInput" placeholder="(XXX)XXX-XXXX" />
                             <span asp-validation-for="AdditionalShipToSites[i].Phone" class="text-danger"></span>
                         </div>
                         <div class="col-md-4">
@@ -487,7 +488,7 @@
                         </div>
                         <div class="col-md-4">
                             <label for="AdditionalShipToSites_${index}__State" class="form-label font-weight-bold">State</label>
-                            <input type="text" id="AdditionalShipToSites_${index}__State" name="AdditionalShipToSites[${index}].State" class="form-control" />
+                            <input type="text" id="AdditionalShipToSites_${index}__State" name="AdditionalShipToSites[${index}].State" class="form-control" value="NY" readonly="readonly" />
                         </div>
                         <div class="col-md-4">
                             <label for="AdditionalShipToSites_${index}__Zip" class="form-label font-weight-bold">Zip</label>
@@ -497,7 +498,7 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label for="AdditionalShipToSites_${index}__Phone" class="form-label font-weight-bold">Phone</label>
-                            <input type="text" id="AdditionalShipToSites_${index}__Phone" name="AdditionalShipToSites[${index}].Phone" class="form-control" />
+                            <input type="text" id="AdditionalShipToSites_${index}__Phone" name="AdditionalShipToSites[${index}].Phone" class="form-control phone-format" id="phoneInput" placeholder="(XXX)XXX-XXXX" />
                         </div>
                         <div class="col-md-4">
                             <label for="AdditionalShipToSites_${index}__PhoneExtension" class="form-label font-weight-bold">Extension</label>
@@ -552,7 +553,7 @@
                         </div>
                         <div class="col-md-4">
                             <label for="AdditionalShipToSites_${index}__ShipToState" class="form-label font-weight-bold">Ship To State</label>
-                            <input type="text" id="AdditionalShipToSites_${index}__ShipToState" name="AdditionalShipToSites[${index}].ShipToState" class="form-control" />
+                            <input type="text" id="AdditionalShipToSites_${index}__ShipToState" name="AdditionalShipToSites[${index}].ShipToState" class="form-control" value="NY" readonly="readonly" />
                         </div>
                         <div class="col-md-4">
                             <label for="AdditionalShipToSites_${index}__ShipToZip" class="form-label font-weight-bold">Ship To Zip</label>
@@ -646,7 +647,7 @@
                     </div>
                     <div class="col-md-4">
                         <label for="AdditionalUsers_${additionalUserIndex}__State" class="form-label font-weight-bold">State</label>
-                        <input type="text" id="AdditionalUsers_${additionalUserIndex}__State" name="AdditionalUsers[${additionalUserIndex}].State" class="form-control" />
+                        <input type="text" id="AdditionalUsers_${additionalUserIndex}__State" name="AdditionalUsers[${additionalUserIndex}].State" class="form-control" value="NY" readonly="readonly" />
                         <span class="text-danger" asp-validation-for="AdditionalUsers[${additionalUserIndex}].State"></span>
                     </div>
                     <div class="col-md-4">
@@ -714,6 +715,32 @@
                 document.querySelector('input[name="AgencyContact.AltPhoneExtension"]').value = document.querySelector('[name="EaspSepsRegistration.AltPhoneExtension"]').value;
                 document.querySelector('input[name="AgencyContact.Email"]').value = document.querySelector('[name="EaspSepsRegistration.Email"]').value;
             }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Function to format the phone number
+            function formatPhoneNumber(input) {
+                var cleaned = input.replace(/\D/g, ''); // Remove all non-digit characters
+                var formattedInput = '';
+
+                if (cleaned.length > 0) {
+                    formattedInput += '(' + cleaned.substring(0, 3);
+                }
+                if (cleaned.length >= 4) {
+                    formattedInput += ')' + cleaned.substring(3, 6);
+                }
+                if (cleaned.length >= 7) {
+                    formattedInput += '-' + cleaned.substring(6, 10);
+                }
+
+                return formattedInput;
+            }
+            // Event delegation to handle dynamically added inputs
+            document.addEventListener('input', function (e) {
+                if (e.target.classList.contains('phone-format')) {
+                    e.target.value = formatPhoneNumber(e.target.value);
+                }
+            });
         });
     </script>
 }

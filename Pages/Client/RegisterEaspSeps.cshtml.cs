@@ -48,8 +48,13 @@ public class RegisterEaspSepsModel : PageModel
     [BindProperty]
     public bool IsOther { get; set; }
 
-   // [BindProperty]
-   // public string OtherClassificationText { get; set; }
+    public string LoggedInUserEmail { get; set; }
+
+    [BindProperty]
+    public AgencyContact Agencycontact { get; set; }
+
+    // [BindProperty]
+    // public string OtherClassificationText { get; set; }
 
     public List<SelectListItem> CountyList { get; set; }
     public List<SelectListItem> SuffixList { get; set; }
@@ -88,6 +93,18 @@ public class RegisterEaspSepsModel : PageModel
 
         CountiesServed = Enumerable.Repeat(0, 10).ToList();
         ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };
+
+        // Get the logged-in user's email from the database
+        var userEmail = User.Identity.Name;
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+        LoggedInUserEmail = user?.Email;
+
+        // Prefill the email in the model
+        Agencycontact = new AgencyContact
+        {
+            Email = LoggedInUserEmail
+        };
+
 
         return Page();
     }
