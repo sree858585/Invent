@@ -46,7 +46,7 @@ namespace WebApplication1.Pages.Admin
                     Id = r.Id,
                     AgencyName = r.AgencyName,
                     AlternateName = r.AlternateName,
-                    County = r.County,
+                    County = _context.Counties.Where(c => c.county_id == Convert.ToInt32(r.County)).Select(c => c.name).FirstOrDefault(), // Fetch the county name
                     Address = r.Address,
                     Address2 = r.Address2,
                     City = r.City,

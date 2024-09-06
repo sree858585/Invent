@@ -114,7 +114,7 @@ public class RegisterEaspSepsModel : PageModel
         if (!ModelState.IsValid)
         {
             await OnGetAsync();
-           // return Page();
+            // return Page();
         }
         _logger.LogInformation("CountiesServed count: " + CountiesServed.Count);
         foreach (var county in CountiesServed)
@@ -165,9 +165,9 @@ public class RegisterEaspSepsModel : PageModel
             var lnkAgencyClassificationData = new LnkAgencyClassificationData
             {
                 Category = id,
-               // Other = IsOther && id == 4,
+                // Other = IsOther && id == 4,
                 AgencyRegistrationId = EaspSepsRegistration.Id,
-               // OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null,
+                // OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null,
                 UniqueId = uniqueId
             };
             _context.Lnk_AgencyClassificationData.Add(lnkAgencyClassificationData);

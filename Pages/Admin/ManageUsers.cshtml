@@ -108,8 +108,11 @@
                 </div>
                 <div class="form-group">
                     <label asp-for="Registration.County"></label>
-                    <input asp-for="Registration.County" class="form-control" />
+                    <select asp-for="Registration.County" asp-items="Model.CountyList" class="form-control">
+                        <option value="">Select County</option>
+                    </select>
                 </div>
+
                 <div class="form-group">
                     <label asp-for="Registration.Address"></label>
                     <input asp-for="Registration.Address" class="form-control" />

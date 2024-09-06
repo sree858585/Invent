@@ -44,7 +44,7 @@
                         <label asp-for="EaspSepsRegistration.Address" class="form-label font-weight-bold">Address</label>
                         <input asp-for="EaspSepsRegistration.Address" class="form-control" />
                         <span asp-validation-for="EaspSepsRegistration.Address" class="text-danger"></span>
-                 
+
                         <input asp-for="EaspSepsRegistration.Address2" class="form-control" />
                         <span asp-validation-for="EaspSepsRegistration.Address2" class="text-danger"></span>
                     </div>
@@ -150,15 +150,15 @@
                         <input asp-for="AgencyContact.AltPhoneExtension" class="form-control" />
                         <span asp-validation-for="AgencyContact.AltPhoneExtension" class="text-danger"></span>
                     </div>
-                    </div>
+                </div>
 
                 <div class="mb-3">
                     <label asp-for="AgencyContact.Email" class="form-label font-weight-bold">Email</label>
                     <input asp-for="AgencyContact.Email" class="form-control" value="@Model.LoggedInUserEmail" readonly="readonly" />
                     <span asp-validation-for="AgencyContact.Email" class="text-danger"></span>
                 </div>
-                </div>
             </div>
+        </div>
 
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-primary text-white">
@@ -559,10 +559,10 @@
                             <label for="AdditionalShipToSites_${index}__ShipToZip" class="form-label font-weight-bold">Ship To Zip</label>
                             <input type="text" id="AdditionalShipToSites_${index}__ShipToZip" name="AdditionalShipToSites[${index}].ShipToZip" class="form-control" />
                              </div>
-                        
+
                     </div>
 
-               
+
                 `;
                 container.appendChild(newShipToSite);
             } else {
