@@ -53,9 +53,6 @@ public class RegisterEaspSepsModel : PageModel
     [BindProperty]
     public AgencyContact Agencycontact { get; set; }
 
-    // [BindProperty]
-    // public string OtherClassificationText { get; set; }
-
     public List<SelectListItem> CountyList { get; set; }
     public List<SelectListItem> SuffixList { get; set; }
     public List<SelectListItem> PrefixList { get; set; }
@@ -71,51 +68,92 @@ public class RegisterEaspSepsModel : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        CountyList = await _context.Counties
-            .Where(c => c.is_active)
-            .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
-            .ToListAsync();
+        // Call your existing PopulateData method to fill the dropdowns
+        await PopulateData();
 
-        SuffixList = await _context.Suffixes
-            .Where(s => s.IsActive)
-            .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Sufix })
-            .ToListAsync();
+        // Only initialize `CountiesServed` and `ShipToSiteCounties` during the first GET request, not during POST
+        if (!Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+        {
+            CountiesServed = Enumerable.Repeat(0, 10).ToList();  // Ensuring 10 elements for 10 dropdowns
+            ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };  // Initialize counties for each site
+        }
 
-        PrefixList = await _context.Prefixes
-            .Where(s => s.IsActive)
-            .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Prefx })
-            .ToListAsync();
-
-        AgencyClassifications = await _context.LkAgencyClassifications
-            .Where(c => c.is_active)
-            .Select(c => new SelectListItem { Value = c.agency_classification_id.ToString(), Text = c.classifcation_description })
-            .ToListAsync();
-
-        CountiesServed = Enumerable.Repeat(0, 10).ToList();
-        ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };
-
-        // Get the logged-in user's email from the database
+        // Prefill the email in the model (retrieving the current user)
         var userEmail = User.Identity.Name;
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
         LoggedInUserEmail = user?.Email;
 
-        // Prefill the email in the model
-        Agencycontact = new AgencyContact
-        {
-            Email = LoggedInUserEmail
-        };
+        // Check if the user has already filled out the registration form (existing registration)
+        var existingRegistration = await _context.AgencyRegistrations
+            .Include(a => a.AgencyContacts)
+            .Include(a => a.AdditionalUsers)
+            .Include(a => a.ShipToSites)
+            .Include(a => a.CountiesServed)
+            .Include(a => a.ShipInformations) // Include ShipInformation
+            .FirstOrDefaultAsync(r => r.UserId == user.Id);
 
+        if (existingRegistration != null)
+        {
+            // If registration exists, populate the form with existing data
+            EaspSepsRegistration = existingRegistration;
+
+            // Populate the AgencyContact with the first contact (assuming only one is the primary)
+            AgencyContact = existingRegistration.AgencyContacts.FirstOrDefault();
+
+            // Load the additional users if they exist
+            AdditionalUsers = existingRegistration.AdditionalUsers.ToList();
+
+            // Load the ship-to sites if they exist
+            AdditionalShipToSites = existingRegistration.ShipToSites.ToList();
+
+            // Load the ShipInformation
+            ShipInformation = existingRegistration.ShipInformations.FirstOrDefault();
+
+            // Populate the counties served
+            CountiesServed = existingRegistration.CountiesServed.Select(c => c.CountyId).ToList();
+
+            // Populate the counties for each ShipToSite
+            ShipToSiteCounties = existingRegistration.ShipToSites
+                .Select(s => _context.ShipToSiteCounties
+                    .Where(sc => sc.ShipToSiteId == s.Id)
+                    .Select(sc => sc.CountyId)
+                    .ToArray())
+                .ToList();
+            // Ensure that every ShipToSite has exactly 5 counties, even if some are missing
+            for (int i = 0; i < ShipToSiteCounties.Count; i++)
+            {
+                if (ShipToSiteCounties[i].Length < 5)
+                {
+                    // Extend the array to have exactly 5 elements, filling with default value 0
+                    ShipToSiteCounties[i] = ShipToSiteCounties[i].Concat(new int[5 - ShipToSiteCounties[i].Length]).ToArray();
+                }
+            }
+            // Optionally, mark the form as readonly based on certain conditions
+            ViewData["IsReadOnly"] = true;
+        }
+        else
+        {
+            // If no existing registration, prepare for a new submission
+            EaspSepsRegistration = new AgencyRegistration();
+            AgencyContact = new AgencyContact { Email = LoggedInUserEmail };
+            AdditionalUsers = new List<AdditionalUser> { new AdditionalUser() };
+            AdditionalShipToSites = new List<ShipToSite>();
+            ShipInformation = new ShipInformation(); // Initialize ShipInformation for new registration
+            ViewData["IsReadOnly"] = false;
+        }
 
         return Page();
     }
+
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
         {
-            await OnGetAsync();
-            // return Page();
+            await PopulateData(); // Repopulate dropdowns but avoid resetting `CountiesServed`
+                                  // return Page();
         }
+
         _logger.LogInformation("CountiesServed count: " + CountiesServed.Count);
         foreach (var county in CountiesServed)
         {
@@ -133,6 +171,7 @@ public class RegisterEaspSepsModel : PageModel
         EaspSepsRegistration.SubmissionDate = DateTime.Now; // Set the submission date
         EaspSepsRegistration.Status = "Pending"; // Set the status to Pending
 
+        // Save selected classifications
         var selectedClassifications = new List<string>();
         if (IsSyringeExchangeProgram) selectedClassifications.Add("Syringe exchange program");
         if (IsESAPTier1) selectedClassifications.Add("ESAP Tier 1");
@@ -165,19 +204,19 @@ public class RegisterEaspSepsModel : PageModel
             var lnkAgencyClassificationData = new LnkAgencyClassificationData
             {
                 Category = id,
-                // Other = IsOther && id == 4,
                 AgencyRegistrationId = EaspSepsRegistration.Id,
-                // OtherClassificationText = IsOther && id == 4 ? OtherClassificationText ?? string.Empty : null,
                 UniqueId = uniqueId
             };
             _context.Lnk_AgencyClassificationData.Add(lnkAgencyClassificationData);
         }
         await _context.SaveChangesAsync();
 
+        // Save agency contact
         AgencyContact.AgencyRegistrationId = EaspSepsRegistration.Id;
         _context.AgencyContacts.Add(AgencyContact);
         await _context.SaveChangesAsync();
 
+        // Save additional users
         foreach (var user in AdditionalUsers)
         {
             user.AgencyRegistrationId = EaspSepsRegistration.Id;
@@ -185,10 +224,12 @@ public class RegisterEaspSepsModel : PageModel
         }
         await _context.SaveChangesAsync();
 
+        // Save shipping information
         ShipInformation.AgencyRegistrationId = EaspSepsRegistration.Id;
         _context.ShipInformations.Add(ShipInformation);
         await _context.SaveChangesAsync();
 
+        // Save additional Ship to Sites
         foreach (var shipToSite in AdditionalShipToSites)
         {
             shipToSite.AgencyRegistrationId = EaspSepsRegistration.Id;
@@ -207,7 +248,6 @@ public class RegisterEaspSepsModel : PageModel
                     AgencyRegistrationId = EaspSepsRegistration.Id,
                     CountyId = countyId
                 };
-                _logger.LogInformation($"Adding EaspSepsRegistrationCounty: {entity.AgencyRegistrationId}, {entity.CountyId}");
                 _context.EaspSepsRegistrationCounties.Add(entity);
             }
         }
@@ -220,7 +260,6 @@ public class RegisterEaspSepsModel : PageModel
 
             foreach (var countyId in counties.Distinct())
             {
-                _logger.LogInformation($"Processing ShipToSiteId: {shipToSite.Id}, CountyId: {countyId}");
                 if (countyId > 0)
                 {
                     var shipToSiteCounty = new ShipToSiteCounty
@@ -228,19 +267,39 @@ public class RegisterEaspSepsModel : PageModel
                         ShipToSiteId = shipToSite.Id,
                         CountyId = countyId
                     };
-                    _logger.LogInformation($"Adding ShipToSiteCounty: {shipToSiteCounty.ShipToSiteId}, {shipToSiteCounty.CountyId}");
                     _context.ShipToSiteCounties.Add(shipToSiteCounty);
                 }
             }
         }
 
         await _context.SaveChangesAsync();
-        _logger.LogInformation($"EaspSepsRegistration Id: {EaspSepsRegistration.Id}");
-        _logger.LogInformation($"CountiesServed Count: {CountiesServed.Count}");
-        _logger.LogInformation($"ShipToSiteCounties Count: {ShipToSiteCounties.Count}");
 
-        SuccessMessage = "Registration successful!";
-        return RedirectToPage("/Index");
+        SuccessMessage = "Your registration has been successfully submitted. Please wait for the approval.";
+//        TempData["SuccessMessage"] = "Your registration has been successfully submitted. Please wait for the approval.";
+
+        return RedirectToPage("/Client/Home");
     }
 
+    private async Task PopulateData()
+    {
+        CountyList = await _context.Counties
+            .Where(c => c.is_active)
+            .Select(c => new SelectListItem { Value = c.county_id.ToString(), Text = c.name })
+            .ToListAsync();
+
+        SuffixList = await _context.Suffixes
+            .Where(s => s.IsActive)
+            .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Sufix })
+            .ToListAsync();
+
+        PrefixList = await _context.Prefixes
+            .Where(s => s.IsActive)
+            .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Prefx })
+            .ToListAsync();
+
+        AgencyClassifications = await _context.LkAgencyClassifications
+            .Where(c => c.is_active)
+            .Select(c => new SelectListItem { Value = c.agency_classification_id.ToString(), Text = c.classifcation_description })
+            .ToListAsync();
+    }
 }

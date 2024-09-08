@@ -3,452 +3,526 @@
 @{
     Layout = "~/Pages/Shared/_ClientLayout.cshtml";
     ViewData["Title"] = "ESAP/SEPS Registration";
+
 }
 
 <div class="container py-4">
     <h2 class="mb-4 text-center">@ViewData["Title"]</h2>
 
-    @if (Model.SuccessMessage != null)
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
     {
         <div class="alert alert-success">@Model.SuccessMessage</div>
     }
 
-    <form method="post" class="needs-validation" novalidate>
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Agency Information</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label asp-for="EaspSepsRegistration.AgencyName" class="form-label font-weight-bold">Agency/Organization Name</label>
-                    <input asp-for="EaspSepsRegistration.AgencyName" class="form-control" />
-                    <span asp-validation-for="EaspSepsRegistration.AgencyName" class="text-danger"></span>
+
+    <form id="registrationForm" method="post" class="needs-validation" novalidate>
+        <fieldset @(ViewData["IsReadOnly"] != null && (bool)ViewData["IsReadOnly"] ? "disabled" : "")>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Agency Information</h5>
                 </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label asp-for="EaspSepsRegistration.AgencyName" class="form-label font-weight-bold">Agency/Organization Name</label>
+                        <input asp-for="EaspSepsRegistration.AgencyName" class="form-control" />
+                        <span asp-validation-for="EaspSepsRegistration.AgencyName" class="text-danger"></span>
+                    </div>
 
-                <div class="mb-3">
-                    <label asp-for="EaspSepsRegistration.AlternateName" class="form-label font-weight-bold">Alternate Name</label>
-                    <input asp-for="EaspSepsRegistration.AlternateName" class="form-control" placeholder="For multiple 'Alternate Names' separate with a comma" />
-                    <span asp-validation-for="EaspSepsRegistration.AlternateName" class="text-danger"></span>
-                </div>
+                    <div class="mb-3">
+                        <label asp-for="EaspSepsRegistration.AlternateName" class="form-label font-weight-bold">Alternate Name</label>
+                        <input asp-for="EaspSepsRegistration.AlternateName" class="form-control" placeholder="For multiple 'Alternate Names' separate with a comma" />
+                        <span asp-validation-for="EaspSepsRegistration.AlternateName" class="text-danger"></span>
+                    </div>
 
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="EaspSepsRegistration.County" class="form-label font-weight-bold">County</label>
-                        <select asp-for="EaspSepsRegistration.County" asp-items="Model.CountyList" class="form-select"></select>
-                        <span asp-validation-for="EaspSepsRegistration.County" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="EaspSepsRegistration.Address" class="form-label font-weight-bold">Address</label>
-                        <input asp-for="EaspSepsRegistration.Address" class="form-control" />
-                        <span asp-validation-for="EaspSepsRegistration.Address" class="text-danger"></span>
-
-                        <input asp-for="EaspSepsRegistration.Address2" class="form-control" />
-                        <span asp-validation-for="EaspSepsRegistration.Address2" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="EaspSepsRegistration.City" class="form-label font-weight-bold">City</label>
-                        <input asp-for="EaspSepsRegistration.City" class="form-control" />
-                        <span asp-validation-for="EaspSepsRegistration.City" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="EaspSepsRegistration.State" class="form-label font-weight-bold">State</label>
-                        <input asp-for="EaspSepsRegistration.State" class="form-control" value="NY" readonly="readonly" />
-                        <span asp-validation-for="EaspSepsRegistration.State" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="EaspSepsRegistration.Zip" class="form-label font-weight-bold">Zip</label>
-                        <input asp-for="EaspSepsRegistration.Zip" class="form-control" />
-                        <span asp-validation-for="EaspSepsRegistration.Zip" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Agency Contacts/Users</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8 mb-3">
-                        <label asp-for="AgencyContact.ProgramDirector" class="form-label font-weight-bold">Program Director</label>
-                        <input asp-for="AgencyContact.ProgramDirector" class="form-control" />
-                        <span asp-validation-for="AgencyContact.ProgramDirector" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="AgencyContact.SuffixId" class="form-label font-weight-bold">Suffix</label>
-                        <select asp-for="AgencyContact.SuffixId" asp-items="Model.SuffixList" class="form-select"></select>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="AgencyContact.Address" class="form-label font-weight-bold">Program Director Address</label>
-                        <input asp-for="AgencyContact.Address" class="form-control" />
-                        <span asp-validation-for="AgencyContact.Address" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 mb-3 d-flex align-items-center">
-                        <div class="form-check">
-                            <input asp-for="AgencyContact.SameAddressAsAgency" type="checkbox" class="form-check-input" />
-                            <label asp-for="AgencyContact.SameAddressAsAgency" class="form-check-label">Same Address As Agency</label>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EaspSepsRegistration.County" class="form-label font-weight-bold">County</label>
+                            <select asp-for="EaspSepsRegistration.County" asp-items="Model.CountyList" class="form-select"></select>
+                            <span asp-validation-for="EaspSepsRegistration.County" class="text-danger"></span>
                         </div>
                     </div>
 
-                    <div class="col-md-6 mb-3">
-                        <input asp-for="AgencyContact.Address2" class="form-control" />
-                        <span asp-validation-for="AgencyContact.Address2" class="text-danger"></span>
-                    </div>
-                </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EaspSepsRegistration.Address" class="form-label font-weight-bold">Address</label>
+                            <input asp-for="EaspSepsRegistration.Address" class="form-control" />
+                            <span asp-validation-for="EaspSepsRegistration.Address" class="text-danger"></span>
 
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="AgencyContact.City" class="form-label font-weight-bold">City</label>
-                        <input asp-for="AgencyContact.City" class="form-control" />
-                        <span asp-validation-for="AgencyContact.City" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="AgencyContact.State" class="form-label font-weight-bold">State</label>
-                        <input asp-for="AgencyContact.State" class="form-control" value="NY" readonly="readonly" />
-                        <span asp-validation-for="AgencyContact.State" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="AgencyContact.Zip" class="form-label font-weight-bold">Zip</label>
-                        <input asp-for="AgencyContact.Zip" class="form-control" />
-                        <span asp-validation-for="AgencyContact.Zip" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="AgencyContact.Phone" class="form-label font-weight-bold">Phone</label>
-                        <input asp-for="AgencyContact.Phone" class="form-control phone-format" placeholder="(XXX)XXX-XXXX" />
-                        <span asp-validation-for="AgencyContact.Phone" class="text-danger"></span>
-                        <span asp-validation-for="AgencyContact.Phone" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="AgencyContact.PhoneExtension" class="form-label font-weight-bold">Extension</label>
-                        <input asp-for="AgencyContact.PhoneExtension" class="form-control" />
-                        <span asp-validation-for="AgencyContact.PhoneExtension" class="text-danger"></span>
+                            <input asp-for="EaspSepsRegistration.Address2" class="form-control" />
+                            <span asp-validation-for="EaspSepsRegistration.Address2" class="text-danger"></span>
+                        </div>
                     </div>
 
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="AgencyContact.AltPhone" class="form-label font-weight-bold">Alt Phone</label>
-                        <input asp-for="AgencyContact.Phone" class="form-control phone-format" placeholder="(XXX)XXX-XXXX" />
-                        <span asp-validation-for="AgencyContact.AltPhone" class="text-danger"></span>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="EaspSepsRegistration.City" class="form-label font-weight-bold">City</label>
+                            <input asp-for="EaspSepsRegistration.City" class="form-control" />
+                            <span asp-validation-for="EaspSepsRegistration.City" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="EaspSepsRegistration.State" class="form-label font-weight-bold">State</label>
+                            <input asp-for="EaspSepsRegistration.State" class="form-control" value="NY" readonly="readonly" />
+                            <span asp-validation-for="EaspSepsRegistration.State" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="EaspSepsRegistration.Zip" class="form-label font-weight-bold">Zip</label>
+                            <input asp-for="EaspSepsRegistration.Zip" class="form-control" />
+                            <span asp-validation-for="EaspSepsRegistration.Zip" class="text-danger"></span>
+                        </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="AgencyContact.AltPhoneExtension" class="form-label font-weight-bold">Alt Phone Extension</label>
-                        <input asp-for="AgencyContact.AltPhoneExtension" class="form-control" />
-                        <span asp-validation-for="AgencyContact.AltPhoneExtension" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="AgencyContact.Email" class="form-label font-weight-bold">Email</label>
-                    <input asp-for="AgencyContact.Email" class="form-control" value="@Model.LoggedInUserEmail" readonly="readonly" />
-                    <span asp-validation-for="AgencyContact.Email" class="text-danger"></span>
                 </div>
             </div>
-        </div>
 
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Additional Staff Contact (Optional)</h5>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Agency Contacts/Users</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label asp-for="AgencyContact.ProgramDirector" class="form-label font-weight-bold">Program Director</label>
+                            <input asp-for="AgencyContact.ProgramDirector" class="form-control" />
+                            <span asp-validation-for="AgencyContact.ProgramDirector" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="AgencyContact.SuffixId" class="form-label font-weight-bold">Suffix</label>
+                            <select asp-for="AgencyContact.SuffixId" asp-items="Model.SuffixList" class="form-select"></select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="AgencyContact.Address" class="form-label font-weight-bold">Program Director Address</label>
+                            <input asp-for="AgencyContact.Address" class="form-control" />
+                            <span asp-validation-for="AgencyContact.Address" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3 d-flex align-items-center">
+                            <div class="form-check">
+                                <input asp-for="AgencyContact.SameAddressAsAgency" type="checkbox" class="form-check-input" />
+                                <label asp-for="AgencyContact.SameAddressAsAgency" class="form-check-label">Same Address As Agency</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <input asp-for="AgencyContact.Address2" class="form-control" />
+                            <span asp-validation-for="AgencyContact.Address2" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="AgencyContact.City" class="form-label font-weight-bold">City</label>
+                            <input asp-for="AgencyContact.City" class="form-control" />
+                            <span asp-validation-for="AgencyContact.City" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="AgencyContact.State" class="form-label font-weight-bold">State</label>
+                            <input asp-for="AgencyContact.State" class="form-control" value="NY" readonly="readonly" />
+                            <span asp-validation-for="AgencyContact.State" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="AgencyContact.Zip" class="form-label font-weight-bold">Zip</label>
+                            <input asp-for="AgencyContact.Zip" class="form-control" />
+                            <span asp-validation-for="AgencyContact.Zip" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="AgencyContact.Phone" class="form-label font-weight-bold">Phone</label>
+                            <input asp-for="AgencyContact.Phone" class="form-control phone-format" placeholder="(XXX)XXX-XXXX" />
+                            <span asp-validation-for="AgencyContact.Phone" class="text-danger"></span>
+                            <span asp-validation-for="AgencyContact.Phone" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="AgencyContact.PhoneExtension" class="form-label font-weight-bold">Extension</label>
+                            <input asp-for="AgencyContact.PhoneExtension" class="form-control" />
+                            <span asp-validation-for="AgencyContact.PhoneExtension" class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="AgencyContact.AltPhone" class="form-label font-weight-bold">Alt Phone</label>
+                            <input asp-for="AgencyContact.Phone" class="form-control phone-format" placeholder="(XXX)XXX-XXXX" />
+                            <span asp-validation-for="AgencyContact.AltPhone" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="AgencyContact.AltPhoneExtension" class="form-label font-weight-bold">Alt Phone Extension</label>
+                            <input asp-for="AgencyContact.AltPhoneExtension" class="form-control" />
+                            <span asp-validation-for="AgencyContact.AltPhoneExtension" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AgencyContact.Email" class="form-label font-weight-bold">Email</label>
+                        <input asp-for="AgencyContact.Email" class="form-control" value="@Model.LoggedInUserEmail" readonly="readonly" />
+                        <span asp-validation-for="AgencyContact.Email" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-            <div class="card-body" id="additional-users-container">
-                @for (int i = 0; i < Model.AdditionalUsers.Count; i++)
-                {
-                    <div class="additional-user mb-4 p-3 border rounded bg-light">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5>Additional User @i</h5>
-                            <button type="button" class="btn btn-danger btn-sm remove-additional-user" data-index="@i">&times;</button>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-2">
-                                <label asp-for="AdditionalUsers[i].PrefixId" class="form-label font-weight-bold">Prefix</label>
-                                <select asp-for="AdditionalUsers[i].PrefixId" asp-items="Model.PrefixList" class="form-select"></select>
-                            </div>
-                            <div class="col-md-8">
-                                <label asp-for="AdditionalUsers[i].Name" class="form-label font-weight-bold">Name</label>
-                                <input asp-for="AdditionalUsers[i].Name" class="form-control" />
-                                <span asp-validation-for="AdditionalUsers[i].Name" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-2">
-                                <label asp-for="AdditionalUsers[i].SuffixId" class="form-label font-weight-bold">Suffix</label>
-                                <select asp-for="AdditionalUsers[i].SuffixId" asp-items="Model.SuffixList" class="form-select"></select>
-                            </div>
-                        </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="AdditionalUsers[i].Title" class="form-label font-weight-bold">Additional Staff Title</label>
-                                <input asp-for="AdditionalUsers[i].Title" class="form-control" />
-                                <span asp-validation-for="AdditionalUsers[i].Title" class="text-danger"></span>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Additional Staff Contact (Optional)</h5>
+                </div>
+                <div class="card-body" id="additional-users-container">
+                    @for (int i = 0; i < Model.AdditionalUsers.Count; i++)
+                    {
+                        <div class="additional-user mb-4 p-3 border rounded bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Additional User @i</h5>
+                                <button type="button" class="btn btn-danger btn-sm remove-additional-user" data-index="@i">&times;</button>
                             </div>
-                        </div>
+                            <div class="row mb-3">
+                                <div class="col-md-2">
+                                    <label asp-for="AdditionalUsers[i].PrefixId" class="form-label font-weight-bold">Prefix</label>
+                                    <select asp-for="AdditionalUsers[i].PrefixId" asp-items="Model.PrefixList" class="form-select"></select>
+                                </div>
+                                <div class="col-md-8">
+                                    <label asp-for="AdditionalUsers[i].Name" class="form-label font-weight-bold">Name</label>
+                                    <input asp-for="AdditionalUsers[i].Name" class="form-control" />
+                                    <span asp-validation-for="AdditionalUsers[i].Name" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-2">
+                                    <label asp-for="AdditionalUsers[i].SuffixId" class="form-label font-weight-bold">Suffix</label>
+                                    <select asp-for="AdditionalUsers[i].SuffixId" asp-items="Model.SuffixList" class="form-select"></select>
+                                </div>
+                            </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="AdditionalUsers[i].Address" class="form-label font-weight-bold">Additional Staff Address</label>
-                                <input asp-for="AdditionalUsers[i].Address" class="form-control" />
-                                <span asp-validation-for="AdditionalUsers[i].Address" class="text-danger"></span>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="AdditionalUsers[i].Title" class="form-label font-weight-bold">Additional Staff Title</label>
+                                    <input asp-for="AdditionalUsers[i].Title" class="form-control" />
+                                    <span asp-validation-for="AdditionalUsers[i].Title" class="text-danger"></span>
+                                </div>
                             </div>
-                            <div class="col-md-6 d-flex align-items-center">
-                                <div class="form-check">
-                                    <input asp-for="AdditionalUsers[i].SameAddressAsAgency" type="checkbox" class="form-check-input" />
-                                    <label asp-for="AdditionalUsers[i].SameAddressAsAgency" class="form-check-label">Same Address As Agency</label>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="AdditionalUsers[i].Address" class="form-label font-weight-bold">Additional Staff Address</label>
+                                    <input asp-for="AdditionalUsers[i].Address" class="form-control" />
+                                    <span asp-validation-for="AdditionalUsers[i].Address" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-center">
+                                    <div class="form-check">
+                                        <input asp-for="AdditionalUsers[i].SameAddressAsAgency" type="checkbox" class="form-check-input" />
+                                        <label asp-for="AdditionalUsers[i].SameAddressAsAgency" class="form-check-label">Same Address As Agency</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="AdditionalUsers[i].Address2" class="form-label font-weight-bold">Address 2</label>
+                                    <input asp-for="AdditionalUsers[i].Address2" class="form-control" />
+                                    <span asp-validation-for="AdditionalUsers[i].Address2" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label asp-for="AdditionalUsers[i].City" class="form-label font-weight-bold">City</label>
+                                    <input asp-for="AdditionalUsers[i].City" class="form-control" />
+                                    <span asp-validation-for="AdditionalUsers[i].City" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="AdditionalUsers[i].State" class="form-label font-weight-bold">State</label>
+                                    <input asp-for="AdditionalUsers[i].State" class="form-control" value="NY" readonly="readonly" />
+                                    <span asp-validation-for="AdditionalUsers[i].State" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="AdditionalUsers[i].Zip" class="form-label font-weight-bold">Zip</label>
+                                    <input asp-for="AdditionalUsers[i].Zip" class="form-control" />
+                                    <span asp-validation-for="AdditionalUsers[i].Zip" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label asp-for="AdditionalUsers[i].Phone" class="form-label font-weight-bold">Phone</label>
+                                    <input asp-for="AdditionalUsers[i].Phone" class="form-control phone-format" id="phoneInput" placeholder="(XXX)XXX-XXXX" />
+                                    <span asp-validation-for="AdditionalUsers[i].Phone" class="text-danger"></span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label asp-for="AdditionalUsers[i].Email" class="form-label font-weight-bold">Email</label>
+                                    <input asp-for="AdditionalUsers[i].Email" class="form-control" />
+                                    <span asp-validation-for="AdditionalUsers[i].Email" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="AdditionalUsers[i].Address2" class="form-label font-weight-bold">Address 2</label>
-                                <input asp-for="AdditionalUsers[i].Address2" class="form-control" />
-                                <span asp-validation-for="AdditionalUsers[i].Address2" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label asp-for="AdditionalUsers[i].City" class="form-label font-weight-bold">City</label>
-                                <input asp-for="AdditionalUsers[i].City" class="form-control" />
-                                <span asp-validation-for="AdditionalUsers[i].City" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-4">
-                                <label asp-for="AdditionalUsers[i].State" class="form-label font-weight-bold">State</label>
-                                <input asp-for="AdditionalUsers[i].State" class="form-control" value="NY" readonly="readonly" />
-                                <span asp-validation-for="AdditionalUsers[i].State" class="text-danger"></span>
-                            </div>
-                            <div class="col-md-4">
-                                <label asp-for="AdditionalUsers[i].Zip" class="form-label font-weight-bold">Zip</label>
-                                <input asp-for="AdditionalUsers[i].Zip" class="form-control" />
-                                <span asp-validation-for="AdditionalUsers[i].Zip" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label asp-for="AdditionalUsers[i].Phone" class="form-label font-weight-bold">Phone</label>
-                                <input asp-for="AdditionalUsers[i].Phone" class="form-control phone-format" id="phoneInput" placeholder="(XXX)XXX-XXXX" />
-                                <span asp-validation-for="AdditionalUsers[i].Phone" class="text-danger"></span>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="AdditionalUsers[i].Email" class="form-label font-weight-bold">Email</label>
-                                <input asp-for="AdditionalUsers[i].Email" class="form-control" />
-                                <span asp-validation-for="AdditionalUsers[i].Email" class="text-danger"></span>
-                            </div>
-                        </div>
-                    </div>
-                }
+                    }
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button type="button" id="add-additional-user" class="btn btn-outline-primary">Add Additional User</button>
+                </div>
             </div>
-            <div class="d-flex justify-content-end">
-                <button type="button" id="add-additional-user" class="btn btn-outline-primary">Add Additional User</button>
-            </div>
-        </div>
 
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Counties Served by the Agency</h5>
-            </div>
-            <div class="card-body">
-                @{
-                    int itemsPerRow = 4;
-                    int itemCount = Model.CountiesServed.Count;
-                    int rows = (int)Math.Ceiling(itemCount / (double)itemsPerRow);
-                }
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Counties Served by the Agency</h5>
+                </div>
+                <div class="card-body">
+                    @{
+                        int itemsPerRow = 4;
+                        int itemCount = Model.CountiesServed.Count;
+                        int rows = (int)Math.Ceiling(itemCount / (double)itemsPerRow);
+                    }
 
-                @for (int row = 0; row < rows; row++)
-                {
-                    <div class="row mb-3">
-                        @for (int col = 0; col < itemsPerRow; col++)
-                        {
-                            int index = row * itemsPerRow + col;
-                            if (index >= itemCount)
+                    @for (int row = 0; row < rows; row++)
+                    {
+                        <div class="row mb-3">
+                            @for (int col = 0; col < itemsPerRow; col++)
                             {
-                                break;
+                                int index = row * itemsPerRow + col;
+                                if (index >= itemCount)
+                                {
+                                    break;
+                                }
+                                <div class="col-md-3">
+                                    <label class="form-label font-weight-bold">County @Html.Raw(index + 1)</label>
+                                    <select asp-for="CountiesServed[index]" asp-items="Model.CountyList" class="form-select">
+                                        <option value="0">Select County</option>
+                                    </select>
+                                </div>
                             }
-                            <div class="col-md-3">
-                                <label class="form-label font-weight-bold">County @Html.Raw(index + 1)</label>
-                                <select asp-for="CountiesServed[index]" asp-items="Model.CountyList" class="form-select"></select>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Shipping Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ShipInformation.ShipToName" class="form-label font-weight-bold">Ship To Name</label>
+                            <input asp-for="ShipInformation.ShipToName" class="form-control" />
+                            <span asp-validation-for="ShipInformation.ShipToName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ShipInformation.ShipToEmail" class="form-label font-weight-bold">Ship To Email</label>
+                            <input asp-for="ShipInformation.ShipToEmail" class="form-control" />
+                            <span asp-validation-for="ShipInformation.ShipToEmail" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ShipInformation.ShipToAddress" class="form-label font-weight-bold">Ship To Address</label>
+                            <input asp-for="ShipInformation.ShipToAddress" class="form-control" />
+                            <span asp-validation-for="ShipInformation.ShipToAddress" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check">
+                                <input asp-for="ShipInformation.SameAsSite" type="checkbox" class="form-check-input" />
+                                <label asp-for="ShipInformation.SameAsSite" class="form-check-label">Same As Site</label>
                             </div>
-                        }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="ShipInformation.ShipToAddress2" class="form-label font-weight-bold">Address 2</label>
+                            <input asp-for="ShipInformation.ShipToAddress2" class="form-control" />
+                            <span asp-validation-for="ShipInformation.ShipToAddress2" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label asp-for="ShipInformation.ShipToCity" class="form-label font-weight-bold">City</label>
+                            <input asp-for="ShipInformation.ShipToCity" class="form-control" />
+                            <span asp-validation-for="ShipInformation.ShipToCity" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ShipInformation.ShipToState" class="form-label font-weight-bold">State</label>
+                            <input asp-for="ShipInformation.ShipToState" class="form-control" value="NY" readonly="readonly" />
+                            <span asp-validation-for="ShipInformation.ShipToState" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ShipInformation.ShipToZip" class="form-label font-weight-bold">Zip</label>
+                            <input asp-for="ShipInformation.ShipToZip" class="form-control" />
+                            <span asp-validation-for="ShipInformation.ShipToZip" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="additional-ship-to-sites-container" class="mb-4">
+                @for (int i = 0; i < Model.AdditionalShipToSites.Count; i++)
+                {
+                    <div class="additional-ship-to-site mb-4 p-3 border rounded bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5>Additional Ship to Site @i</h5>
+                            <button type="button" class="btn btn-danger btn-sm remove-additional-ship-to-site" data-index="@i">&times;</button>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="AdditionalShipToSites[i].Name" class="form-label font-weight-bold">Name</label>
+                                <input asp-for="AdditionalShipToSites[i].Name" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].Name" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="AdditionalShipToSites[i].Address" class="form-label font-weight-bold">Address</label>
+                                <input asp-for="AdditionalShipToSites[i].Address" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].Address" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="AdditionalShipToSites[i].Address2" class="form-label font-weight-bold">Address 2</label>
+                                <input asp-for="AdditionalShipToSites[i].Address2" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].Address2" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].City" class="form-label font-weight-bold">City</label>
+                                <input asp-for="AdditionalShipToSites[i].City" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].City" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].State" class="form-label font-weight-bold">State</label>
+                                <input asp-for="AdditionalShipToSites[i].State" class="form-control" value="NY" readonly="readonly" />
+                                <span asp-validation-for="AdditionalShipToSites[i].State" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].Zip" class="form-label font-weight-bold">Zip</label>
+                                <input asp-for="AdditionalShipToSites[i].Zip" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].Zip" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].Phone" class="form-label font-weight-bold">Phone</label>
+                                <input asp-for="AdditionalShipToSites[i].Phone" class="form-control phone-format" placeholder="(XXX)XXX-XXXX" />
+                                <span asp-validation-for="AdditionalShipToSites[i].Phone" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].PhoneExtension" class="form-label font-weight-bold">Extension</label>
+                                <input asp-for="AdditionalShipToSites[i].PhoneExtension" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].PhoneExtension" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].SiteType" class="form-label font-weight-bold">Site Type</label>
+                                <div class="form-check">
+                                    <input type="radio" asp-for="AdditionalShipToSites[i].SiteType" value="Business" class="form-check-input" />
+                                    <label class="form-check-label" for="AdditionalShipToSites[i].SiteType_Business">Business</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" asp-for="AdditionalShipToSites[i].SiteType" value="Personal" class="form-check-input" />
+                                    <label class="form-check-label" for="AdditionalShipToSites[i].SiteType_Personal">Personal</label>
+                                </div>
+                                <span asp-validation-for="AdditionalShipToSites[i].SiteType" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="AdditionalShipToSites[i].ShipToName" class="form-label font-weight-bold">Ship To Name</label>
+                                <input asp-for="AdditionalShipToSites[i].ShipToName" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].ShipToName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="AdditionalShipToSites[i].ShipToEmail" class="form-label font-weight-bold">Ship To Email</label>
+                                <input asp-for="AdditionalShipToSites[i].ShipToEmail" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].ShipToEmail" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="AdditionalShipToSites[i].ShipToAddress" class="form-label font-weight-bold">Ship To Address</label>
+                                <input asp-for="AdditionalShipToSites[i].ShipToAddress" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].ShipToAddress" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-center">
+                                <input type="checkbox" asp-for="AdditionalShipToSites[i].SameAsSite" class="form-check-input" />
+                                <label class="form-check-label ml-2" asp-for="AdditionalShipToSites[i].SameAsSite">Same As Site</label>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="AdditionalShipToSites[i].ShipToAddress2" class="form-label font-weight-bold">Ship To Address 2</label>
+                                <input asp-for="AdditionalShipToSites[i].ShipToAddress2" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].ShipToAddress2" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].ShipToCity" class="form-label font-weight-bold">Ship To City</label>
+                                <input asp-for="AdditionalShipToSites[i].ShipToCity" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].ShipToCity" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].ShipToState" class="form-label font-weight-bold">Ship To State</label>
+                                <input asp-for="AdditionalShipToSites[i].ShipToState" class="form-control" value="NY" readonly="readonly" />
+                                <span asp-validation-for="AdditionalShipToSites[i].ShipToState" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="AdditionalShipToSites[i].ShipToZip" class="form-label font-weight-bold">Ship To Zip</label>
+                                <input asp-for="AdditionalShipToSites[i].ShipToZip" class="form-control" />
+                                <span asp-validation-for="AdditionalShipToSites[i].ShipToZip" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4">Primary Counties Served by Site:</h5>
+                        <div class="row mb-3">
+                            <div class="row mb-3">
+                                @if (Model.ShipToSiteCounties[i] != null)
+                                {
+                                    for (int j = 0; j < Model.ShipToSiteCounties[i].Length; j++)
+                                    {
+                                        <div class="col-md-2">
+                                            <select asp-for="ShipToSiteCounties[i][j]" asp-items="Model.CountyList" class="form-select"></select>
+                                        </div>
+                                    }
+                                }
+                            </div>
+
+                        </div>
                     </div>
                 }
             </div>
-        </div>
 
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Shipping Information</h5>
+
+            <div class="d-flex justify-content-end">
+                <button type="button" id="add-additional-ship-to-site" class="btn btn-outline-primary">Add Additional Ship to Site</button>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label asp-for="ShipInformation.ShipToName" class="form-label font-weight-bold">Ship To Name</label>
-                        <input asp-for="ShipInformation.ShipToName" class="form-control" />
-                        <span asp-validation-for="ShipInformation.ShipToName" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6">
-                        <label asp-for="ShipInformation.ShipToEmail" class="form-label font-weight-bold">Ship To Email</label>
-                        <input asp-for="ShipInformation.ShipToEmail" class="form-control" />
-                        <span asp-validation-for="ShipInformation.ShipToEmail" class="text-danger"></span>
-                    </div>
-                </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label asp-for="ShipInformation.ShipToAddress" class="form-label font-weight-bold">Ship To Address</label>
-                        <input asp-for="ShipInformation.ShipToAddress" class="form-control" />
-                        <span asp-validation-for="ShipInformation.ShipToAddress" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="form-check">
-                            <input asp-for="ShipInformation.SameAsSite" type="checkbox" class="form-check-input" />
-                            <label asp-for="ShipInformation.SameAsSite" class="form-check-label">Same As Site</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label asp-for="ShipInformation.ShipToAddress2" class="form-label font-weight-bold">Address 2</label>
-                        <input asp-for="ShipInformation.ShipToAddress2" class="form-control" />
-                        <span asp-validation-for="ShipInformation.ShipToAddress2" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label asp-for="ShipInformation.ShipToCity" class="form-label font-weight-bold">City</label>
-                        <input asp-for="ShipInformation.ShipToCity" class="form-control" />
-                        <span asp-validation-for="ShipInformation.ShipToCity" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="ShipInformation.ShipToState" class="form-label font-weight-bold">State</label>
-                        <input asp-for="ShipInformation.ShipToState" class="form-control" value="NY" readonly="readonly" />
-                        <span asp-validation-for="ShipInformation.ShipToState" class="text-danger"></span>
-                    </div>
-                    <div class="col-md-4">
-                        <label asp-for="ShipInformation.ShipToZip" class="form-label font-weight-bold">Zip</label>
-                        <input asp-for="ShipInformation.ShipToZip" class="form-control" />
-                        <span asp-validation-for="ShipInformation.ShipToZip" class="text-danger"></span>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-center mt-5">
+                <button type="submit" class="btn btn-success btn-lg px-5">Submit</button>
             </div>
-        </div>
+        </fieldset>
 
-        <div id="additional-ship-to-sites-container" class="mb-4">
-            @for (int i = 0; i < Model.AdditionalShipToSites.Count; i++)
-            {
-                <div class="additional-ship-to-site mb-4 p-3 border rounded bg-light">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5>Additional Ship to Site @i</h5>
-                        <button type="button" class="btn btn-danger btn-sm remove-additional-ship-to-site" data-index="@i">&times;</button>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="AdditionalShipToSites[i].Name" class="form-label font-weight-bold">Name</label>
-                            <input asp-for="AdditionalShipToSites[i].Name" class="form-control" />
-                            <span asp-validation-for="AdditionalShipToSites[i].Name" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="AdditionalShipToSites[i].Address" class="form-label font-weight-bold">Address</label>
-                            <input asp-for="AdditionalShipToSites[i].Address" class="form-control" />
-                            <span asp-validation-for="AdditionalShipToSites[i].Address" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label asp-for="AdditionalShipToSites[i].Address2" class="form-label font-weight-bold">Address 2</label>
-                            <input asp-for="AdditionalShipToSites[i].Address2" class="form-control" />
-                            <span asp-validation-for="AdditionalShipToSites[i].Address2" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label asp-for="AdditionalShipToSites[i].City" class="form-label font-weight-bold">City</label>
-                            <input asp-for="AdditionalShipToSites[i].City" class="form-control" />
-                            <span asp-validation-for="AdditionalShipToSites[i].City" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-4">
-                            <label asp-for="AdditionalShipToSites[i].State" class="form-label font-weight-bold">State</label>
-                            <input asp-for="AdditionalShipToSites[i].State" class="form-control" value="NY" readonly="readonly" />
-                            <span asp-validation-for="AdditionalShipToSites[i].State" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-4">
-                            <label asp-for="AdditionalShipToSites[i].Zip" class="form-label font-weight-bold">Zip</label>
-                            <input asp-for="AdditionalShipToSites[i].Zip" class="form-control" />
-                            <span asp-validation-for="AdditionalShipToSites[i].Zip" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label asp-for="AdditionalShipToSites[i].Phone" class="form-label font-weight-bold">Phone</label>
-                            <input asp-for="AdditionalShipToSites[i].Phone" class="form-control phone-format" id="phoneInput" placeholder="(XXX)XXX-XXXX" />
-                            <span asp-validation-for="AdditionalShipToSites[i].Phone" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-4">
-                            <label asp-for="AdditionalShipToSites[i].PhoneExtension" class="form-label font-weight-bold">Extension</label>
-                            <input asp-for="AdditionalShipToSites[i].PhoneExtension" class="form-control" />
-                            <span asp-validation-for="AdditionalShipToSites[i].PhoneExtension" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label asp-for="AdditionalShipToSites[i].SiteType" class="form-label font-weight-bold">Site Type</label>
-                            <div class="form-check">
-                                <input type="radio" asp-for="AdditionalShipToSites[i].SiteType" value="Business" class="form-check-input" />
-                                <label class="form-check-label" for="AdditionalShipToSites[i].SiteType_Business">Business</label>
-                            </div>
-                            <div class="form-check">
-                                <input type="radio" asp-for="AdditionalShipToSites[i].SiteType" value="Personal" class="form-check-input" />
-                                <label class="form-check-label" for="AdditionalShipToSites[i].SiteType_Personal">Personal</label>
-                            </div>
-                            <span asp-validation-for="AdditionalShipToSites[i].SiteType" class="text-danger"></span>
-                        </div>
-                    </div>
-
-                    <h5 class="mt-4">Primary Counties Served by Site:</h5>
-                    <div class="row mb-3">
-                        @for (int j = 0; j < 5; j++)
-                        {
-                            <div class="col-md-2">
-                                <select asp-for="ShipToSiteCounties[i][j]" asp-items="Model.CountyList" class="form-select"></select>
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
-        </div>
-
-        <div class="d-flex justify-content-end">
-            <button type="button" id="add-additional-ship-to-site" class="btn btn-outline-primary">Add Additional Ship to Site</button>
-        </div>
-
-        <div class="d-flex justify-content-center mt-5">
-            <button type="submit" class="btn btn-success btn-lg px-5">Submit</button>
-        </div>
     </form>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Convert the Razor boolean into lowercase 'true' or 'false' for JavaScript
+            const isReadOnly = @((bool)ViewData["IsReadOnly"] ? "true" : "false");
+
+            if (isReadOnly === "true") {
+                // Disable all form fields and the submit button
+                const formElements = document.querySelectorAll('#registrationForm input, #registrationForm select, #registrationForm textarea, #registrationForm button[type="submit"]');
+                formElements.forEach(function (element) {
+                    element.disabled = true; // Disable the form elements
+                });
+            }
+        });
         const countyList = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.CountyList));
 
         document.getElementById("add-additional-ship-to-site").addEventListener("click", function () {
@@ -559,8 +633,25 @@
                             <label for="AdditionalShipToSites_${index}__ShipToZip" class="form-label font-weight-bold">Ship To Zip</label>
                             <input type="text" id="AdditionalShipToSites_${index}__ShipToZip" name="AdditionalShipToSites[${index}].ShipToZip" class="form-control" />
                              </div>
-
                     </div>
+
+                    <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label font-weight-bold">Primary Counties Served by Site</label>
+                    <div class="row">
+                        ${Array.from({ length: 5 }).map((_, j) => `
+                            <div class="col-md-2 mb-2">
+                                <select id="ShipToSiteCounties_${index}__${j}" name="ShipToSiteCounties[${index}][${j}]" class="form-select">
+                                    <option value="0" selected>Select County</option>
+                                    ${countyList.map(county => `
+                                        <option value="${county.Value}">${county.Text}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
 
 
                 `;

@@ -4,10 +4,11 @@
     ViewData["Title"] = "Manage Users";
     Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
-
-@if (!string.IsNullOrEmpty(Model.SuccessMessage))
+@if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success">@Model.SuccessMessage</div>
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
 }
 
 <form method="get" class="form-inline mb-3">
@@ -146,6 +147,7 @@
         </div>
         <div class="tab-pane fade" id="agencycontact" role="tabpanel" aria-labelledby="agencycontact-tab">
             <form method="post" asp-page-handler="UpdateAgencyContact">
+                <input type="hidden" asp-for="Registration.Id" />
                 <input type="hidden" asp-for="AgencyContact.AgencyRegistrationId" />
                 <div class="form-group">
                     <label asp-for="AgencyContact.ProgramDirector"></label>
@@ -248,6 +250,7 @@
         </div>
         <div class="tab-pane fade" id="shippinginfo" role="tabpanel" aria-labelledby="shippinginfo-tab">
             <form method="post" asp-page-handler="UpdateShippingInfo">
+                <input type="hidden" asp-for="Registration.Id" />
                 <input type="hidden" asp-for="ShipInformation.AgencyRegistrationId" />
                 <div class="form-group">
                     <label asp-for="ShipInformation.ShipToName"></label>
@@ -280,6 +283,8 @@
                 <button type="submit" class="btn btn-primary">Update</button>
             </form>
         </div>
+
+
         <div class="tab-pane fade" id="shiptosites" role="tabpanel" aria-labelledby="shiptosites-tab">
             <div id="shipToSitesList">
                 @foreach (var site in Model.AdditionalShipToSites)
@@ -387,7 +392,9 @@
                 {
                     <div class="form-group">
                         <label>County @i + 1</label>
-                        <select asp-for="CountiesServed[i]" asp-items="Model.CountyList" class="form-control"></select>
+                        <select asp-for="CountiesServed[i]" asp-items="Model.CountyList" class="form-control">
+                            <option value="0">Please select</option>
+                        </select>
                     </div>
                 }
                 <button type="submit" class="btn btn-primary">Update</button>
@@ -452,5 +459,7 @@
                     }
                 })
                 .catch(error => console.error('Error:', error));
-        }</script>
+        }
+
+    </script>
 }

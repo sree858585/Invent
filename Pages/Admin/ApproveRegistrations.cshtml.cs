@@ -33,6 +33,7 @@ namespace WebApplication1.Pages.Admin
             {
                 SuccessMessage = successMessage;
             }
+            
 
             var registrations = await _context.AgencyRegistrations
                 .Include(r => r.AgencyContacts)

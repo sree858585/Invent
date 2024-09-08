@@ -178,7 +178,7 @@ namespace WebApplication1.Pages.Admin
                 _context.AgencyRegistrations.Update(registration);
                 await _context.SaveChangesAsync();
 
-                SuccessMessage = "EaspSepsRegistration updated successfully.";
+                TempData["SuccessMessage"] = "EaspSepsRegistration updated successfully.";
             }
             else
             {
@@ -192,7 +192,7 @@ namespace WebApplication1.Pages.Admin
                 _logger.LogWarning($"User with Id: {registration.UserId} not found.");
             }
 
-            return RedirectToPage("/Admin/ManageUsers", new { email = email });
+            return RedirectToPage("/Admin/ManageUsers");
         }
 
         public async Task<IActionResult> OnPostUpdateAgencyContactAsync()
@@ -202,10 +202,24 @@ namespace WebApplication1.Pages.Admin
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("ModelState is invalid");
+              //  return Page(); // Return the page to show validation errors
             }
 
+            // Fetch the AgencyRegistration by ID
+            var registration = await _context.AgencyRegistrations
+                .FirstOrDefaultAsync(r => r.Id == Registration.Id);
+
+            // Check if the registration is null
+            if (registration == null)
+            {
+                _logger.LogWarning($"AgencyRegistration with Id {Registration.Id} not found.");
+                ModelState.AddModelError(string.Empty, "Invalid registration ID. The registration does not exist.");
+                //return Page();
+            }
+
+            // Update the AgencyContact if it exists
             var agencyContact = await _context.AgencyContacts
-                .FirstOrDefaultAsync(ac => ac.AgencyRegistrationId == Registration.Id);
+                .FirstOrDefaultAsync(ac => ac.AgencyRegistrationId == registration.Id);
 
             if (agencyContact != null)
             {
@@ -219,25 +233,35 @@ namespace WebApplication1.Pages.Admin
 
                 _context.AgencyContacts.Update(agencyContact);
                 await _context.SaveChangesAsync();
-                SuccessMessage = "AgencyContact updated successfully.";
+                TempData["SuccessMessage"] = "AgencyContact updated successfully.";
             }
             else
             {
-                _logger.LogWarning($"AgencyContact for RegistrationId: {Registration.Id} not found.");
+                _logger.LogWarning($"AgencyContact for RegistrationId: {registration.Id} not found.");
+                ModelState.AddModelError(string.Empty, "Agency contact not found.");
+                return Page();
             }
 
-            var registration = await _context.AgencyRegistrations
-                .FirstOrDefaultAsync(r => r.Id == Registration.Id);
-
-            User = await _userManager.FindByIdAsync(registration.UserId);
-            var email = User != null ? User.Email : Email;
-            if (User == null)
+            // Fetch the user associated with this registration, but check if UserId exists first
+            if (!string.IsNullOrEmpty(registration.UserId))
             {
-                _logger.LogWarning($"User with Id: {registration.UserId} not found.");
+                User = await _userManager.FindByIdAsync(registration.UserId);
+                if (User == null)
+                {
+                    _logger.LogWarning($"User with Id: {registration.UserId} not found.");
+                    return NotFound();
+                }
+                var email = User.Email ?? Email; // Fallback to the provided email if User.Email is null
+                return RedirectToPage("/Admin/ManageUsers");
             }
-
-            return RedirectToPage("/Admin/ManageUsers", new { email = email });
+            else
+            {
+                _logger.LogWarning($"Registration with Id: {registration.Id} does not have an associated UserId.");
+                ModelState.AddModelError(string.Empty, "No user associated with this registration.");
+                return Page();
+            }
         }
+
 
         public async Task<IActionResult> OnPostUpdateAdditionalUserAsync()
         {
@@ -265,7 +289,7 @@ namespace WebApplication1.Pages.Admin
 
                 _context.AdditionalUsers.Update(additionalUser);
                 await _context.SaveChangesAsync();
-                SuccessMessage = "AdditionalUser updated successfully.";
+                TempData["SuccessMessage"] = "AdditionalUser updated successfully.";
             }
             else
             {
@@ -280,7 +304,7 @@ namespace WebApplication1.Pages.Admin
             {
                 User = await _userManager.FindByIdAsync(registration.UserId.ToString());
                 var email = User != null ? User.Email : Email;
-                return RedirectToPage("/Admin/ManageUsers", new { email = email });
+                return RedirectToPage("/Admin/ManageUsers");
             }
             else
             {
@@ -296,13 +320,43 @@ namespace WebApplication1.Pages.Admin
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("ModelState is invalid");
+               // return Page(); // Return to the page to display validation errors
+            }
+
+            // Check if the AgencyRegistrationId exists in the AgencyRegistrations table
+            var registration = await _context.AgencyRegistrations
+                .FirstOrDefaultAsync(r => r.Id == Registration.Id);
+
+            if (registration == null)
+            {
+                _logger.LogWarning($"AgencyRegistration with Id {Registration.Id} not found.");
+                ModelState.AddModelError(string.Empty, "Invalid registration ID. The registration does not exist.");
+               // return Page();
             }
 
             var shipInformation = await _context.ShipInformations
                 .FirstOrDefaultAsync(si => si.AgencyRegistrationId == Registration.Id);
 
-            if (shipInformation != null)
+            // If ShipInformation is null, create a new entry
+            if (shipInformation == null)
             {
+                shipInformation = new ShipInformation
+                {
+                    AgencyRegistrationId = Registration.Id, // Ensure this is a valid foreign key
+                    ShipToName = ShipInformation.ShipToName,
+                    ShipToEmail = ShipInformation.ShipToEmail,
+                    ShipToAddress = ShipInformation.ShipToAddress,
+                    ShipToAddress2 = ShipInformation.ShipToAddress2,
+                    ShipToCity = ShipInformation.ShipToCity,
+                    ShipToState = ShipInformation.ShipToState,
+                    ShipToZip = ShipInformation.ShipToZip
+                };
+                _context.ShipInformations.Add(shipInformation);
+                _logger.LogInformation("New ShipInformation created.");
+            }
+            else
+            {
+                // Update the existing ShipInformation
                 shipInformation.ShipToName = ShipInformation.ShipToName;
                 shipInformation.ShipToEmail = ShipInformation.ShipToEmail;
                 shipInformation.ShipToAddress = ShipInformation.ShipToAddress;
@@ -310,28 +364,20 @@ namespace WebApplication1.Pages.Admin
                 shipInformation.ShipToCity = ShipInformation.ShipToCity;
                 shipInformation.ShipToState = ShipInformation.ShipToState;
                 shipInformation.ShipToZip = ShipInformation.ShipToZip;
-
                 _context.ShipInformations.Update(shipInformation);
-                await _context.SaveChangesAsync();
-                SuccessMessage = "ShipInformation updated successfully.";
-            }
-            else
-            {
-                _logger.LogWarning($"ShipInformation for RegistrationId: {Registration.Id} not found.");
+                _logger.LogInformation("Existing ShipInformation updated.");
             }
 
-            var registration = await _context.AgencyRegistrations
-                .FirstOrDefaultAsync(r => r.Id == Registration.Id);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "ShipInformation updated successfully.";
 
-            User = await _userManager.FindByIdAsync(registration.UserId);
-            var email = User != null ? User.Email : Email;
-            if (User == null)
-            {
-                _logger.LogWarning($"User with Id: {registration.UserId} not found.");
-            }
-
-            return RedirectToPage("/Admin/ManageUsers", new { email = email });
+            return RedirectToPage("/Admin/ManageUsers");
         }
+
+
+
+
+
 
         public async Task<IActionResult> OnPostUpdateShipToSiteAsync()
         {
@@ -367,7 +413,7 @@ namespace WebApplication1.Pages.Admin
 
                 _context.ShipToSites.Update(shipToSite);
                 await _context.SaveChangesAsync();
-                SuccessMessage = "ShipToSite updated successfully.";
+                TempData["SuccessMessage"] = "ShipToSite updated successfully.";
             }
             else
             {
@@ -382,7 +428,7 @@ namespace WebApplication1.Pages.Admin
             {
                 User = await _userManager.FindByIdAsync(registration.UserId.ToString());
                 var email = User != null ? User.Email : Email;
-                return RedirectToPage("/Admin/ManageUsers", new { email = email });
+                return RedirectToPage("/Admin/ManageUsers");
             }
             else
             {
@@ -400,37 +446,68 @@ namespace WebApplication1.Pages.Admin
                 _logger.LogWarning("ModelState is invalid");
             }
 
+            if (Registration == null)
+            {
+                _logger.LogWarning("Registration object is null.");
+                return BadRequest("Registration data is missing or invalid.");
+            }
+
+            // Proceed with updating the counties served
             var existingCounties = await _context.EaspSepsRegistrationCounties
                 .Where(c => c.AgencyRegistrationId == Registration.Id)
                 .ToListAsync();
 
-            _context.EaspSepsRegistrationCounties.RemoveRange(existingCounties);
+            foreach (var existingCounty in existingCounties)
+            {
+                if (!CountiesServed.Contains(existingCounty.CountyId))
+                {
+                    _context.EaspSepsRegistrationCounties.Remove(existingCounty);
+                }
+            }
 
             foreach (var countyId in CountiesServed)
             {
-                if (countyId > 0)
+                if (countyId > 0 && !existingCounties.Any(c => c.CountyId == countyId))
                 {
                     var newCounty = new EaspSepsRegistrationCounty
                     {
                         AgencyRegistrationId = Registration.Id,
                         CountyId = countyId
                     };
-                    _context.EaspSepsRegistrationCounties.Add(newCounty);
+
+                    var existingEntity = _context.ChangeTracker.Entries<EaspSepsRegistrationCounty>()
+                        .FirstOrDefault(e => e.Entity.AgencyRegistrationId == Registration.Id && e.Entity.CountyId == countyId);
+
+                    if (existingEntity == null)
+                    {
+                        _context.EaspSepsRegistrationCounties.Add(newCounty);
+                    }
+                    else
+                    {
+                        _context.Entry(existingEntity.Entity).State = EntityState.Modified;
+                    }
                 }
             }
 
             await _context.SaveChangesAsync();
-            SuccessMessage = "CountiesServed updated successfully.";
 
-            User = await _userManager.FindByIdAsync(Registration.UserId.ToString());
-            var email = User != null ? User.Email : Email;
-            if (User == null)
-            {
-                _logger.LogWarning($"User with Id: {Registration.UserId} not found.");
-            }
 
-            return RedirectToPage("/Admin/ManageUsers", new { email = email });
+            //// Check if Registration.UserId is null
+            //if (!string.IsNullOrEmpty(Registration.UserId))
+            //{
+            //    var user = await _userManager.FindByIdAsync(Registration.UserId.ToString());
+            //    var email = user != null ? user.Email : Email;
+            //    return RedirectToPage("/Admin/ManageUsers", new { email = email });
+            //}
+
+            TempData["SuccessMessage"] = "CountiesServed updated successfully."; // Set success message
+
+            return RedirectToPage("/Admin/ManageUsers");
+
         }
+
+
+
 
         public async Task<IActionResult> OnGetAdditionalUserAsync(int id)
         {
