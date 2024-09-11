@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
 using Serilog;
+using Microsoft.Extensions.Options;
+using System.Net.Mail;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +14,6 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddRoles<IdentityRole>()
@@ -24,6 +25,7 @@ builder.Services.AddRazorPages()
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
     });
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     // Default Lockout settings.
@@ -47,6 +49,10 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.SignIn.RequireConfirmedEmail = false;
     options.SignIn.RequireConfirmedPhoneNumber = false;
 });
+
+// Inject the SMTP settings from configuration
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddTransient<IEmailService, EmailService>();  // Register email service
 
 builder.Services.AddAuthorization();
 
@@ -164,5 +170,58 @@ static async Task CreateRolesAndAdminUser(IServiceProvider serviceProvider)
         {
             throw new Exception($"Error creating distributor user: {createDistributorUser.Errors.FirstOrDefault()?.Description}");
         }
+    }
+}
+
+// Email service logic
+public class SmtpSettings
+{
+    public bool IsDevelopment { get; set; }
+    public SmtpConfig DevSettings { get; set; }
+    public SmtpConfig ProdSettings { get; set; }
+}
+
+public class SmtpConfig
+{
+    public string Host { get; set; }
+    public int Port { get; set; }
+    public bool EnableSSL { get; set; }
+    public string UserName { get; set; }
+    public string Password { get; set; }
+}
+
+public interface IEmailService
+{
+    Task SendEmailAsync(string to, string subject, string body);
+}
+
+public class EmailService : IEmailService
+{
+    private readonly SmtpSettings _smtpSettings;
+
+    public EmailService(IOptions<SmtpSettings> smtpSettings)
+    {
+        _smtpSettings = smtpSettings.Value;
+    }
+
+    public async Task SendEmailAsync(string to, string subject, string body)
+    {
+        var smtpConfig = _smtpSettings.IsDevelopment ? _smtpSettings.DevSettings : _smtpSettings.ProdSettings;
+
+        var mailMessage = new MailMessage
+        {
+            From = new MailAddress(smtpConfig.UserName),
+            Subject = subject,
+            Body = body,
+            IsBodyHtml = true
+        };
+        mailMessage.To.Add(to);
+
+        using var smtpClient = new SmtpClient(smtpConfig.Host, smtpConfig.Port)
+        {
+            Credentials = new NetworkCredential(smtpConfig.UserName, smtpConfig.Password),
+            EnableSsl = smtpConfig.EnableSSL
+        };
+        await smtpClient.SendMailAsync(mailMessage);
     }
 }
