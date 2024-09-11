@@ -10,16 +10,20 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Services; 
+
 
 namespace WebApplication1.Pages.Client
 {
     public class PlaceOrderModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService; // Inject EmailService
 
-        public PlaceOrderModel(ApplicationDbContext context)
+        public PlaceOrderModel(ApplicationDbContext context, IEmailService emailService) // Inject IEmailService here
         {
             _context = context;
+            _emailService = emailService; // Assign the email service
         }
 
         public string Classification1ProductsJson { get; set; }
@@ -155,6 +159,10 @@ namespace WebApplication1.Pages.Client
 
                 await _context.SaveChangesAsync();
 
+                // Prepare and send the email confirmation after successful order placement
+                await SendOrderConfirmationEmail(order);
+
+
                 var orderConfirmation = await GetOrderConfirmationAsync(order.OrderId);
 
                 return new JsonResult(new { success = true, orderConfirmation });
@@ -165,6 +173,71 @@ namespace WebApplication1.Pages.Client
                 System.Diagnostics.Debug.WriteLine("An error occurred: " + ex.Message);
                 return new JsonResult(new { success = false, message = "An internal server error occurred." });
             }
+        }
+        // Email confirmation receipt.
+        private async Task SendOrderConfirmationEmail(Order order)
+        {
+            // Fetch the agency registration based on the UserId from the order
+            var agencyRegistration = await _context.AgencyRegistrations
+                .Include(ar => ar.LnkAgencyClassificationData)
+                .FirstOrDefaultAsync(ar => ar.UserId == order.UserId);
+
+            if (agencyRegistration == null)
+            {
+                throw new Exception("Agency registration not found.");
+            }
+
+            // Ensure the registration and classification exist
+            var uniqueId = agencyRegistration.LnkAgencyClassificationData.FirstOrDefault()?.UniqueId ?? "N/A";
+            var agencyName = agencyRegistration.AgencyName; // Retrieve the Agency Name
+
+            var subject = $"Order Confirmation - Order #{order.OrderId}";
+
+            // Build the order details table dynamically
+            var orderDetails = await _context.OrderDetails
+                .Where(od => od.OrderId == order.OrderId)
+                .ToListAsync();
+
+            var orderItemsHtml = orderDetails
+                .Select(od =>
+                {
+                    var product = _context.Products.FirstOrDefault(p => p.product_id == od.product_id);
+                    return $@"
+                <tr>
+                    <td>{product?.product_description ?? "Unknown Product"}</td>
+                    <td>{od.Quantity} {(od.Quantity > 1 ? "orders" : "order")}</td>
+                </tr>";
+                })
+                .Aggregate((current, next) => current + next); // Concatenating the rows
+
+            // Build the email body with dynamic content
+            var message = $@"
+        <p>Dear Colleague,</p>
+        <p>Thank you for successfully submitting your order.</p>
+        <p>Upon approval, programs will receive e-notification of all shipping details and products that will be received.</p>
+        <p><strong>{agencyName} (#{uniqueId})</strong> has placed an order(s) for the following items:</p>
+        <p>{order.ShipToAddress}<br/>
+           {order.ShipToAddress2}<br/>
+           {order.ShipToCity}, {order.ShipToState} {order.ShipToZip}</p>
+        <p><strong>Placed by:</strong> {order.ShipToName}            Order #{order.OrderId}</p>
+
+        <table style='border-collapse: collapse; width: 100%;'>
+            <thead>
+                <tr>
+                    <th style='border: 1px solid black; padding: 8px;'>Product</th>
+                    <th style='border: 1px solid black; padding: 8px;'>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {orderItemsHtml}
+            </tbody>
+        </table>
+        <p>If you have any questions about your order, feel free to reply to this email.</p>
+        <p>Best regards,<br/>Your Company</p>
+    ";
+
+            // Send the email using the IEmailService
+            await _emailService.SendEmailAsync(order.ShipToEmail, subject, message);
         }
 
 

@@ -9,11 +9,15 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Services;
+
 
 public class RegisterEaspSepsModel : PageModel
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<RegisterEaspSepsModel> _logger;
+    private readonly IEmailService _emailService; // Inject EmailService
+
 
     [BindProperty]
     public AgencyRegistration EaspSepsRegistration { get; set; }
@@ -60,10 +64,12 @@ public class RegisterEaspSepsModel : PageModel
 
     public string SuccessMessage { get; set; }
 
-    public RegisterEaspSepsModel(ApplicationDbContext context, ILogger<RegisterEaspSepsModel> logger)
+    public RegisterEaspSepsModel(ApplicationDbContext context, ILogger<RegisterEaspSepsModel> logger, IEmailService emailService)
     {
         _context = context;
         _logger = logger;
+        _emailService = emailService; // Assign the email service
+
     }
 
     public async Task<IActionResult> OnGetAsync()
@@ -274,11 +280,30 @@ public class RegisterEaspSepsModel : PageModel
 
         await _context.SaveChangesAsync();
 
+        // Now that registration is saved, send the email
+        await SendRegistrationConfirmationEmail(AgencyContact.Email, EaspSepsRegistration.AgencyName);
+
         SuccessMessage = "Your registration has been successfully submitted. Please wait for the approval.";
 //        TempData["SuccessMessage"] = "Your registration has been successfully submitted. Please wait for the approval.";
 
         return RedirectToPage("/Client/Home");
     }
+
+    private async Task SendRegistrationConfirmationEmail(string recipientEmail, string agencyName)
+    {
+        var subject = "ESAP/SEPS Registration Confirmation";
+
+        var message = $@"
+        <p>Dear Colleague,</p>
+        <p>Your registration for the agency <strong>{agencyName}</strong> has been successfully submitted.</p>
+        <p>Please wait for the approval process to complete. Once your registration is approved, you will be notified accordingly.</p>
+        <p>If you have any questions, feel free to reply to this email.</p>
+        <p>Best regards,<br/>Your Company</p>
+    ";
+
+        await _emailService.SendEmailAsync(recipientEmail, subject, message);
+    }
+
 
     private async Task PopulateData()
     {
