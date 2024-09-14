@@ -68,19 +68,20 @@ namespace WebApplication1.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<EaspSepsRegistrationCounty>()
-                .HasKey(e => new { e.AgencyRegistrationId, e.CountyId });
+    .HasKey(e => new { e.AgencyRegistrationId, e.CountyId });
 
             modelBuilder.Entity<EaspSepsRegistrationCounty>()
                 .HasOne(e => e.AgencyRegistration)
-                .WithMany(e => e.CountiesServed)
+                .WithMany(ar => ar.CountiesServed)
                 .HasForeignKey(e => e.AgencyRegistrationId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade); // Use Cascade if you want to delete related CountiesServed when an Agency is deleted.
 
             modelBuilder.Entity<EaspSepsRegistrationCounty>()
                 .HasOne(e => e.County)
                 .WithMany()
                 .HasForeignKey(e => e.CountyId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade); // Similarly, use Cascade if you want the relationship to be deleted when a County is deleted.
+
 
             modelBuilder.Entity<Suffix>().ToTable("lk_Suffix");
             modelBuilder.Entity<Prefix>().ToTable("lk_Prefix");
