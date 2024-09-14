@@ -22,8 +22,18 @@ public class Startup
 
         services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();        
-        services.AddRazorPages();
+                .AddEntityFrameworkStores<ApplicationDbContext>();
+        services.AddRazorPages(options =>
+        {
+            options.Conventions.AuthorizeFolder("/Client", "MainUserOnly");
+            options.Conventions.AuthorizeFolder("/Client", "AdditionalUserRole");
+        });
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("MainUserOnly", policy => policy.RequireRole("Client"));
+            options.AddPolicy("AdditionalUserRole", policy => policy.RequireRole("AdditionalUser"));
+
+        });
         services.AddControllersWithViews()
             .AddJsonOptions(options =>
             {
@@ -98,7 +108,8 @@ public class Startup
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        string[] roleNames = { "Client", "Admin", "Distributor" };
+        // Define roles for the application
+        string[] roleNames = { "Client", "AdditionalUser", "Admin", "Distributor" };
         IdentityResult roleResult;
 
         foreach (var roleName in roleNames)
