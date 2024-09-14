@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApplication1.Models
 {
@@ -11,6 +12,11 @@ namespace WebApplication1.Models
 
         [Required]
         public string UserId { get; set; }
+
+        public int? AdditionalUserId { get; set; } // Nullable field for additional user
+
+        [ForeignKey("AdditionalUserId")]
+        public AdditionalUser? AdditionalUser { get; set; } // Navigation property made nullable
 
         [Required]
         public DateTime OrderDate { get; set; } = DateTime.Now;

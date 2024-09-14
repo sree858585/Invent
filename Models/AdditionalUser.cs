@@ -24,6 +24,7 @@ namespace WebApplication1.Models
         public string? Email { get; set; }
         public bool SameAddressAsAgency { get; set; }
 
+
         // Foreign Key to EaspSepsRegistration
         [Required]
         public int AgencyRegistrationId { get; set; }

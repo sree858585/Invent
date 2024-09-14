@@ -11,6 +11,7 @@ namespace WebApplication1.Models
     public class ApplicationUser : IdentityUser
     {
        // public string Id { get; set; }
+
         public string Role { get; set; } // "Client", "Admin", "Distributor"
         public bool IsApproved { get; set; } // For Admin approval
     }
