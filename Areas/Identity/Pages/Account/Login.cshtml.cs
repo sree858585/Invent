@@ -94,6 +94,10 @@ namespace WebApplication1.Areas.Identity.Pages.Account
                     {
                         return LocalRedirect("/Distributor/Home");
                     }
+                    else if (roles.Contains("AdditionalUser"))
+                    {
+                        return LocalRedirect("/Client/Home");
+                    }
 
                     return LocalRedirect(returnUrl);
                 }
