@@ -21,6 +21,7 @@ else
                     <div class="card-body">
                         <h5 class="card-title">Order #@order.OrderId</h5>
                         <p class="card-text">Placed on: @order.OrderDate.ToString("MM/dd/yyyy")</p>
+                        <p class="card-text"><strong>Placed By:</strong> @order.PlacedBy</p> <!-- Display the Placed By information -->
                         <p class="card-text">
                             Ship To: @order.ShipToName<br />
                             @order.ShipToAddress, @order.ShipToCity, @order.ShipToState @order.ShipToZip

@@ -23,33 +23,88 @@ namespace WebApplication1.Pages.Client
 
         public async Task OnGetAsync()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Current user's ID
 
-            Orders = await _context.Orders
-                .Where(o => o.UserId == userId)
-                .Include(o => o.OrderDetails)
-                .ThenInclude(od => od.Product)
-                .Select(o => new OrderViewModel
-                {
-                    OrderId = o.OrderId,
-                    OrderDate = o.OrderDate,
-                    OrderStatus = o.OrderStatus,
-                    ApprovedDate = o.ApprovedDate,
-                    CanceledDate = o.CanceledDate,
-                    ShippedDate = o.ShippedDate,
-                    ShipToName = o.ShipToName,
-                    ShipToAddress = o.ShipToAddress,
-                    ShipToCity = o.ShipToCity,
-                    ShipToState = o.ShipToState,
-                    ShipToZip = o.ShipToZip,
-                    Products = o.OrderDetails.Select(od => new ProductDetail
+            // Check if the current user is the main client (not additional user)
+            var agencyRegistration = await _context.AgencyRegistrations
+                .Include(ar => ar.AgencyContacts)  // Include AgencyContacts to get ProgramDirector
+                .FirstOrDefaultAsync(ar => ar.UserId == userId);
+
+            if (agencyRegistration != null)
+            {
+                // Main client: get their own orders and the orders of additional users under their agency
+                var agencyRegistrationId = agencyRegistration.Id;
+                var programDirector = agencyRegistration.AgencyContacts.FirstOrDefault()?.ProgramDirector;
+
+                Orders = await _context.Orders
+                    .Where(o => o.UserId == userId ||
+                                _context.AdditionalUsers.Any(au => au.AgencyRegistrationId == agencyRegistrationId && au.Id == o.AdditionalUserId)) // Fetch orders from main client and additional users
+                    .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.Product)
+                    .Select(o => new OrderViewModel
                     {
-                        ProductName = od.Product.product_description,
-                        Quantity = od.Quantity
-                    }).ToList()
-                })
-                .ToListAsync();
+                        OrderId = o.OrderId,
+                        OrderDate = o.OrderDate,
+                        OrderStatus = o.OrderStatus,
+                        ApprovedDate = o.ApprovedDate,
+                        CanceledDate = o.CanceledDate,
+                        ShippedDate = o.ShippedDate,
+                        ShipToName = o.ShipToName,
+                        ShipToAddress = o.ShipToAddress,
+                        ShipToCity = o.ShipToCity,
+                        ShipToState = o.ShipToState,
+                        ShipToZip = o.ShipToZip,
+                        PlacedBy = o.AdditionalUserId == null ? programDirector : _context.AdditionalUsers.FirstOrDefault(au => au.Id == o.AdditionalUserId).Name,  // Use ProgramDirector or AdditionalUserName
+                        Products = o.OrderDetails.Select(od => new ProductDetail
+                        {
+                            ProductName = od.Product.product_description,
+                            Quantity = od.Quantity
+                        }).ToList()
+                    })
+                    .ToListAsync();
+            }
+            else
+            {
+                // Fetch the additional user based on the current logged-in userId (which is likely a string)
+                var additionalUser = await _context.AdditionalUsers
+                    .FirstOrDefaultAsync(au => au.Email == User.Identity.Name); // Or use au.UserId == userId if available
+
+                if (additionalUser != null)
+                {
+                    // Additional user: only see the orders they have placed
+                    Orders = await _context.Orders
+                        .Where(o => o.AdditionalUserId == additionalUser.Id) // Compare with the AdditionalUser's Id
+                        .Include(o => o.OrderDetails)
+                        .ThenInclude(od => od.Product)
+                        .Select(o => new OrderViewModel
+                        {
+                            OrderId = o.OrderId,
+                            OrderDate = o.OrderDate,
+                            OrderStatus = o.OrderStatus,
+                            ApprovedDate = o.ApprovedDate,
+                            CanceledDate = o.CanceledDate,
+                            ShippedDate = o.ShippedDate,
+                            ShipToName = o.ShipToName,
+                            ShipToAddress = o.ShipToAddress,
+                            ShipToCity = o.ShipToCity,
+                            ShipToState = o.ShipToState,
+                            ShipToZip = o.ShipToZip,
+                            PlacedBy = additionalUser.Name,  // Additional user name as Placed By
+                            Products = o.OrderDetails.Select(od => new ProductDetail
+                            {
+                                ProductName = od.Product.product_description,
+                                Quantity = od.Quantity
+                            }).ToList()
+                        })
+                        .ToListAsync();
+                }
+                else
+                {
+                    Orders = new List<OrderViewModel>(); // Handle case where no additional user is found
+                }
+            }
         }
+
 
         public string GetProgressBarClass(OrderViewModel order)
         {
@@ -84,7 +139,6 @@ namespace WebApplication1.Pages.Client
             };
         }
 
-
         public class OrderViewModel
         {
             public int OrderId { get; set; }
@@ -98,6 +152,7 @@ namespace WebApplication1.Pages.Client
             public DateTime? ApprovedDate { get; set; }
             public DateTime? CanceledDate { get; set; }
             public DateTime? ShippedDate { get; set; }
+            public string PlacedBy { get; set; }  // Added property for Order Placed By
             public List<ProductDetail> Products { get; set; } = new List<ProductDetail>();
         }
 

@@ -23,22 +23,42 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-page="/Client/Home">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Client/RegisterEaspSeps">ESAP/SEPS Registration</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Client/PlaceOrder">Place Order</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Client/MyOrders">My Orders</a> <!-- New Link -->
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Client/ShipToSites">Ship To Sites</a> <!-- New Link -->
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Client/Reports">Reports</a>
-                        </li>
 
+                        @if (User.IsInRole("Client"))
+                        {
+                            <!-- Display all links for Client role -->
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/RegisterEaspSeps">ESAP/SEPS Registration</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/PlaceOrder">Place Order</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/MyOrders">My Orders</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/ShipToSites">Ship To Sites</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/Reports">Reports</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/ManageAdditionalUsers">Additional Users</a>
+                            </li>
+                        }
+                        else if (User.IsInRole("AdditionalUser"))
+                        {
+                            <!-- Only show limited options for AdditionalUser role -->
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/PlaceOrder">Place Order</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/MyOrders">My Orders</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Client/Reports">Reports</a>
+                            </li>
+                        }
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>

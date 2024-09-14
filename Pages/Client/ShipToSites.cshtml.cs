@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,8 @@ using WebApplication1.Models;
 
 namespace WebApplication1.Pages.Client
 {
+    [Authorize(Roles = "Client")]
+
     public class ShipToSitesModel : PageModel
     {
         private readonly ApplicationDbContext _context;

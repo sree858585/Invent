@@ -37,7 +37,7 @@
                     <tr>
                         <th>Order ID</th>
                         <th>Agency Name</th>
-                        <th>Order Date</th>
+                        <th>Placed By</th> 
                         <th>Ship To</th>
                         <th>Products</th>
                         <th>Order Status</th>
@@ -49,8 +49,12 @@
                     {
                         <tr>
                             <td>@order.OrderId</td>
-                            <td>@order.AgencyName</td>
-                            <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <strong>@order.AgencyName</strong><br />
+                                Email: @order.ContactEmail<br />
+                                Phone: @order.ContactPhone
+                            </td>
+                            <td>@order.PlacedBy</td> 
                             <td>
                                 <p>@order.ShipToName</p>
                                 <p>@order.ShipToAddress</p>
@@ -114,7 +118,7 @@
                     <tr>
                         <th>Order ID</th>
                         <th>Agency Name</th>
-                        <th>Order Date</th>
+                        <th>Placed By</th>
                         <th>Ship To</th>
                         <th>Products</th>
                         <th>Order Status</th>
@@ -126,8 +130,12 @@
                     {
                         <tr>
                             <td>@order.OrderId</td>
-                            <td>@order.AgencyName</td>
-                            <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <strong>@order.AgencyName</strong><br />
+                                Email: @order.ContactEmail<br />
+                                Phone: @order.ContactPhone
+                            </td>
+                            <td>@order.PlacedBy</td>
                             <td>
                                 <p>@order.ShipToName</p>
                                 <p>@order.ShipToAddress</p>
@@ -190,7 +198,7 @@
                     <tr>
                         <th>Order ID</th>
                         <th>Agency Name</th>
-                        <th>Order Date</th>
+                        <th>Placed By</th>
                         <th>Ship To</th>
                         <th>Products</th>
                         <th>Order Status</th>
@@ -202,8 +210,12 @@
                     {
                         <tr>
                             <td>@order.OrderId</td>
-                            <td>@order.AgencyName</td>
-                            <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <strong>@order.AgencyName</strong><br />
+                                Email: @order.ContactEmail<br />
+                                Phone: @order.ContactPhone
+                            </td>
+                            <td>@order.PlacedBy</td>
                             <td>
                                 <p>@order.ShipToName</p>
                                 <p>@order.ShipToAddress</p>
@@ -266,7 +278,7 @@
                     <tr>
                         <th>Order ID</th>
                         <th>Agency Name</th>
-                        <th>Order Date</th>
+                        <th>Placed By</th>
                         <th>Ship To</th>
                         <th>Products</th>
                         <th>Ship Date</th>
@@ -277,8 +289,12 @@
                     {
                         <tr>
                             <td>@order.OrderId</td>
-                            <td>@order.AgencyName</td>
-                            <td>@order.OrderDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <strong>@order.AgencyName</strong><br />
+                                Email: @order.ContactEmail<br />
+                                Phone: @order.ContactPhone
+                            </td>
+                            <td>@order.PlacedBy</td>
                             <td>
                                 <p>@order.ShipToName</p>
                                 <p>@order.ShipToAddress</p>

@@ -37,37 +37,51 @@ namespace WebApplication1.Pages.Admin
             ViewData["CurrentTab"] = currentTab;
 
             var ordersQuery = _context.Orders
-                .Include(o => o.OrderDetails)
-                .ThenInclude(od => od.Product)
-                .Join(
-                    _context.AgencyRegistrations,
-                    order => order.UserId,
-                    agency => agency.UserId,
-                    (order, agency) => new { Order = order, Agency = agency }
-                )
-                .GroupBy(
-                    o => o.Order.OrderId
-                )
-                .Select(group => new OrderViewModel
-                {
-                    OrderId = group.First().Order.OrderId,
-                    AgencyName = group.First().Agency.AgencyName,
-                    OrderDate = group.First().Order.OrderDate,
-                    OrderStatus = group.First().Order.OrderStatus,
-                    ApprovedDate = group.First().Order.ApprovedDate,
-                    CanceledDate = group.First().Order.CanceledDate,
-                    ShippedDate = group.First().Order.ShippedDate,
-                    ShipToName = group.First().Order.ShipToName,
-                    ShipToAddress = group.First().Order.ShipToAddress,
-                    ShipToCity = group.First().Order.ShipToCity,
-                    ShipToState = group.First().Order.ShipToState,
-                    ShipToZip = group.First().Order.ShipToZip,
-                    Products = group.First().Order.OrderDetails.Select(od => new ProductDetail
-                    {
-                        ProductName = od.Product.product_description,
-                        Quantity = od.Quantity
-                    }).ToList()
-                });
+        .Include(o => o.OrderDetails)
+        .ThenInclude(od => od.Product)
+        .Select(o => new OrderViewModel
+        {
+            OrderId = o.OrderId,
+            AgencyName = _context.AgencyRegistrations
+                .Where(ar => ar.UserId == o.UserId)
+                .Select(ar => ar.AgencyName)
+                .FirstOrDefault(),
+            ContactEmail = _context.AgencyContacts
+                .Where(ac => ac.AgencyRegistrationId == _context.AgencyRegistrations
+                    .Where(ar => ar.UserId == o.UserId).Select(ar => ar.Id).FirstOrDefault())
+                .Select(ac => ac.Email)
+                .FirstOrDefault(),
+            ContactPhone = _context.AgencyContacts
+                .Where(ac => ac.AgencyRegistrationId == _context.AgencyRegistrations
+                    .Where(ar => ar.UserId == o.UserId).Select(ar => ar.Id).FirstOrDefault())
+                .Select(ac => ac.Phone)
+                .FirstOrDefault(),
+            PlacedBy = o.AdditionalUserId == null
+                ? _context.AgencyContacts
+                    .Where(ac => ac.AgencyRegistrationId == _context.AgencyRegistrations
+                        .Where(ar => ar.UserId == o.UserId).Select(ar => ar.Id).FirstOrDefault())
+                    .Select(ac => ac.ProgramDirector)
+                    .FirstOrDefault()
+                : _context.AdditionalUsers
+                    .Where(au => au.Id == o.AdditionalUserId)
+                    .Select(au => au.Name)
+                    .FirstOrDefault(),
+            OrderDate = o.OrderDate,
+            ShipToName = o.ShipToName,
+            ShipToAddress = o.ShipToAddress,
+            ShipToCity = o.ShipToCity,
+            ShipToState = o.ShipToState,
+            ShipToZip = o.ShipToZip,
+            Products = o.OrderDetails.Select(od => new ProductDetail
+            {
+                ProductName = od.Product.product_description,
+                Quantity = od.Quantity
+            }).ToList(),
+            OrderStatus = o.OrderStatus,
+            ApprovedDate = o.ApprovedDate,
+            CanceledDate = o.CanceledDate,
+            ShippedDate = o.ShippedDate
+        });
 
             // Pending Orders
             PendingOrdersPageNumber = pendingPage;
@@ -138,8 +152,11 @@ namespace WebApplication1.Pages.Admin
         {
             public int OrderId { get; set; }
             public string AgencyName { get; set; }
-            public DateTime OrderDate { get; set; }
+            public string ContactEmail { get; set; }  // New field for email
+            public string ContactPhone { get; set; }  // New field for phone number
+            public string PlacedBy { get; set; }  // New PlacedBy field
             public string OrderStatus { get; set; }
+            public DateTime OrderDate { get; set; }
             public DateTime? ApprovedDate { get; set; }
             public DateTime? CanceledDate { get; set; }
             public DateTime? ShippedDate { get; set; }

@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
@@ -10,20 +10,20 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.Models;
-using WebApplication1.Services; 
-
+using WebApplication1.Services;
 
 namespace WebApplication1.Pages.Client
 {
+    [Authorize(Roles = "Client,AdditionalUser")]
     public class PlaceOrderModel : PageModel
     {
         private readonly ApplicationDbContext _context;
-        private readonly IEmailService _emailService; // Inject EmailService
+        private readonly IEmailService _emailService;
 
-        public PlaceOrderModel(ApplicationDbContext context, IEmailService emailService) // Inject IEmailService here
+        public PlaceOrderModel(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
-            _emailService = emailService; // Assign the email service
+            _emailService = emailService;
         }
 
         public string Classification1ProductsJson { get; set; }
@@ -55,6 +55,21 @@ namespace WebApplication1.Pages.Client
         public async Task OnGetAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRoles = User.FindFirstValue(ClaimTypes.Role);
+
+            // Check if it's a main user or additional user
+            if (userRoles.Contains("AdditionalUser"))
+            {
+                // Fetch the main user's ID from the additional user's agency registration
+                var additionalUser = await _context.AdditionalUsers
+                    .Include(a => a.AgencyRegistration)
+                    .FirstOrDefaultAsync(a => a.Email == User.Identity.Name);
+
+                if (additionalUser != null && additionalUser.AgencyRegistration != null)
+                {
+                    userId = additionalUser.AgencyRegistration.UserId;  // Main user's ID
+                }
+            }
 
             var userRegistrations = await _context.AgencyRegistrations
                 .Where(ar => ar.UserId == userId && ar.Status == "Approved")
@@ -108,30 +123,53 @@ namespace WebApplication1.Pages.Client
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("OnPostCheckoutAsync method called");
-
-                var requestBody = JsonConvert.SerializeObject(request);
-                System.Diagnostics.Debug.WriteLine("Incoming request: " + requestBody);
-
-                if (!ModelState.IsValid)
+                if (!ModelState.IsValid || request.Cart == null || !request.Cart.Any())
                 {
-                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-                    System.Diagnostics.Debug.WriteLine("Model State Errors: " + string.Join(", ", errors));
-                    return new JsonResult(new { success = false, message = "Invalid request data.", errors });
+                    //return new JsonResult(new { success = false, message = "Invalid request data or cart is empty." });
                 }
 
-                if (request.Cart == null || !request.Cart.Any())
+                // Retrieve User ID from Claims
+                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Main client ID
+                int? additionalUserId = null;  // Nullable int for additional user ID
+
+                if (string.IsNullOrEmpty(userId))
                 {
-                    System.Diagnostics.Debug.WriteLine("Cart is empty.");
-                    return new JsonResult(new { success = false, message = "Cart is empty." });
+                    throw new Exception("User ID is null or empty. Unable to place order.");
                 }
 
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                System.Diagnostics.Debug.WriteLine("User ID: " + userId);
+                // Check if the user is an additional user
+                var userRoles = User.FindFirstValue(ClaimTypes.Role);
+                if (userRoles.Contains("AdditionalUser"))
+                {
+                    var additionalUser = await _context.AdditionalUsers
+                        .Include(au => au.AgencyRegistration)
+                        .FirstOrDefaultAsync(au => au.Email == User.Identity.Name);
 
+                    if (additionalUser != null && additionalUser.AgencyRegistration != null)
+                    {
+                        userId = additionalUser.AgencyRegistration.UserId;  // Use the main client's ID
+                        additionalUserId = additionalUser.Id;  // Set the additional user's ID
+                    }
+                    else
+                    {
+                        throw new Exception("Additional user is not associated with any agency registration.");
+                    }
+                }
+
+                // Ensure all required fields are set
+                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(request.ShippingInfo.ShipToName) ||
+                    string.IsNullOrEmpty(request.ShippingInfo.ShipToEmail) || string.IsNullOrEmpty(request.ShippingInfo.ShipToAddress) ||
+                    string.IsNullOrEmpty(request.ShippingInfo.ShipToCity) || string.IsNullOrEmpty(request.ShippingInfo.ShipToState) ||
+                    string.IsNullOrEmpty(request.ShippingInfo.ShipToZip))
+                {
+                    throw new Exception("One or more required fields are missing.");
+                }
+
+                // Create the order object
                 var order = new Order
                 {
-                    UserId = userId,
+                    UserId = userId,  // Set the main client's ID for the order
+                    AdditionalUserId = additionalUserId,  // Set additional user ID if applicable
                     OrderDate = DateTime.Now,
                     OrderStatus = "ordered",
                     ShipToName = request.ShippingInfo.ShipToName,
@@ -143,9 +181,11 @@ namespace WebApplication1.Pages.Client
                     ShipToZip = request.ShippingInfo.ShipToZip
                 };
 
+                // Add the order to the database
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
+                // Add each product in the cart as an order detail
                 foreach (var item in request.Cart)
                 {
                     var orderDetail = new OrderDetail
@@ -157,23 +197,32 @@ namespace WebApplication1.Pages.Client
                     _context.OrderDetails.Add(orderDetail);
                 }
 
+                // Save order details
                 await _context.SaveChangesAsync();
 
-                // Prepare and send the email confirmation after successful order placement
+                // Send order confirmation email
                 await SendOrderConfirmationEmail(order);
 
-
+                // Retrieve order confirmation details
                 var orderConfirmation = await GetOrderConfirmationAsync(order.OrderId);
 
                 return new JsonResult(new { success = true, orderConfirmation });
             }
+            catch (DbUpdateException dbEx)
+            {
+                // Capture the full details of the database update exception
+                var innerException = dbEx.InnerException != null ? dbEx.InnerException.Message : dbEx.Message;
+                return new JsonResult(new { success = false, message = $"Database error occurred: {innerException}", details = dbEx.ToString() });
+            }
             catch (Exception ex)
             {
-                // Log the exception for further analysis
-                System.Diagnostics.Debug.WriteLine("An error occurred: " + ex.Message);
-                return new JsonResult(new { success = false, message = "An internal server error occurred." });
+                // Return detailed error message
+                return new JsonResult(new { success = false, message = $"An internal server error occurred: {ex.Message}", details = ex.ToString() });
             }
         }
+
+
+
         // Email confirmation receipt.
         private async Task SendOrderConfirmationEmail(Order order)
         {
@@ -240,7 +289,6 @@ namespace WebApplication1.Pages.Client
             await _emailService.SendEmailAsync(order.ShipToEmail, subject, message);
         }
 
-
         public class CheckoutRequest
         {
             public List<CartItem> Cart { get; set; }
@@ -249,10 +297,7 @@ namespace WebApplication1.Pages.Client
 
         public async Task<OrderConfirmation> GetOrderConfirmationAsync(int orderId)
         {
-            var order = await _context.Orders
-                .Include(o => o.OrderDetails)
-                .FirstOrDefaultAsync(o => o.OrderId == orderId);
-
+            var order = await _context.Orders.Include(o => o.OrderDetails).FirstOrDefaultAsync(o => o.OrderId == orderId);
             if (order == null)
             {
                 return null;
@@ -288,7 +333,6 @@ namespace WebApplication1.Pages.Client
         private async Task<string> GetProductDescriptionAsync(int productId)
         {
             string productDescription = null;
-
             try
             {
                 using (var connection = _context.Database.GetDbConnection())
@@ -314,16 +358,11 @@ namespace WebApplication1.Pages.Client
             }
             catch (Exception ex)
             {
-                // Log the exception
                 Console.WriteLine($"Error fetching product description: {ex.Message}");
             }
 
             return productDescription;
         }
-
-
-
-
 
         public class OrderDetailDto
         {
