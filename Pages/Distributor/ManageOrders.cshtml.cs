@@ -314,6 +314,10 @@ namespace WebApplication1.Pages.Distributor
                 }
             }
 
+            // Capture edited date and note
+            order.EditedDate = DateTime.Now;
+            order.Note = request.Note;
+
             await _context.SaveChangesAsync();
 
             return new JsonResult(new { success = true });
@@ -392,6 +396,8 @@ namespace WebApplication1.Pages.Distributor
             public string ShipToCity { get; set; }
             public string ShipToState { get; set; }
             public string ShipToZip { get; set; }
+            public string Note { get; set; } // Add a note field
+
         }
 
         public class OrderHistoryViewModel

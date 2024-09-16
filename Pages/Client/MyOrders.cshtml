@@ -21,18 +21,31 @@ else
                     <div class="card-body">
                         <h5 class="card-title">Order #@order.OrderId</h5>
                         <p class="card-text">Placed on: @order.OrderDate.ToString("MM/dd/yyyy")</p>
-                        <p class="card-text"><strong>Placed By:</strong> @order.PlacedBy</p> <!-- Display the Placed By information -->
+                        <p class="card-text"><strong>Placed By:</strong> @order.PlacedBy</p>
                         <p class="card-text">
                             Ship To: @order.ShipToName<br />
                             @order.ShipToAddress, @order.ShipToCity, @order.ShipToState @order.ShipToZip
                         </p>
+
+                        @if (order.EditedDate.HasValue)
+                        {
+                            <p class="text-warning">
+                                <strong>Your order was edited on @order.EditedDate.Value.ToString("MM/dd/yyyy")</strong> - <a href="javascript:void(0)" onclick="showNote('@order.Note')">View Note</a>
+                            </p>
+                        }
+
                         <div class="mb-3">
                             <strong>Order Status:</strong>
                             <div class="progress">
                                 <div class="progress-bar @GetProgressBarClass(order)" role="progressbar" style="width: @GetProgressPercentage(order)%" aria-valuenow="@GetProgressPercentage(order)" aria-valuemin="0" aria-valuemax="100">@order.OrderStatus</div>
                             </div>
                         </div>
-                        <div>
+
+                        <!-- Button to toggle products visibility -->
+                        <button class="btn btn-info" onclick="toggleProducts(@order.OrderId)">View Products</button>
+
+                        <!-- Hidden products section -->
+                        <div id="products-@order.OrderId" style="display:none;">
                             <ul>
                                 @foreach (var product in order.Products)
                                 {
@@ -48,6 +61,27 @@ else
             </div>
         }
     </div>
+
+    <!-- Note Modal -->
+    <div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="noteModalLabel">Order Note</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="noteContent">
+                    <!-- Note content will be displayed here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 }
 
 @section Styles {
@@ -60,6 +94,22 @@ else
             font-size: 0.85rem;
         }
     </style>
+}
+@section Scripts {
+    <script>function showNote(note) {
+            $('#noteContent').text(note || 'No note provided.');
+            $('#noteModal').modal('show');
+}
+        // Function to toggle product visibility
+        function toggleProducts(orderId) {
+            var productSection = document.getElementById('products-' + orderId);
+            if (productSection.style.display === 'none') {
+                productSection.style.display = 'block';
+            } else {
+                productSection.style.display = 'none';
+            }
+        }
+    </script>
 }
 
 @functions {

@@ -59,7 +59,9 @@ namespace WebApplication1.Pages.Client
                         {
                             ProductName = od.Product.product_description,
                             Quantity = od.Quantity
-                        }).ToList()
+                        }).ToList(),
+                        EditedDate = o.EditedDate,  
+                        Note = o.Note            
                     })
                     .ToListAsync();
             }
@@ -94,7 +96,9 @@ namespace WebApplication1.Pages.Client
                             {
                                 ProductName = od.Product.product_description,
                                 Quantity = od.Quantity
-                            }).ToList()
+                            }).ToList(),
+                            EditedDate = o.EditedDate,
+                            Note = o.Note
                         })
                         .ToListAsync();
                 }
@@ -130,14 +134,26 @@ namespace WebApplication1.Pages.Client
 
         public string GetOrderTimeline(OrderViewModel order)
         {
-            return order.OrderStatus switch
+            var timeline = $"Ordered on {order.OrderDate:MM/dd/yyyy}";
+
+            if (order.ApprovedDate.HasValue)
             {
-                "ordered" => $"Ordered on {order.OrderDate:MM/dd/yyyy}",
-                "approved" => $"Ordered on {order.OrderDate:MM/dd/yyyy}, Approved on {order.ApprovedDate:MM/dd/yyyy}",
-                "shipped" => $"Ordered on {order.OrderDate:MM/dd/yyyy}, Approved on {order.ApprovedDate:MM/dd/yyyy}, Shipped on {order.ShippedDate:MM/dd/yyyy}",
-                _ => $"Status: {order.OrderStatus}"
-            };
+                timeline += $", Approved on {order.ApprovedDate:MM/dd/yyyy}";
+            }
+
+            if (order.ShippedDate.HasValue)
+            {
+                timeline += $", Shipped on {order.ShippedDate:MM/dd/yyyy}";
+            }
+
+            if (order.EditedDate.HasValue)
+            {
+                timeline += $", Edited on {order.EditedDate:MM/dd/yyyy}";
+            }
+
+            return timeline;
         }
+
 
         public class OrderViewModel
         {
@@ -154,6 +170,10 @@ namespace WebApplication1.Pages.Client
             public DateTime? ShippedDate { get; set; }
             public string PlacedBy { get; set; }  // Added property for Order Placed By
             public List<ProductDetail> Products { get; set; } = new List<ProductDetail>();
+
+            // New fields
+            public DateTime? EditedDate { get; set; }  // Nullable Edited Date
+            public string Note { get; set; }           // Note field
         }
 
         public class ProductDetail

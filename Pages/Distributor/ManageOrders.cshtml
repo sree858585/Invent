@@ -65,12 +65,14 @@
                 <!-- Order details content will be loaded here dynamically -->
             </div>
             <div class="modal-footer">
+                <textarea id="orderNote" class="form-control" placeholder="Add your note here" maxlength="250"></textarea>
                 <button type="button" class="btn btn-primary" onclick="saveOrderDetails()">Save</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Order History Modal -->
 <div class="modal fade" id="orderHistoryModal" tabindex="-1" aria-labelledby="orderHistoryModalLabel" aria-hidden="true">
@@ -117,43 +119,43 @@
                         const products = order.products.$values || [];
 
                         $('#orderDetailsContent').html(`
-                                        <h5>Order ID: ${order.orderId}</h5>
-                                        <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleDateString()}</p>
-                                        <p><strong>Shipping Information:</strong><br>
-                                            <input type="text" id="editShipToName" class="form-control" value="${order.shipToName}">
-                                            <input type="text" id="editShipToAddress" class="form-control mt-2" value="${order.shipToAddress}">
-                                            <input type="text" id="editShipToCity" class="form-control mt-2" value="${order.shipToCity}">
-                                            <input type="text" id="editShipToState" class="form-control mt-2" value="${order.shipToState}">
-                                            <input type="text" id="editShipToZip" class="form-control mt-2" value="${order.shipToZip}">
-                                        </p>
-                                        <h5>Products:</h5>
-                                        <table class="table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Product Name</th>
-                                                    <th>Quantity</th>
-                                                    <th>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="productList">
-                                                ${products.map(product => `
+                                            <h5>Order ID: ${order.orderId}</h5>
+                                            <p><strong>Order Date:</strong> ${new Date(order.orderDate).toLocaleDateString()}</p>
+                                            <p><strong>Shipping Information:</strong><br>
+                                                <input type="text" id="editShipToName" class="form-control" value="${order.shipToName}">
+                                                <input type="text" id="editShipToAddress" class="form-control mt-2" value="${order.shipToAddress}">
+                                                <input type="text" id="editShipToCity" class="form-control mt-2" value="${order.shipToCity}">
+                                                <input type="text" id="editShipToState" class="form-control mt-2" value="${order.shipToState}">
+                                                <input type="text" id="editShipToZip" class="form-control mt-2" value="${order.shipToZip}">
+                                            </p>
+                                            <h5>Products:</h5>
+                                            <table class="table">
+                                                <thead>
                                                     <tr>
-                                                        <td><input type="text" class="form-control" value="${product.productName}" readonly></td>
-                                                        <td><input type="number" class="form-control" value="${product.quantity}" min="1" id="quantity-${product.productId}"></td>
-                                                        <td><button class="btn btn-danger btn-sm" onclick="removeProduct(${product.productId}, ${order.orderId})">X</button></td>
+                                                        <th>Product Name</th>
+                                                        <th>Quantity</th>
+                                                        <th>Actions</th>
                                                     </tr>
-                                                `).join('')}
-                                            </tbody>
-                                        </table>
-                                        <div>
-                                            <h5>Add New Product:</h5>
-                                            <select id="newProductSelect" class="form-control">
-                                                <!-- Populate with available products -->
-                                            </select>
-                                            <input type="number" id="newProductQuantity" class="form-control mt-2" placeholder="Quantity" min="1">
-                                            <button class="btn btn-primary mt-2" onclick="addProduct(${order.orderId})">Add Product</button>
-                                        </div>
-                                    `);
+                                                </thead>
+                                                <tbody id="productList">
+                                                    ${products.map(product => `
+                                                        <tr>
+                                                            <td><input type="text" class="form-control" value="${product.productName}" readonly></td>
+                                                            <td><input type="number" class="form-control" value="${product.quantity}" min="1" id="quantity-${product.productId}"></td>
+                                                            <td><button class="btn btn-danger btn-sm" onclick="removeProduct(${product.productId}, ${order.orderId})">X</button></td>
+                                                        </tr>
+                                                    `).join('')}
+                                                </tbody>
+                                            </table>
+                                            <div>
+                                                <h5>Add New Product:</h5>
+                                                <select id="newProductSelect" class="form-control">
+                                                    <!-- Populate with available products -->
+                                                </select>
+                                                <input type="number" id="newProductQuantity" class="form-control mt-2" placeholder="Quantity" min="1">
+                                                <button class="btn btn-primary mt-2" onclick="addProduct(${order.orderId})">Add Product</button>
+                                            </div>
+                                        `);
 
                         loadAvailableProducts(orderId);
 
@@ -230,8 +232,8 @@
                     if (Array.isArray(productsArray)) {
                         const productSelect = document.getElementById('newProductSelect');
                         productSelect.innerHTML = productsArray.map(product => `
-                                    <option value="${product.productId}">${product.productName}</option>
-                                `).join('');
+                                        <option value="${product.productId}">${product.productName}</option>
+                                    `).join('');
                     } else {
                         console.error("Expected an array for data.products.$values but got:", productsArray);
                         alert('Error: Could not load products.');
@@ -293,21 +295,21 @@
                             $('#orderHistoryContent').html(''); // Clear previous content
 
                             $('#orderHistoryContent').html(`
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Order ID</th>
-                                            <th>Agency Name</th>
-                                            <th>Program Director</th>
-                                            <th>Email</th>
-                                            <th>Phone</th>
-                                            <th>Ship Date</th>
-                                            <th>Shipping Address</th>
-                                            <th>Products</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${history.filter(order => {
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Agency Name</th>
+                                                <th>Program Director</th>
+                                                <th>Email</th>
+                                                <th>Phone</th>
+                                                <th>Ship Date</th>
+                                                <th>Shipping Address</th>
+                                                <th>Products</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${history.filter(order => {
                                 // Only include unique order IDs
                                 if (!uniqueOrders.has(order.orderId)) {
                                     uniqueOrders.add(order.orderId);
@@ -325,32 +327,32 @@
                                 const products = Array.isArray(order.products.$values) ? order.products.$values : [];
 
                                 return `
-                                                <tr>
-                                                    <td>${orderId}</td>
-                                                    <td>${agencyName}</td>
-                                                    <td>${programDirector}</td>
-                                                    <td>${email}</td>
-                                                    <td>${phone}</td>
-                                                    <td>${shipDate}</td>
-                                                   <td>
-                                                        ${shippingInfo.shipToName || ''}<br />
-                                                        ${shippingInfo.shipToAddress || ''}<br />
-                                                        ${shippingInfo.shipToAddress2 || ''}<br />
-                                                        ${shippingInfo.shipToCity || ''}, ${shippingInfo.shipToState || ''} ${shippingInfo.shipToZip || ''}
-                                                    </td>
-                                                    <td>
-                                                        <ul>
-                                                            ${products.map(product => `
-                                                                <li>${product.productName || ''} - Quantity: ${product.quantity || ''}</li>
-                                                            `).join('')}
-                                                        </ul>
-                                                    </td>
-                                                </tr>
-                                            `;
+                                                    <tr>
+                                                        <td>${orderId}</td>
+                                                        <td>${agencyName}</td>
+                                                        <td>${programDirector}</td>
+                                                        <td>${email}</td>
+                                                        <td>${phone}</td>
+                                                        <td>${shipDate}</td>
+                                                       <td>
+                                                            ${shippingInfo.shipToName || ''}<br />
+                                                            ${shippingInfo.shipToAddress || ''}<br />
+                                                            ${shippingInfo.shipToAddress2 || ''}<br />
+                                                            ${shippingInfo.shipToCity || ''}, ${shippingInfo.shipToState || ''} ${shippingInfo.shipToZip || ''}
+                                                        </td>
+                                                        <td>
+                                                            <ul>
+                                                                ${products.map(product => `
+                                                                    <li>${product.productName || ''} - Quantity: ${product.quantity || ''}</li>
+                                                                `).join('')}
+                                                            </ul>
+                                                        </td>
+                                                    </tr>
+                                                `;
                             }).join('')}
-                                    </tbody>
-                                </table>
-                            `);
+                                        </tbody>
+                                    </table>
+                                `);
                         } else {
                             $('#orderHistoryContent').html('<p>No history available.</p>');
                         }
@@ -415,6 +417,9 @@
                 updatedProducts.push({ ProductId: parseInt(productId), Quantity: parseInt(quantity) });
             });
 
+            // Gather the note
+            var note = $('#orderNote').val();
+
             fetch('/Distributor/ManageOrders?handler=SaveOrder', {
                 method: 'POST',
                 headers: {
@@ -428,7 +433,8 @@
                     ShipToCity: shipToCity,
                     ShipToState: shipToState,
                     ShipToZip: shipToZip,
-                    UpdatedProducts: updatedProducts
+                    UpdatedProducts: updatedProducts,
+                    Note: note // Include the note in the request
                 })
             })
                 .then(response => response.json())
@@ -443,6 +449,7 @@
                 })
                 .catch(error => console.error('Error:', error));
         }
+
         // Close modal on click of cancel button or cross mark
         document.querySelectorAll('button[data-dismiss="modal"]').forEach(button => {
             if (button) {
