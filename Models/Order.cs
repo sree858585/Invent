@@ -50,6 +50,10 @@ namespace WebApplication1.Models
         [Required]
         public string ShipToZip { get; set; }
 
+        // New fields
+        public DateTime? EditedDate { get; set; }
+        public string Note { get; set; } // Nullable string for note
+
         public ICollection<OrderDetail> OrderDetails { get; set; }
     }
 }
