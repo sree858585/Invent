@@ -1,0 +1,167 @@
+﻿@page
+@model WebApplication1.Pages.Admin.ManageAccountsModel
+@{
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Manage Accounts";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<!-- Success/Error Messages -->
+@if (!string.IsNullOrEmpty(ViewData["SuccessMessage"]?.ToString()))
+{
+    <div class="alert alert-success">@ViewData["SuccessMessage"]</div>
+}
+@if (!string.IsNullOrEmpty(ViewData["ErrorMessage"]?.ToString()))
+{
+    <div class="alert alert-danger">@ViewData["ErrorMessage"]</div>
+}
+
+<!-- Filters Section -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="form-inline">
+        <label for="roleFilter" class="mr-2">Filter by Role: </label>
+        <select id="roleFilter" class="form-control mr-3" onchange="filterByRole()">
+            <option value="All">All</option>
+            <option value="Admin">Admin</option>
+            <option value="Distributor">Distributor</option>
+            <option value="AdditionalUser">Additional User</option>
+        </select>
+    </div>
+
+    <div class="form-inline">
+        <input type="text" id="searchBox" class="form-control mr-2" placeholder="Search by email" onkeyup="searchUsers()">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createUserModal">Create New User</button>
+    </div>
+</div>
+
+<hr />
+
+<!-- Display All Users with Password Reset Option -->
+<h3>Existing Users</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="userTable">
+        @foreach (var user in Model.Users)
+        {
+            <tr class="user-row" data-role="@user.Role">
+                <td>@user.Email</td>
+                <td>@user.Role</td>
+                <td>
+                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#resetPasswordModal" data-email="@user.Email" data-userid="@user.Id">Reset Password</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modals -->
+<!-- Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1" role="dialog" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createUserModalLabel">Create New User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form for Creating a New User -->
+                <form method="post" asp-page-handler="CreateUser">
+                    <div class="form-group">
+                        <label asp-for="NewUser.Email">Email</label>
+                        <input asp-for="NewUser.Email" class="form-control" />
+                        <span asp-validation-for="NewUser.Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewUser.Password">Password</label>
+                        <input asp-for="NewUser.Password" class="form-control" type="password" />
+                        <span asp-validation-for="NewUser.Password" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="NewUser.Role">Role</label>
+                        <select asp-for="NewUser.Role" class="form-control">
+                            <option value="Admin">Admin</option>
+                            <option value="Distributor">Distributor</option>
+                        </select>
+                        <span asp-validation-for="NewUser.Role" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-success">Create User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" role="dialog" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resetPasswordModalLabel">Reset Password</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form for Resetting Password -->
+                <form method="post" asp-page-handler="ResetPassword">
+                    <input type="hidden" id="userId" name="userId" />
+                    <input type="hidden" id="email" name="email" />
+                    <p>Are you sure you want to reset the password for <span id="resetEmail"></span>?</p>
+                    <button type="submit" class="btn btn-warning">Reset Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>function filterByRole() {
+            var selectedRole = document.getElementById('roleFilter').value;
+            var rows = document.querySelectorAll('.user-row');
+
+            rows.forEach(function (row) {
+                var role = row.getAttribute('data-role');
+                if (selectedRole === 'All' || role === selectedRole) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function searchUsers() {
+            var input = document.getElementById("searchBox");
+            var filter = input.value.toLowerCase();
+            var rows = document.querySelectorAll(".user-row");
+
+            rows.forEach(function (row) {
+                var email = row.cells[0].innerText.toLowerCase();
+                if (email.indexOf(filter) > -1) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+
+        // Pass data to reset password modal
+        $('#resetPasswordModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var email = button.data('email');
+            var userId = button.data('userid');
+
+            var modal = $(this);
+            modal.find('#resetEmail').text(email);
+            modal.find('#email').val(email);
+            modal.find('#userId').val(userId);
+        });</script>
+}

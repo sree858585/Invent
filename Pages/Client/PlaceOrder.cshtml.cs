@@ -188,14 +188,22 @@ namespace WebApplication1.Pages.Client
                 // Add each product in the cart as an order detail
                 foreach (var item in request.Cart)
                 {
+                    if (item.product_id == 0 || item.product_id == null)
+                    {
+                        // Log error or throw exception
+                        throw new Exception($"Product ID is missing for one of the cart items: {JsonConvert.SerializeObject(item)}");
+                    }
+
                     var orderDetail = new OrderDetail
                     {
                         OrderId = order.OrderId,
-                        product_id = item.product_id,
+                        product_id = item.product_id, // Ensure the product_id is passed properly
                         Quantity = item.Quantity
                     };
+
                     _context.OrderDetails.Add(orderDetail);
                 }
+
 
                 // Save order details
                 await _context.SaveChangesAsync();
@@ -308,10 +316,12 @@ namespace WebApplication1.Pages.Client
             foreach (var od in order.OrderDetails)
             {
                 string productDescription = await GetProductDescriptionAsync(od.product_id);
+
                 orderDetailsList.Add(new OrderDetailDto
                 {
                     ProductName = !string.IsNullOrEmpty(productDescription) ? productDescription : "Unknown Product",
-                    Quantity = od.Quantity
+                    Quantity = od.Quantity,
+                    ProductId = od.product_id // Ensure the product_id is passed correctly
                 });
             }
 
@@ -368,6 +378,8 @@ namespace WebApplication1.Pages.Client
         {
             public string ProductName { get; set; }
             public int Quantity { get; set; }
+            public int ProductId { get; set; }
+
         }
 
         public class OrderConfirmation

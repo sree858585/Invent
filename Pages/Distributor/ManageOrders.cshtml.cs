@@ -179,7 +179,7 @@ namespace WebApplication1.Pages.Distributor
             Console.WriteLine($"Fetching order history for UserId: {request.UserId}");
 
             var orderHistory = await _context.Orders
-                .Where(o => o.UserId == request.UserId) // Removed the IsDeleted condition
+                .Where(o => o.UserId == request.UserId)
                 .Include(o => o.OrderDetails)
                 .ThenInclude(od => od.Product)
                 .Join(_context.AgencyRegistrations,
@@ -193,9 +193,6 @@ namespace WebApplication1.Pages.Distributor
                 .OrderByDescending(o => o.order.ShippedDate)
                 .ToListAsync();
 
-            // Log the number of orders retrieved
-            Console.WriteLine($"Order history count: {orderHistory.Count}");
-
             if (orderHistory == null || !orderHistory.Any())
             {
                 return new JsonResult(new { success = false, message = "No order history available." });
@@ -203,15 +200,17 @@ namespace WebApplication1.Pages.Distributor
 
             // Generate CSV data
             var csvData = new StringBuilder();
-            csvData.AppendLine("Order ID,Agency Name,Program Director,Email,Phone,Ship Date,Shipping Address,Product Name,Quantity");
+            csvData.AppendLine("Order ID,Agency Name,Program Director,Email,Phone,Ship Date,Shipping Address,Products");
 
             foreach (var entry in orderHistory)
             {
-                foreach (var detail in entry.order.OrderDetails)
-                {
-                    var shippingInfo = $"{entry.order.ShipToAddress}, {entry.order.ShipToCity}, {entry.order.ShipToState}, {entry.order.ShipToZip}";
-                    csvData.AppendLine($"{entry.order.OrderId},{entry.registration.AgencyName},{entry.contact.ProgramDirector},{entry.contact.Email},{entry.contact.Phone},{entry.order.ShippedDate?.ToString("MM/dd/yyyy")},{shippingInfo},{detail.Product.product_description},{detail.Quantity}");
-                }
+                // Combine product names and quantities into a single string
+                var productDetails = entry.order.OrderDetails
+                    .Select(od => $"{od.Product.product_description} (Qty: {od.Quantity})")
+                    .Aggregate((p1, p2) => $"{p1}; {p2}"); // Separate products with a semicolon
+
+                var shippingInfo = $"{entry.order.ShipToAddress}, {entry.order.ShipToCity}, {entry.order.ShipToState}, {entry.order.ShipToZip}";
+                csvData.AppendLine($"{entry.order.OrderId},{entry.registration.AgencyName},{entry.contact.ProgramDirector},{entry.contact.Email},{entry.contact.Phone},{entry.order.ShippedDate?.ToString("MM/dd/yyyy")},{shippingInfo},{productDetails}");
             }
 
             return new JsonResult(new { success = true, csv = csvData.ToString() });

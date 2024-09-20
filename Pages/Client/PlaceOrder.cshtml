@@ -318,15 +318,25 @@
                 showCheckoutModal(); // Update the modal view
             });
 
-            function addToCart(productId, quantity) {
-                var existingItem = cart.find(item => item.product_id === productId);
-                if (existingItem) {
-                    existingItem.Quantity += parseInt(quantity); // Use Quantity with uppercase Q
-                } else {
-                    cart.push({ product_id: productId, Quantity: parseInt(quantity) }); // Use Quantity with uppercase Q
-                }
-                updateCartCount();
-            }
+    function addToCart(productId, quantity) {
+        let product = getProductById(productId); // Fetch the product by ID
+
+        if (!product) {
+            console.error("Product not found when adding to cart:", productId);
+            return;
+        }
+
+        console.log('Adding to cart:', { productId, quantity });
+
+        var existingItem = cart.find(item => item.product_id === productId);
+        if (existingItem) {
+            existingItem.Quantity += parseInt(quantity); // Use Quantity with uppercase Q
+        } else {
+            cart.push({ product_id: productId, Quantity: parseInt(quantity) }); // Use Quantity with uppercase Q
+        }
+        updateCartCount();
+    }
+
 
             function updateCartQuantity(productId, newQuantity) {
                 var existingItem = cart.find(item => item.product_id === productId);
@@ -393,22 +403,23 @@
                 updatePaginationControls(products.length);
             }
 
-            function getProductById(productId) {
-                // Check if product exists in classification1Products
-                let product = classification1Products.find(p => p.product_id === productId);
+    function getProductById(productId) {
+        let product = classification1Products.find(p => p.product_id === productId);
 
-                // If not found, check in classification2Products
-                if (!product) {
-                    product = classification2Products.find(p => p.product_id === productId);
-                }
+        if (!product) {
+            product = classification2Products.find(p => p.product_id === productId);
+        }
 
-                // Debugging output to check if the product is found
-                if (!product) {
-                    console.warn(`Product with ID ${productId} not found.`);
-                }
+        if (!product) {
+            console.warn(`Product with ID ${productId} not found in any classification.`);
+            return null; // Ensure null is returned if not found
+        }
 
-                return product;
-            }
+        return product;
+    }
+
+
+
 
 
             function populateShippingInfo(shipInfo) {
@@ -435,6 +446,9 @@
         };
 
         var requestData = { Cart: cart, ShippingInfo: shippingInfo };
+
+        // Log cart to check if product IDs are properly included
+        console.log('Placing order with cart:', cart);
 
         var url = '/Client/PlaceOrder?handler=Checkout';
 
@@ -468,90 +482,110 @@
             });
     }
 
-            function showOrderConfirmation(orderConfirmation) {
-                if (!orderConfirmation) {
-                    console.error("orderConfirmation is not defined", orderConfirmation);
-                    return;
-                }
 
-                var orderDetailsArray = orderConfirmation.orderDetails.$values;
+    function showOrderConfirmation(orderConfirmation) {
+        if (!orderConfirmation) {
+            console.error("orderConfirmation is not defined", orderConfirmation);
+            return;
+        }
 
-                if (!Array.isArray(orderDetailsArray)) {
-                    console.error("OrderDetails is not defined or not an array", orderDetailsArray);
-                    return;
-                }
+        var orderDetailsArray = orderConfirmation.orderDetails.$values;
 
-                var orderDetailsHtml = orderDetailsArray.map(detail => {
-                    console.log('Processing order detail:', detail); // Debugging line
-                    if (!detail.product_id) {
-                        console.error("Product ID is undefined for order detail:", detail);
-                    }
+        if (!Array.isArray(orderDetailsArray)) {
+            console.error("OrderDetails is not defined or not an array", orderDetailsArray);
+            return;
+        }
 
-                    var product = getProductById(detail.product_id);
-                    return `
-                <tr>
-                    <td>${product ? product.product_description : "Unknown Product"}</td>
-                    <td>${detail.quantity !== undefined ? detail.quantity : "Not available"}</td>
-                </tr>
-            `;
-                }).join('');
+        var orderDetailsHtml = orderDetailsArray.map(detail => {
+            console.log('Processing order detail:', detail);
 
-                var confirmationHtml = `
-            <div class="order-confirmation-card">
-                <div class="card text-center" style="border-radius: 10px; background: #f9f9f9;">
-                    <div class="card-header bg-primary text-white" style="border-radius: 10px 10px 0 0;">
-                        <h4 class="my-0">Order Confirmation</h4>
-                        <button type="button" class="close text-white" id="close-confirmation-card">&times;</button>
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Order ID: <span class="text-primary">${orderConfirmation.orderId}</span></h5>
-                        <p class="card-text"><strong>Order Date:</strong> ${new Date(orderConfirmation.orderDate).toLocaleDateString()}</p>
-                        <h6 class="mt-4 mb-2">Shipping Information</h6>
-                        <p class="mb-1">${orderConfirmation.shipToName}</p>
-                        <p class="mb-1">${orderConfirmation.shipToAddress}${orderConfirmation.shipToAddress2 ? ', ' + orderConfirmation.shipToAddress2 : ''}</p>
-                        <p class="mb-1">${orderConfirmation.shipToCity}, ${orderConfirmation.shipToState} ${orderConfirmation.shipToZip}</p>
-                        <p class="mb-3"><strong>Email:</strong> ${orderConfirmation.shipToEmail}</p>
-                        <h6 class="mt-4 mb-2">Order Details</h6>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Quantity</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${orderDetailsHtml}
-                            </tbody>
-                        </table>
-                    </div>
+            // Check if product_id is available and handle error logging
+            if (!detail.product_id) {
+                console.error("Product ID is undefined for order detail:", detail);
+            }
+
+            // Retrieve product using product_id
+            let product = getProductById(detail.product_id);
+
+            if (!product) {
+                console.warn(`Product with ID ${detail.product_id} not found.`);
+            }
+
+            let productName = product ? product.product_description : "Unknown Product";
+            let quantity = detail.quantity !== undefined ? detail.quantity : "Not available";
+
+            return `
+            <tr>
+                <td>${productName}</td>
+                <td>${quantity}</td>
+            </tr>
+        `;
+        }).join('');
+
+        var confirmationHtml = `
+        <div class="order-confirmation-card">
+            <div class="card text-center">
+                <div class="card-header bg-primary text-white">
+                    <h4>Order Confirmation</h4>
+                    <button type="button" class="close text-white" id="close-confirmation-card">&times;</button>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Order ID: ${orderConfirmation.orderId}</h5>
+                    <p><strong>Order Date:</strong> ${new Date(orderConfirmation.orderDate).toLocaleDateString()}</p>
+                    <h6>Order Details</h6>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orderDetailsHtml}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        `;
+        </div>
+    `;
 
-                $('body').append(confirmationHtml);
+        $('body').append(confirmationHtml);
 
-                $('#close-confirmation-card').on('click', function () {
-                    $('.order-confirmation-card').remove();
-                });
-            }
+        $('#close-confirmation-card').on('click', function () {
+            $('.order-confirmation-card').remove();
+        });
+    }
 
-            function getProductById(productId) {
-                if (!productId) {
-                    console.error('Product ID is undefined');
-                    return null;
+
+    // Async function to get product description from the server
+    async function getProductByIdAsync(productId) {
+        if (!productId) {
+            console.error('Product ID is undefined or null');
+            return null;
+        }
+
+        try {
+            const response = await fetch(`/Client/PlaceOrder?handler=GetProductById&productId=${productId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
                 }
+            });
 
-                let product = classification1Products.find(p => p.product_id === productId);
-                if (!product) {
-                    product = classification2Products.find(p => p.product_id === productId);
-                }
-
-                if (!product) {
-                    console.warn(`Product with ID ${productId} not found.`);
-                }
-
+            if (response.ok) {
+                const product = await response.json();
                 return product;
+            } else {
+                console.error(`Failed to fetch product with ID: ${productId}`);
             }
+        } catch (error) {
+            console.error('Error fetching product data:', error);
+        }
+
+        return null;
+    }
+
+
 
 
             function updateCartCount() {

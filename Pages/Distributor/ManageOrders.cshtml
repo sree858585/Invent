@@ -274,15 +274,16 @@
 
 
         function loadOrderHistory(userId) {
+            $('#orderHistoryModal').data('userId', userId); // Store UserId for later use
+
             fetch('/Distributor/ManageOrders?handler=GetOrderHistory', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                 },
-                body: JSON.stringify({ UserId: userId, downloadCsv: true })
+                body: JSON.stringify({ UserId: userId })
             })
-
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.history) {
@@ -295,22 +296,20 @@
                             $('#orderHistoryContent').html(''); // Clear previous content
 
                             $('#orderHistoryContent').html(`
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th>Order ID</th>
-                                                <th>Agency Name</th>
-                                                <th>Program Director</th>
-                                                <th>Email</th>
-                                                <th>Phone</th>
-                                                <th>Ship Date</th>
-                                                <th>Shipping Address</th>
-                                                <th>Products</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${history.filter(order => {
-                                // Only include unique order IDs
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Agency Name</th>
+                                <th>Program Director / Email / Phone</th>
+                                <th>Order Status</th>
+                                <th>Ship Date</th>
+                                <th>Shipping Address</th>
+                                <th>Products</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${history.filter(order => {
                                 if (!uniqueOrders.has(order.orderId)) {
                                     uniqueOrders.add(order.orderId);
                                     return true;
@@ -322,37 +321,36 @@
                                 const programDirector = order.programDirector || '';
                                 const email = order.email || '';
                                 const phone = order.phone || '';
+                                const orderStatus = order.orderStatus || 'N/A';
                                 const shipDate = order.shipDate ? new Date(order.shipDate).toLocaleDateString() : '';
-                                const shippingInfo = order.shipToAddress || {};
+                                const shippingInfo = `${order.shipToAddress.shipToName}<br />${order.shipToAddress.shipToAddress}, ${order.shipToAddress.shipToCity}, ${order.shipToAddress.shipToState} ${order.shipToAddress.shipToZip}`;
                                 const products = Array.isArray(order.products.$values) ? order.products.$values : [];
 
                                 return `
-                                                    <tr>
-                                                        <td>${orderId}</td>
-                                                        <td>${agencyName}</td>
-                                                        <td>${programDirector}</td>
-                                                        <td>${email}</td>
-                                                        <td>${phone}</td>
-                                                        <td>${shipDate}</td>
-                                                       <td>
-                                                            ${shippingInfo.shipToName || ''}<br />
-                                                            ${shippingInfo.shipToAddress || ''}<br />
-                                                            ${shippingInfo.shipToAddress2 || ''}<br />
-                                                            ${shippingInfo.shipToCity || ''}, ${shippingInfo.shipToState || ''} ${shippingInfo.shipToZip || ''}
-                                                        </td>
-                                                        <td>
-                                                            <ul>
-                                                                ${products.map(product => `
-                                                                    <li>${product.productName || ''} - Quantity: ${product.quantity || ''}</li>
-                                                                `).join('')}
-                                                            </ul>
-                                                        </td>
-                                                    </tr>
-                                                `;
+                                    <tr>
+                                        <td>${orderId}</td>
+                                        <td>${agencyName}</td>
+                                        <td>
+                                            <strong>${programDirector}</strong><br />
+                                            <a href="mailto:${email}">${email}</a><br />
+                                            <span>${phone}</span>
+                                        </td>
+                                        <td>${orderStatus}</td>
+                                        <td>${shipDate}</td>
+                                        <td>${shippingInfo}</td>
+                                        <td>
+                                            <ul>
+                                                ${products.map(product => `
+                                                    <li>${product.productName || ''} - Quantity: ${product.quantity || ''}</li>
+                                                `).join('')}
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                `;
                             }).join('')}
-                                        </tbody>
-                                    </table>
-                                `);
+                        </tbody>
+                    </table>
+                `);
                         } else {
                             $('#orderHistoryContent').html('<p>No history available.</p>');
                         }
@@ -367,6 +365,7 @@
                     $('#orderHistoryContent').html('<p>Error loading order history.</p>');
                 });
         }
+
 
         function downloadOrderHistoryCsv() {
             fetch('/Distributor/ManageOrders?handler=GetOrderHistoryCsv', {
