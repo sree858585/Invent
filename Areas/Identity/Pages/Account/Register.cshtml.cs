@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿//using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Policy;
 using System.Text;
 using System.Text.Encodings.Web;
 using WebApplication1.Models;
+using WebApplication1.Services; // Add this to include your EmailService
 
 public class RegisterModel : PageModel
 {
@@ -17,21 +17,21 @@ public class RegisterModel : PageModel
     private readonly IUserStore<ApplicationUser> _userStore;
     private readonly IUserEmailStore<ApplicationUser> _emailStore;
     private readonly ILogger<RegisterModel> _logger;
-    private readonly IEmailSender _emailSender;
+    private readonly IEmailService _emailService;  // Use IEmailService instead of IEmailSender
 
     public RegisterModel(
         UserManager<ApplicationUser> userManager,
         IUserStore<ApplicationUser> userStore,
         SignInManager<ApplicationUser> signInManager,
         ILogger<RegisterModel> logger,
-        IEmailSender emailSender)
+        IEmailService emailService)  // Inject the custom EmailService
     {
         _userManager = userManager;
         _userStore = userStore;
         _emailStore = GetEmailStore();
         _signInManager = signInManager;
         _logger = logger;
-        _emailSender = emailSender;
+        _emailService = emailService;  // Assign custom EmailService
     }
 
     [BindProperty]
@@ -75,32 +75,52 @@ public class RegisterModel : PageModel
             {
                 UserName = Input.Email,
                 Email = Input.Email,
-                Role = "Client" // Assign the default role here
+                Role = "Client" // Ensure the role is always set to 'Client'
             };
 
+            // Creating the user with the UserManager
             var result = await _userManager.CreateAsync(user, Input.Password);
             if (result.Succeeded)
             {
                 _logger.LogInformation("User created a new account with password.");
-                await _userManager.AddToRoleAsync(user, "Client"); // Ensure this role exists
 
+                // Assign the "Client" role to the new user
+                await _userManager.AddToRoleAsync(user, "Client");
+
+                // Generate email confirmation link
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                var callbackUrl = Url.Page(
+                    "/Account/ConfirmEmail",
+                    pageHandler: null,
+                    values: new { area = "Identity", userId = user.Id, code = code },
+                    protocol: Request.Scheme);
+
+                // Use the custom EmailService to send the confirmation email
+                await _emailService.SendEmailAsync(Input.Email, "Confirm your email",
+                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                // Redirect to confirmation page
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
-                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                    return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = Input.Email });
                 }
                 else
                 {
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return LocalRedirect(returnUrl);
                 }
+
             }
+
+            // If registration fails, show the error messages
             foreach (var error in result.Errors)
             {
                 ModelState.AddModelError(string.Empty, error.Description);
             }
         }
 
-        // If we got this far, something failed, redisplay form
+        // Redisplay the form if something failed
         return Page();
     }
 
