@@ -8,6 +8,10 @@ using WebApplication1.Data;
 using WebApplication1.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using CsvHelper;
+using System.Globalization;
+using System.IO;
+
 
 namespace WebApplication1.Pages.Client
 {
@@ -80,6 +84,86 @@ namespace WebApplication1.Pages.Client
             if (success == true)
             {
                 SuccessMessage = "Report submitted successfully!";
+            }
+        }
+
+        public async Task<IActionResult> OnPostDownloadReportAsync(int reportId)
+        {
+            // Find the report based on the ID
+            var report = await _context.QuarterlyReports
+                            .Include(q => q.CollectionDetails)
+                            .FirstOrDefaultAsync(q => q.Id == reportId);
+
+            if (report == null)
+            {
+                return NotFound("Report not found.");
+            }
+
+            // Create the CSV file in memory
+            using (var memoryStream = new MemoryStream())
+            using (var writer = new StreamWriter(memoryStream))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                csv.WriteField("FacilityName");
+                csv.WriteField("CompletedBy");
+                csv.WriteField("Address");
+                csv.WriteField("Phone");
+                csv.WriteField("Fax");
+                csv.WriteField("SyringesProvidedUnits");
+                csv.WriteField("SyringesProvidedSessions");
+                csv.WriteField("PharmacyVouchersUnits");
+                csv.WriteField("PharmacyVouchersSessions");
+                csv.WriteField("ReportedVouchersUnits");
+                csv.WriteField("ReportedVouchersSessions");
+                csv.WriteField("FitpacksProvidedUnits");
+                csv.WriteField("FitpacksProvidedSessions");
+                csv.WriteField("QuartContainersProvidedUnits");
+                csv.WriteField("QuartContainersProvidedSessions");
+                csv.WriteField("GallonContainersProvidedUnits");
+                csv.WriteField("GallonContainersProvidedSessions");
+                csv.WriteField("OtherSuccessesConcernsIssues");
+                csv.NextRecord();
+
+                // Write the report data to CSV
+                csv.WriteField(report.FacilityName);
+                csv.WriteField(report.CompletedBy);
+                csv.WriteField(report.Address);
+                csv.WriteField(report.Phone);
+                csv.WriteField(report.Fax);
+                csv.WriteField(report.SyringesProvidedUnits);
+                csv.WriteField(report.SyringesProvidedSessions);
+                csv.WriteField(report.PharmacyVouchersUnits);
+                csv.WriteField(report.PharmacyVouchersSessions);
+                csv.WriteField(report.ReportedVouchersUnits);
+                csv.WriteField(report.ReportedVouchersSessions);
+                csv.WriteField(report.FitpacksProvidedUnits);
+                csv.WriteField(report.FitpacksProvidedSessions);
+                csv.WriteField(report.QuartContainersProvidedUnits);
+                csv.WriteField(report.QuartContainersProvidedSessions);
+                csv.WriteField(report.GallonContainersProvidedUnits);
+                csv.WriteField(report.GallonContainersProvidedSessions);
+                csv.WriteField(report.OtherSuccessesConcernsIssues);
+                csv.NextRecord();
+
+                // Add the collection details
+                csv.WriteField("SharpsCollectionSite");
+                csv.WriteField("CollectionDates");
+                csv.WriteField("PoundsCollected");
+                csv.NextRecord();
+
+                foreach (var detail in report.CollectionDetails)
+                {
+                    csv.WriteField(detail.SharpsCollectionSite);
+                    csv.WriteField(detail.CollectionDates.HasValue ? detail.CollectionDates.Value.ToString("yyyy-MM-dd") : string.Empty);
+                    csv.WriteField(detail.PoundsCollected);
+                    csv.NextRecord();
+                }
+
+                writer.Flush();
+                memoryStream.Position = 0;
+
+                // Return the CSV file to the user
+                return File(memoryStream.ToArray(), "text/csv", $"QuarterlyReport_{report.Quarter}_{report.Year}.csv");
             }
         }
 

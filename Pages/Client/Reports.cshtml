@@ -43,6 +43,14 @@
                                 <button class="btn btn-secondary" onclick="editReport(@quarter.ReportId)">
                                     Edit Report
                                 </button>
+
+                                <!-- Download CSV Button -->
+                                <form method="post" asp-page-handler="DownloadReport" class="d-inline">
+                                    <input type="hidden" name="reportId" value="@quarter.ReportId" />
+                                    <button type="submit" class="btn btn-success">
+                                        Download CSV
+                                    </button>
+                                </form>
                             }
                             else
                             {
