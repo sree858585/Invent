@@ -55,7 +55,12 @@ namespace WebApplication1.Pages.Client
 
             if (agency == null)
             {
-                return NotFound("Agency not found.");
+                // If registration not found, show a user-friendly message
+                ViewData["ErrorMessage"] = "You are not a registered user yet.";
+                AdditionalUsers = new List<AdditionalUser>(); // Empty list to avoid errors in the UI
+                Prefixes = new List<Prefix>(); // Ensure Prefixes is initialized
+                Suffixes = new List<Suffix>(); // Ensure Suffixes is initialized
+                return Page(); // Return the page with the error message
             }
 
             AdditionalUsers = agency.AdditionalUsers.ToList();

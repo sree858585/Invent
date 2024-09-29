@@ -6,298 +6,305 @@
 }
 
 <h2>@ViewData["Title"]</h2>
-
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Prefix</th>
-                <th>Name</th>
-                <th>Suffix</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Model.AdditionalUsers)
-            {
+@if (ViewData["ErrorMessage"] != null)
+    {
+    <div class="alert alert-warning">
+        @ViewData["ErrorMessage"]
+    </div>
+    }
+    else
+    {
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>@user.Prefix?.Prefx</td>
-                    <td>@user.Name</td>
-                    <td>@user.Suffix?.Sufix</td>
-                    <td>@user.Email</td>
-                    <td>@user.Phone</td>
-                    <td>
-                        <button class="btn btn-info btn-sm" onclick="viewAdditionalUserDetails(@user.Id)">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteAdditionalUser(@user.Id)">Delete</button>
-                        <button class="btn btn-primary btn-sm" onclick="openSetPasswordModal(@user.Id, '@user.Email')">Set Password</button>
-                    </td>
+                    <th>Prefix</th>
+                    <th>Name</th>
+                    <th>Suffix</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.AdditionalUsers)
+                    {
+                    <tr>
+                        <td>@user.Prefix?.Prefx</td>
+                        <td>@user.Name</td>
+                        <td>@user.Suffix?.Sufix</td>
+                        <td>@user.Email</td>
+                        <td>@user.Phone</td>
+                        <td>
+                            <button class="btn btn-info btn-sm" onclick="viewAdditionalUserDetails(@user.Id)">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteAdditionalUser(@user.Id)">Delete</button>
+                            <button class="btn btn-primary btn-sm" onclick="openSetPasswordModal(@user.Id, '@user.Email')">Set Password</button>
+                        </td>
+                    </tr>
+                    }
+            </tbody>
+        </table>
+    </div>
 
-<button class="btn btn-primary" onclick="addNewAdditionalUser()">Add New Additional User</button>
+    <button class="btn btn-primary" onclick="addNewAdditionalUser()">Add New Additional User</button>
+    }
+    <!-- View/Edit AdditionalUser Modal -->
+    <div class="modal fade" id="additionalUserModal" tabindex="-1" aria-labelledby="additionalUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="additionalUserModalLabel">Additional User Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="additionalUserForm">
+                        <input type="hidden" id="additionalUserId" name="additionalUserId" />
 
-<!-- View/Edit AdditionalUser Modal -->
-<div class="modal fade" id="additionalUserModal" tabindex="-1" aria-labelledby="additionalUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="additionalUserModalLabel">Additional User Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="additionalUserForm">
-                    <input type="hidden" id="additionalUserId" name="additionalUserId" />
+                        <div class="form-group">
+                            <label for="additionalUserPrefix">Prefix</label>
+                            <select class="form-control" id="additionalUserPrefix" name="additionalUserPrefix">
+                                @foreach (var prefix in Model.Prefixes)
+                                {
+                                    <option value="@prefix.ID">@prefix.Prefx</option>
+                                }
+                            </select>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserPrefix">Prefix</label>
-                        <select class="form-control" id="additionalUserPrefix" name="additionalUserPrefix">
-                            @foreach (var prefix in Model.Prefixes)
-                            {
-                                <option value="@prefix.ID">@prefix.Prefx</option>
-                            }
-                        </select>
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserName">Name</label>
+                            <input type="text" class="form-control" id="additionalUserName" name="additionalUserName" required />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserName">Name</label>
-                        <input type="text" class="form-control" id="additionalUserName" name="additionalUserName" required />
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserSuffix">Suffix</label>
+                            <select class="form-control" id="additionalUserSuffix" name="additionalUserSuffix">
+                                @foreach (var suffix in Model.Suffixes)
+                                {
+                                    <option value="@suffix.ID">@suffix.Sufix</option>
+                                }
+                            </select>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserSuffix">Suffix</label>
-                        <select class="form-control" id="additionalUserSuffix" name="additionalUserSuffix">
-                            @foreach (var suffix in Model.Suffixes)
-                            {
-                                <option value="@suffix.ID">@suffix.Sufix</option>
-                            }
-                        </select>
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserTitle">Title</label>
+                            <input type="text" class="form-control" id="additionalUserTitle" name="additionalUserTitle" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserTitle">Title</label>
-                        <input type="text" class="form-control" id="additionalUserTitle" name="additionalUserTitle" />
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserAddress">Address</label>
+                            <input type="text" class="form-control" id="additionalUserAddress" name="additionalUserAddress" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserAddress">Address</label>
-                        <input type="text" class="form-control" id="additionalUserAddress" name="additionalUserAddress" />
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserAddress2">Address 2</label>
+                            <input type="text" class="form-control" id="additionalUserAddress2" name="additionalUserAddress2" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserAddress2">Address 2</label>
-                        <input type="text" class="form-control" id="additionalUserAddress2" name="additionalUserAddress2" />
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserCity">City</label>
+                            <input type="text" class="form-control" id="additionalUserCity" name="additionalUserCity" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserCity">City</label>
-                        <input type="text" class="form-control" id="additionalUserCity" name="additionalUserCity" />
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserState">State</label>
+                            <input type="text" class="form-control" id="additionalUserState" name="additionalUserState" value="NY" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserState">State</label>
-                        <input type="text" class="form-control" id="additionalUserState" name="additionalUserState" value="NY" />
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserZip">Zip</label>
+                            <input type="text" class="form-control" id="additionalUserZip" name="additionalUserZip" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserZip">Zip</label>
-                        <input type="text" class="form-control" id="additionalUserZip" name="additionalUserZip" />
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserPhone">Phone</label>
+                            <input type="text" class="form-control" id="additionalUserPhone" name="additionalUserPhone" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserPhone">Phone</label>
-                        <input type="text" class="form-control" id="additionalUserPhone" name="additionalUserPhone" />
-                    </div>
+                        <div class="form-group">
+                            <label for="additionalUserEmail">Email</label>
+                            <input type="email" class="form-control" id="additionalUserEmail" name="additionalUserEmail" required />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="additionalUserEmail">Email</label>
-                        <input type="email" class="form-control" id="additionalUserEmail" name="additionalUserEmail" required />
-                    </div>
-
-                    <div class="form-group">
-                        <label for="additionalUserSameAddressAsAgency">
-                            <input type="checkbox" id="additionalUserSameAddressAsAgency" name="additionalUserSameAddressAsAgency" />
-                            Same Address As Agency
-                        </label>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="saveAdditionalUser()">Save</button>
+                        <div class="form-group">
+                            <label for="additionalUserSameAddressAsAgency">
+                                <input type="checkbox" id="additionalUserSameAddressAsAgency" name="additionalUserSameAddressAsAgency" />
+                                Same Address As Agency
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAdditionalUser()">Save</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Set Password Modal -->
-<div class="modal fade" id="setPasswordModal" tabindex="-1" aria-labelledby="setPasswordModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="setPasswordModalLabel">Set Password for <span id="setPasswordEmail"></span></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="setPasswordForm">
-                    <input type="hidden" id="setPasswordUserId" name="setPasswordUserId" />
+    <!-- Set Password Modal -->
+    <div class="modal fade" id="setPasswordModal" tabindex="-1" aria-labelledby="setPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="setPasswordModalLabel">Set Password for <span id="setPasswordEmail"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="setPasswordForm">
+                        <input type="hidden" id="setPasswordUserId" name="setPasswordUserId" />
 
-                    <div class="form-group">
-                        <label for="setPassword">Password</label>
-                        <input type="password" class="form-control" id="setPassword" name="setPassword" required />
-                    </div>
+                        <div class="form-group">
+                            <label for="setPassword">Password</label>
+                            <input type="password" class="form-control" id="setPassword" name="setPassword" required />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required />
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="savePassword()">Save Password</button>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="savePassword()">Save Password</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-@section Scripts {
-    <script>function viewAdditionalUserDetails(userId) {
-            fetch(`/Client/ManageAdditionalUsers?handler=AdditionalUserDetails&id=${userId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const user = data.additionalUser;
-                        $('#additionalUserId').val(user.id);
-                        $('#additionalUserPrefix').val(user.prefixId);
-                        $('#additionalUserName').val(user.name);
-                        $('#additionalUserSuffix').val(user.suffixId);
-                        $('#additionalUserTitle').val(user.title);
-                        $('#additionalUserAddress').val(user.address);
-                        $('#additionalUserAddress2').val(user.address2);
-                        $('#additionalUserCity').val(user.city);
-                        $('#additionalUserState').val(user.state);
-                        $('#additionalUserZip').val(user.zip);
-                        $('#additionalUserPhone').val(user.phone);
-                        $('#additionalUserEmail').val(user.email);
-                        $('#additionalUserSameAddressAsAgency').prop('checked', user.sameAddressAsAgency);
-                        $('#additionalUserModal').modal('show');
-                    } else {
-                        alert('Error loading additional user details.');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
-
-        function addNewAdditionalUser() {
-            $('#additionalUserForm')[0].reset();
-            $('#additionalUserId').val(0); // Indicate this is a new entry
-            $('#additionalUserModal').modal('show');
-        }
-
-        function saveAdditionalUser() {
-            const formData = {
-                id: $('#additionalUserId').val(),
-                prefixId: $('#additionalUserPrefix').val(),
-                name: $('#additionalUserName').val(),
-                suffixId: $('#additionalUserSuffix').val(),
-                email: $('#additionalUserEmail').val(),
-                // Ensure all other fields are also added here properly
-                phone: $('#additionalUserPhone').val(),
-                address: $('#additionalUserAddress').val(),
-                address2: $('#additionalUserAddress2').val(),
-                city: $('#additionalUserCity').val(),
-                state: $('#additionalUserState').val(),
-                zip: $('#additionalUserZip').val(),
-                sameAddressAsAgency: $('#additionalUserSameAddressAsAgency').is(':checked')
-            };
-
-            // Convert form data to JSON and send via fetch
-            fetch('/Client/ManageAdditionalUsers?handler=SaveAdditionalUser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                },
-                body: JSON.stringify(formData)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Additional user saved successfully.');
-                        location.reload();
-                    } else {
-                        alert('Error saving additional user: ' + data.message);
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        }
-
-
-        function deleteAdditionalUser(userId) {
-            if (confirm('Are you sure you want to delete this additional user?')) {
-                fetch(`/Client/ManageAdditionalUsers?handler=DeleteAdditionalUser&id=${userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    }
-                })
+    @section Scripts {
+        <script>function viewAdditionalUserDetails(userId) {
+                fetch(`/Client/ManageAdditionalUsers?handler=AdditionalUserDetails&id=${userId}`)
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert('Additional user deleted successfully.');
-                            location.reload();
+                            const user = data.additionalUser;
+                            $('#additionalUserId').val(user.id);
+                            $('#additionalUserPrefix').val(user.prefixId);
+                            $('#additionalUserName').val(user.name);
+                            $('#additionalUserSuffix').val(user.suffixId);
+                            $('#additionalUserTitle').val(user.title);
+                            $('#additionalUserAddress').val(user.address);
+                            $('#additionalUserAddress2').val(user.address2);
+                            $('#additionalUserCity').val(user.city);
+                            $('#additionalUserState').val(user.state);
+                            $('#additionalUserZip').val(user.zip);
+                            $('#additionalUserPhone').val(user.phone);
+                            $('#additionalUserEmail').val(user.email);
+                            $('#additionalUserSameAddressAsAgency').prop('checked', user.sameAddressAsAgency);
+                            $('#additionalUserModal').modal('show');
                         } else {
-                            alert('Error deleting additional user.');
+                            alert('Error loading additional user details.');
                         }
                     })
                     .catch(error => console.error('Error:', error));
             }
-        }
 
-        function openSetPasswordModal(userId, email) {
-            $('#setPasswordUserId').val(userId);
-            $('#setPasswordEmail').text(email);
-            $('#setPasswordModal').modal('show');
-        }
-
-        function savePassword() {
-            const formData = {
-                id: $('#setPasswordUserId').val(),
-                password: $('#setPassword').val(),
-                confirmPassword: $('#confirmPassword').val()
-            };
-
-            if (formData.password !== formData.confirmPassword) {
-                alert('Passwords do not match.');
-                return;
+            function addNewAdditionalUser() {
+                $('#additionalUserForm')[0].reset();
+                $('#additionalUserId').val(0); // Indicate this is a new entry
+                $('#additionalUserModal').modal('show');
             }
 
-            fetch('/Client/ManageAdditionalUsers?handler=SetPassword', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                },
-                body: JSON.stringify(formData)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Password updated successfully.');
-                        $('#setPasswordModal').modal('hide');
-                    } else {
-                        alert('Error updating password.');
-                    }
+            function saveAdditionalUser() {
+                const formData = {
+                    id: $('#additionalUserId').val(),
+                    prefixId: $('#additionalUserPrefix').val(),
+                    name: $('#additionalUserName').val(),
+                    suffixId: $('#additionalUserSuffix').val(),
+                    email: $('#additionalUserEmail').val(),
+                    // Ensure all other fields are also added here properly
+                    phone: $('#additionalUserPhone').val(),
+                    address: $('#additionalUserAddress').val(),
+                    address2: $('#additionalUserAddress2').val(),
+                    city: $('#additionalUserCity').val(),
+                    state: $('#additionalUserState').val(),
+                    zip: $('#additionalUserZip').val(),
+                    sameAddressAsAgency: $('#additionalUserSameAddressAsAgency').is(':checked')
+                };
+
+                // Convert form data to JSON and send via fetch
+                fetch('/Client/ManageAdditionalUsers?handler=SaveAdditionalUser', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify(formData)
                 })
-                .catch(error => console.error('Error:', error));
-        }</script>
-}
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Additional user saved successfully.');
+                            location.reload();
+                        } else {
+                            alert('Error saving additional user: ' + data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+
+
+            function deleteAdditionalUser(userId) {
+                if (confirm('Are you sure you want to delete this additional user?')) {
+                    fetch(`/Client/ManageAdditionalUsers?handler=DeleteAdditionalUser&id=${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Additional user deleted successfully.');
+                                location.reload();
+                            } else {
+                                alert('Error deleting additional user.');
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+            }
+
+            function openSetPasswordModal(userId, email) {
+                $('#setPasswordUserId').val(userId);
+                $('#setPasswordEmail').text(email);
+                $('#setPasswordModal').modal('show');
+            }
+
+            function savePassword() {
+                const formData = {
+                    id: $('#setPasswordUserId').val(),
+                    password: $('#setPassword').val(),
+                    confirmPassword: $('#confirmPassword').val()
+                };
+
+                if (formData.password !== formData.confirmPassword) {
+                    alert('Passwords do not match.');
+                    return;
+                }
+
+                fetch('/Client/ManageAdditionalUsers?handler=SetPassword', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify(formData)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Password updated successfully.');
+                            $('#setPasswordModal').modal('hide');
+                        } else {
+                            alert('Error updating password.');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }</script>
+    }
