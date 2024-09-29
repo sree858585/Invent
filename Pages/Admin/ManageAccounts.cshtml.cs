@@ -1,12 +1,17 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using WebApplication1.Models;
 using WebApplication1.Services;
+
+
 
 
 namespace WebApplication1.Pages.Admin
@@ -16,6 +21,9 @@ namespace WebApplication1.Pages.Admin
         private readonly UserManager<ApplicationUser>
     _userManager;
         private readonly IEmailService _emailService; // Inject EmailService
+
+        private readonly ILogger<ManageAccountsModel> _logger; // Declare the logger
+
 
 
         public ManageAccountsModel(UserManager<ApplicationUser>
@@ -29,6 +37,8 @@ namespace WebApplication1.Pages.Admin
         public List<ApplicationUser>
             Users
         { get; set; }
+        public Dictionary<string, bool> UserLockStatus { get; set; } = new Dictionary<string, bool>();
+
 
         // Pagination properties
         public int PageSize { get; set; } = 10;
@@ -77,6 +87,13 @@ namespace WebApplication1.Pages.Admin
             .Skip((CurrentPage - 1) * PageSize)
             .Take(PageSize)
             .ToList());
+
+            // Fetch lockout status for each user
+            foreach (var user in Users)
+            {
+                var isLockedOut = user.LockoutEnd.HasValue && user.LockoutEnd > System.DateTimeOffset.Now;
+                UserLockStatus[user.Id] = isLockedOut;
+            }
         }
 
         public async Task<IActionResult> OnPostCreateUserAsync()
@@ -218,6 +235,84 @@ namespace WebApplication1.Pages.Admin
             TempData["ErrorMessage"] = "Error resetting the password.";
             return Page();
         }
+
+        public class LockRequest
+        {
+            public string UserId { get; set; }
+        }
+        // Lock user method
+
+        public async Task<IActionResult> OnPostLockUserAsync([FromBody] LockRequest lockRequest)
+        {
+            var user = await _userManager.FindByIdAsync(lockRequest.UserId);
+            if (user == null)
+            {
+                return new JsonResult(new { success = false, message = "User not found." });
+            }
+
+            var lockoutEnd = System.DateTimeOffset.UtcNow.AddYears(100); // Lock the user indefinitely
+            var result = await _userManager.SetLockoutEndDateAsync(user, lockoutEnd);
+
+            if (result.Succeeded)
+            {
+                return new JsonResult(new { success = true });
+            }
+
+            return new JsonResult(new { success = false, message = result.Errors.FirstOrDefault()?.Description });
+        }
+
+
+        public class UnlockRequest
+        {
+            public string UserId { get; set; }
+        }
+
+        public async Task<IActionResult> OnPostUnlockUserAsync()
+        {
+            try
+            {
+                using (var reader = new StreamReader(Request.Body))
+                {
+                    var body = await reader.ReadToEndAsync();
+                   // _logger.LogInformation($"Request Body: {body}"); // Log the raw request body
+
+                    var unlockRequest = JsonSerializer.Deserialize<UnlockRequest>(body);  // Deserialize the request body
+
+                    if (string.IsNullOrEmpty(unlockRequest?.UserId))
+                    {
+                        _logger.LogWarning("UnlockUserAsync: User ID is missing in the request.");
+                        return new JsonResult(new { success = false, message = "User ID is missing." });
+                    }
+
+                    //_logger.LogInformation($"Unlocking user with ID: {unlockRequest.UserId}"); // Log the User ID
+
+                    var user = await _userManager.FindByIdAsync(unlockRequest.UserId);
+                    if (user == null)
+                    {
+                   //     _logger.LogWarning("UnlockUserAsync: User not found for ID: {UserId}", unlockRequest.UserId);
+                        return new JsonResult(new { success = false, message = "User not found." });
+                    }
+
+                    var result = await _userManager.SetLockoutEndDateAsync(user, null);
+                    if (result.Succeeded)
+                    {
+                        await _userManager.ResetAccessFailedCountAsync(user);
+                   //     _logger.LogInformation("UnlockUserAsync: Successfully unlocked user with ID: {UserId}", unlockRequest.UserId);
+                        return new JsonResult(new { success = true });
+                    }
+
+                   // _logger.LogWarning("UnlockUserAsync: Failed to unlock user with ID: {UserId}", unlockRequest.UserId);
+                    return new JsonResult(new { success = false, message = result.Errors.FirstOrDefault()?.Description });
+                }
+            }
+            catch (Exception ex)
+            {
+               // _logger.LogError(ex, "An error occurred while unlocking user.");
+                return new JsonResult(new { success = false, message = "An error occurred while processing your request." });
+            }
+        }
+
+
         private string GenerateUniquePassword()
         {
             // Ensure password meets the requirements of the UserManager

@@ -45,15 +45,28 @@
         <tr>
             <th>Email</th>
             <th>Role</th>
+            <th>Lock Status</th> 
             <th>Actions</th>
         </tr>
     </thead>
     <tbody id="userTable">
         @foreach (var user in Model.Users)
-        {
+            {
+                var isLockedOut = Model.UserLockStatus.ContainsKey(user.Id) && Model.UserLockStatus[user.Id];
+
             <tr class="user-row" data-role="@user.Role">
                 <td>@user.Email</td>
                 <td>@user.Role</td>
+                <td>
+                    @if (isLockedOut)
+                    {
+                        <span class="text-danger">Locked</span>
+                    }
+                    else
+                    {
+                        <span>Active</span>
+                    }
+                </td>
                 <td>
                     <button type="button" class="btn btn-warning btn-sm"
                             data-bs-toggle="modal"
@@ -62,6 +75,14 @@
                             data-userid="@user.Id">
                         Reset Password
                     </button>
+                    @if (isLockedOut)
+                    {
+                        <button class="btn btn-success btn-sm" onclick="unlockUser('@user.Id')">Unlock</button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-danger btn-sm" onclick="lockUser('@user.Id')">Lock</button>
+                    }
                 </td>
             </tr>
         }
@@ -191,5 +212,54 @@
             var searchTerm = document.getElementById('searchBox').value;
             var selectedRole = document.getElementById('roleFilter').value;
             window.location.href = `?searchTerm=${searchTerm}&roleFilter=${selectedRole}`;
-        }</script>
+        }
+        function unlockUser(userId) {
+            if (confirm('Are you sure you want to unlock this user?')) {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value; // Fetch the anti-forgery token
+
+                fetch(`/Admin/ManageAccounts?handler=UnlockUser`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token // Include the token in the request headers
+                    },
+                    body: JSON.stringify({ "UserId": userId })  // Ensure this is properly formatted JSON
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('User unlocked successfully.');
+                            location.reload();
+                        } else {
+                            alert('Error unlocking user: ' + data.message);
+                        }
+                    }).catch(error => console.error('Error:', error));
+            }
+        }
+
+        function lockUser(userId) {
+            if (confirm('Are you sure you want to lock this user?')) {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value; // Fetch the anti-forgery token
+
+                fetch(`/Admin/ManageAccounts?handler=LockUser`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ "userId": userId }) // Send userId in JSON format
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('User locked successfully.');
+                            location.reload();
+                        } else {
+                            alert('Error locking user: ' + data.message);
+                        }
+                    }).catch(error => console.error('Error:', error));
+            }
+        }
+
+
+
+    </script>
 }

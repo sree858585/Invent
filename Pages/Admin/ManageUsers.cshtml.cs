@@ -202,7 +202,7 @@ namespace WebApplication1.Pages.Admin
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("ModelState is invalid");
-              //  return Page(); // Return the page to show validation errors
+                //  return Page(); // Return the page to show validation errors
             }
 
             // Fetch the AgencyRegistration by ID
@@ -320,7 +320,7 @@ namespace WebApplication1.Pages.Admin
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("ModelState is invalid");
-               // return Page(); // Return to the page to display validation errors
+                // return Page(); // Return to the page to display validation errors
             }
 
             // Check if the AgencyRegistrationId exists in the AgencyRegistrations table
@@ -331,7 +331,7 @@ namespace WebApplication1.Pages.Admin
             {
                 _logger.LogWarning($"AgencyRegistration with Id {Registration.Id} not found.");
                 ModelState.AddModelError(string.Empty, "Invalid registration ID. The registration does not exist.");
-               // return Page();
+                // return Page();
             }
 
             var shipInformation = await _context.ShipInformations
