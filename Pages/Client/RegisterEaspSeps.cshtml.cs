@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace WebApplication1.Pages.Client
 {
-    [Authorize(Roles = "Client")]
+    [Authorize(Roles = "Client,AdditionalUser")]
 
     public class RegisterEaspSepsModel : PageModel
     {
@@ -88,83 +88,112 @@ namespace WebApplication1.Pages.Client
             // Call your existing PopulateData method to fill the dropdowns
             await PopulateData();
 
-            // Only initialize `CountiesServed` and `ShipToSiteCounties` during the first GET request, not during POST
-            if (!Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
-            {
-                CountiesServed = Enumerable.Repeat(0, 10).ToList();  // Ensuring 10 elements for 10 dropdowns
-                ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };  // Initialize counties for each site
-            }
-
             // Prefill the email in the model (retrieving the current user)
             var userEmail = User.Identity.Name;
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
             LoggedInUserEmail = user?.Email;
 
-            // Check if the user has already filled out the registration form (existing registration)
-            var existingRegistration = await _context.AgencyRegistrations
-                .Include(a => a.AgencyContacts)
-                .Include(a => a.AdditionalUsers)
-                .Include(a => a.ShipToSites)
-                .Include(a => a.CountiesServed)
-                .Include(a => a.ShipInformations) // Include ShipInformation
-                .FirstOrDefaultAsync(r => r.UserId == user.Id);
+            // Initialize `CountiesServed` and `ShipToSiteCounties` for a fresh user or during GET request
+            CountiesServed = Enumerable.Repeat(0, 10).ToList();  // Ensuring 10 elements for 10 dropdowns
+            ShipToSiteCounties = new List<int[]> { new int[5], new int[5] };  // Initialize counties for each site with 5 items
 
-            if (existingRegistration != null)
+            // Check if the user is an additional user
+            var additionalUser = await _context.AdditionalUsers.FirstOrDefaultAsync(u => u.Email == userEmail);
+            if (additionalUser != null)
             {
-                // If registration exists, populate the form with existing data
-                EaspSepsRegistration = existingRegistration;
+                // If the logged-in user is an additional user, get the main user's registration form
+                var mainUserId = additionalUser.AgencyRegistrationId;
 
-                // Populate the AgencyContact with the first contact (assuming only one is the primary)
-                AgencyContact = existingRegistration.AgencyContacts.FirstOrDefault();
+                var existingRegistration = await _context.AgencyRegistrations
+                    .Include(a => a.AgencyContacts)
+                    .Include(a => a.AdditionalUsers)
+                    .Include(a => a.ShipToSites)
+                    .Include(a => a.CountiesServed)
+                    .Include(a => a.ShipInformations) // Include ShipInformation
+                    .FirstOrDefaultAsync(r => r.Id == mainUserId);
 
-                // Load the additional users if they exist
-                AdditionalUsers = existingRegistration.AdditionalUsers.ToList();
-
-                // Load the ship-to sites if they exist
-                AdditionalShipToSites = existingRegistration.ShipToSites.ToList();
-
-                // Load the ShipInformation
-                ShipInformation = existingRegistration.ShipInformations.FirstOrDefault();
-
-                // Populate the counties served
-                CountiesServed = existingRegistration.CountiesServed.Select(c => c.CountyId).ToList();
-
-                // Populate the counties for each ShipToSite
-                ShipToSiteCounties = existingRegistration.ShipToSites
-                    .Select(s => _context.ShipToSiteCounties
-                        .Where(sc => sc.ShipToSiteId == s.Id)
-                        .Select(sc => sc.CountyId)
-                        .ToArray())
-                    .ToList();
-                // Ensure that every ShipToSite has exactly 5 counties, even if some are missing
-                for (int i = 0; i < ShipToSiteCounties.Count; i++)
+                if (existingRegistration != null)
                 {
-                    if (ShipToSiteCounties[i].Length < 5)
-                    {
-                        // Extend the array to have exactly 5 elements, filling with default value 0
-                        ShipToSiteCounties[i] = ShipToSiteCounties[i].Concat(new int[5 - ShipToSiteCounties[i].Length]).ToArray();
-                    }
-                }
+                    // If main user's registration exists, populate the form with existing data
+                    EaspSepsRegistration = existingRegistration;
+                    AgencyContact = existingRegistration.AgencyContacts.FirstOrDefault();
+                    AdditionalUsers = existingRegistration.AdditionalUsers.ToList();
+                    AdditionalShipToSites = existingRegistration.ShipToSites.ToList();
+                    ShipInformation = existingRegistration.ShipInformations.FirstOrDefault();
+                    CountiesServed = existingRegistration.CountiesServed.Select(c => c.CountyId).ToList();
+                    ShipToSiteCounties = existingRegistration.ShipToSites
+                        .Select(s => _context.ShipToSiteCounties
+                            .Where(sc => sc.ShipToSiteId == s.Id)
+                            .Select(sc => sc.CountyId)
+                            .ToArray())
+                        .ToList();
 
-                // Set ViewData["IsReadOnly"] to true if the user has an existing registration
-                ViewData["IsReadOnly"] = true;
+                    for (int i = 0; i < ShipToSiteCounties.Count; i++)
+                    {
+                        if (ShipToSiteCounties[i].Length < 5)
+                        {
+                            ShipToSiteCounties[i] = ShipToSiteCounties[i].Concat(new int[5 - ShipToSiteCounties[i].Length]).ToArray();
+                        }
+                    }
+
+                    // Set ViewData["IsReadOnly"] to true for additional users
+                    ViewData["IsReadOnly"] = true;
+                }
             }
             else
             {
-                // If no existing registration, prepare for a new submission
-                EaspSepsRegistration = new AgencyRegistration();
-                AgencyContact = new AgencyContact { Email = LoggedInUserEmail };
-                AdditionalUsers = new List<AdditionalUser> { new AdditionalUser() };
-                AdditionalShipToSites = new List<ShipToSite>();
-                ShipInformation = new ShipInformation(); // Initialize ShipInformation for new registration
+                // Check if the main user has filled out the registration form (existing registration)
+                var existingRegistration = await _context.AgencyRegistrations
+                    .Include(a => a.AgencyContacts)
+                    .Include(a => a.AdditionalUsers)
+                    .Include(a => a.ShipToSites)
+                    .Include(a => a.CountiesServed)
+                    .Include(a => a.ShipInformations) // Include ShipInformation
+                    .FirstOrDefaultAsync(r => r.UserId == user.Id);
 
-                // Set ViewData["IsReadOnly"] to false for new registrations
-                ViewData["IsReadOnly"] = false;
+                if (existingRegistration != null)
+                {
+                    // If registration exists, populate the form with existing data
+                    EaspSepsRegistration = existingRegistration;
+                    AgencyContact = existingRegistration.AgencyContacts.FirstOrDefault();
+                    AdditionalUsers = existingRegistration.AdditionalUsers.ToList();
+                    AdditionalShipToSites = existingRegistration.ShipToSites.ToList();
+                    ShipInformation = existingRegistration.ShipInformations.FirstOrDefault();
+                    CountiesServed = existingRegistration.CountiesServed.Select(c => c.CountyId).ToList();
+                    ShipToSiteCounties = existingRegistration.ShipToSites
+                        .Select(s => _context.ShipToSiteCounties
+                            .Where(sc => sc.ShipToSiteId == s.Id)
+                            .Select(sc => sc.CountyId)
+                            .ToArray())
+                        .ToList();
+
+                    for (int i = 0; i < ShipToSiteCounties.Count; i++)
+                    {
+                        if (ShipToSiteCounties[i].Length < 5)
+                        {
+                            ShipToSiteCounties[i] = ShipToSiteCounties[i].Concat(new int[5 - ShipToSiteCounties[i].Length]).ToArray();
+                        }
+                    }
+
+                    // Set ViewData["IsReadOnly"] to true if the user has an existing registration
+                    ViewData["IsReadOnly"] = true;
+                }
+                else
+                {
+                    // If no existing registration, prepare for a new submission
+                    EaspSepsRegistration = new AgencyRegistration();
+                    AgencyContact = new AgencyContact { Email = LoggedInUserEmail };
+                    AdditionalUsers = new List<AdditionalUser> { new AdditionalUser() };
+                    AdditionalShipToSites = new List<ShipToSite>();
+                    ShipInformation = new ShipInformation(); // Initialize ShipInformation for new registration
+
+                    // Set ViewData["IsReadOnly"] to false for new registrations
+                    ViewData["IsReadOnly"] = false;
+                }
             }
 
             return Page();
         }
-
 
 
         public async Task<IActionResult> OnPostAsync()
@@ -319,7 +348,7 @@ namespace WebApplication1.Pages.Client
         <p>Please reachout to your agency to change the password</p>
         <p>Best regards,<br/>Your Team</p>
     ";
-            await _emailService.SendEmailAsync(email, subject, message);
+          //  await _emailService.SendEmailAsync(email, subject, message);
         }
 
 
@@ -336,7 +365,7 @@ namespace WebApplication1.Pages.Client
         <p>Best regards,<br/>Your Company</p>
     ";
 
-            await _emailService.SendEmailAsync(recipientEmail, subject, message);
+         //   await _emailService.SendEmailAsync(recipientEmail, subject, message);
         }
 
 

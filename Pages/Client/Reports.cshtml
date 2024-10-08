@@ -13,66 +13,126 @@
         @Model.SuccessMessage
     </div>
 }
-
-<div class="card shadow-lg mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Quarterly Reports</h5>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Quarter</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var quarter in Model.UpcomingQuarters)
-                {
+@if (ViewData.ModelState.IsValid)
+{
+    <div class="card shadow-lg mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Quarterly Reports</h5>
+            <table class="table table-striped">
+                <thead>
                     <tr>
-                        <td>@quarter.QuarterName @DateTime.Now.Year</td>
-                        <td>@quarter.DueDate.ToString("MM/dd/yyyy")</td>
-                        <td>
-                            <span class="badge badge-@((quarter.Status == "Submitted") ? "success" : "warning")" style="background-color:@((quarter.Status == "Submitted") ? "#28a745" : "#ffc107");">
-                                @(quarter.Status == "Submitted" ? "Submitted" : "Pending")
-                            </span>
-                        </td>
-                        <td>
-                            @if (quarter.Status == "Submitted")
-                            {
-                                <button class="btn btn-secondary" onclick="editReport(@quarter.ReportId)">
-                                    Edit Report
-                                </button>
-
-                                <!-- Download CSV Button -->
-                                <form method="post" asp-page-handler="DownloadReport" class="d-inline">
-                                    <input type="hidden" name="reportId" value="@quarter.ReportId" />
-                                    <button type="submit" class="btn btn-success">
-                                        Download CSV
-                                    </button>
-                                </form>
-                            }
-                            else
-                            {
-                                <button class="btn btn-primary" onclick="showReportForm('@quarter.QuarterName', '@quarter.DueDate')">
-                                    Submit Report
-                                </button>
-                            }
-                        </td>
+                        <th>Quarter</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
                     </tr>
-                }
-            </tbody>
+                </thead>
+                <tbody>
+                    @foreach (var quarter in Model.UpcomingQuarters)
+                    {
+                        <tr>
+                            <td>@quarter.QuarterName @DateTime.Now.Year</td>
+                            <td>@quarter.DueDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <span class="badge badge-@((quarter.Status == "Submitted") ? "success" : "warning")" style="background-color:@((quarter.Status == "Submitted") ? "#28a745" : "#ffc107");">
+                                    @(quarter.Status == "Submitted" ? "Submitted" : "Pending")
+                                </span>
+                            </td>
+                            <td>
+                                @if (quarter.Status == "Submitted")
+                                {
+                                    <button class="btn btn-secondary" onclick="viewReport(@quarter.ReportId)">
+                                        View Report
+                                    </button>
 
-        </table>
+                                    <!-- Button to raise an edit request -->
+                                    <button class="btn btn-warning" onclick="openEditRequestModal('@quarter.ReportId')">
+                                        Request Edit
+                                    </button>
+
+                                    <!-- Download CSV Button -->
+                                    <form method="post" asp-page-handler="DownloadReport" class="d-inline">
+                                        <input type="hidden" name="reportId" value="@quarter.ReportId" />
+                                        <button type="submit" class="btn btn-success">
+                                            Download CSV
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-primary" onclick="showReportForm('@quarter.QuarterName', '@quarter.DueDate')">
+                                        Submit Report
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    </div>}
+else
+{
+    <!-- Error message if the user doesn't have the required classification -->
+    <div class="alert alert-warning" role="alert">
+        @ViewData.ModelState[""].Errors.FirstOrDefault()?.ErrorMessage
+    </div>
+}
+
+<!-- Modal for raising an edit request -->
+<div class="modal fade" id="editRequestModal" tabindex="-1" role="dialog" aria-labelledby="editRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editRequestModalLabel">Request Report Edit</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-page-handler="RaiseEditRequest">
+                    <input type="hidden" id="reportId" name="reportId" />
+
+                    <div class="form-group">
+                        <label for="requestType">Request Type</label>
+                        <input type="text" class="form-control" id="requestType" value="Report Edit" readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emailSubject">Subject</label>
+                        <input type="text" class="form-control" id="emailSubject" readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fromEmail">From</label>
+                        <input type="email" class="form-control" id="fromEmail" value="@Model.UserEmail" readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emailBody">Message</label>
+                        <textarea class="form-control" id="emailBody" rows="4">I would like to request an edit for Report #<span id="reportIdText"></span>.</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="toEmail">To</label>
+                        <input type="email" class="form-control" id="toEmail" value="esap@sep.com" readonly />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
+
 
 <!-- Report Form Modal -->
 <div class="modal fade" id="reportModal" tabindex="-1" role="dialog" aria-labelledby="reportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="reportModalLabel">Submit Quarterly Report</h5>
+                <h5 class="modal-title" id="reportModalLabel">View Quarterly Report</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -86,7 +146,7 @@
 
                     <div class="form-group">
                         <label for="FacilityName">Facility Name</label>
-                        <input asp-for="QuarterlyReport.FacilityName" class="form-control" id="FacilityName" required />
+                        <input asp-for="QuarterlyReport.FacilityName" class="form-control" id="FacilityName" readonly />
                     </div>
 
                     <div class="form-group">
@@ -128,17 +188,15 @@
                                     {
                                         <tr>
                                             <td>
-                                                <input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[@i].SharpsCollectionSite" value="@Model.QuarterlyReport.CollectionDetails[i].SharpsCollectionSite" required />
+                                                <input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[@i].SharpsCollectionSite" value="@Model.QuarterlyReport.CollectionDetails[i].SharpsCollectionSite" />
                                             </td>
                                             <td>
-                                                <input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[@i].CollectionDates" value="@Model.QuarterlyReport.CollectionDetails[i].CollectionDates?.ToString("yyyy-MM-dd")" required />
+                                                <input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[@i].CollectionDates" value="@Model.QuarterlyReport.CollectionDetails[i].CollectionDates?.ToString("yyyy-MM-dd")" />
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control pounds-collected" name="QuarterlyReport.CollectionDetails[@i].PoundsCollected" value="@Model.QuarterlyReport.CollectionDetails[i].PoundsCollected" required />
+                                                <input type="text" class="form-control pounds-collected" name="QuarterlyReport.CollectionDetails[@i].PoundsCollected" value="@Model.QuarterlyReport.CollectionDetails[i].PoundsCollected" />
                                             </td>
-                                            <td>
-                                                <button type="button" class="btn btn-danger remove-row">Remove</button>
-                                            </td>
+
                                         </tr>
                                     }
                                 }
@@ -225,11 +283,19 @@
             $('#Quarter').val(quarter);
             $('#DueDate').val(dueDate);
 
-            // Ensure two rows are always present by default
+            // Make all input fields editable
+            $('#reportModal input, #reportModal textarea').prop('readonly', false);
+            $('#addRow').show();  // Show 'Add Row' button for submission mode
+            $('.remove-row').show();  // Show 'Remove' buttons
+
+            // Ensure at least one row is present by default
             ensureDefaultRows();
 
             $('#reportModal').modal('show');
         }
+
+
+
 
         function editReport(reportId) {
             $.get('/Client/Reports?handler=LoadReport', { id: reportId }, function (data) {
@@ -277,6 +343,68 @@
             });
         }
 
+        function viewReport(reportId) {
+            $.get('/Client/Reports?handler=LoadReport', { id: reportId }, function (data) {
+                console.log('Data received:', data);  // Debugging: Log the received data
+
+                // Populate the form fields with the main data
+                $('#QuarterlyReport_Id').val(data.id);
+                $('#FacilityName').val(data.facilityName);
+                $('#CompletedBy').val(data.completedBy);
+                $('#Address').val(data.address);
+                $('#Phone').val(data.phone);
+                $('#Fax').val(data.fax);
+                $('#SyringesProvidedUnits').val(data.syringesProvidedUnits);
+                $('#SyringesProvidedSessions').val(data.syringesProvidedSessions);
+                $('#PharmacyVouchersUnits').val(data.pharmacyVouchersUnits);
+                $('#PharmacyVouchersSessions').val(data.pharmacyVouchersSessions);
+                $('#ReportedVouchersUnits').val(data.reportedVouchersUnits);
+                $('#ReportedVouchersSessions').val(data.reportedVouchersSessions);
+                $('#FitpacksProvidedUnits').val(data.fitpacksProvidedUnits);
+                $('#FitpacksProvidedSessions').val(data.fitpacksProvidedSessions);
+                $('#QuartContainersProvidedUnits').val(data.quartContainersProvidedUnits);
+                $('#QuartContainersProvidedSessions').val(data.quartContainersProvidedSessions);
+                $('#GallonContainersProvidedUnits').val(data.gallonContainersProvidedUnits);
+                $('#GallonContainersProvidedSessions').val(data.gallonContainersProvidedSessions);
+                $('#OtherSuccessesConcernsIssues').val(data.otherSuccessesConcernsIssues);
+
+                // Clear existing rows in the collection details table
+                $('#collectionDetailsTable tbody').empty();
+
+                // Check if CollectionDetails exist and are properly nested in $values
+                if (data.collectionDetails && data.collectionDetails.$values && Array.isArray(data.collectionDetails.$values)) {
+                    data.collectionDetails.$values.forEach(function (detail) {
+                        addCollectionDetailRow(detail.sharpsCollectionSite, detail.collectionDates, detail.poundsCollected);
+                    });
+                } else {
+                    console.error('No collection details found!');
+                }
+
+                // Control field behavior based on submission status
+                if (data.isSubmitted) {
+                    // Set fields to read-only
+                    $('#reportModal input, #reportModal textarea').prop('readonly', true);
+                    $('#addRow').hide(); // Hide 'Add Row' button when viewing
+                    $('.remove-row').hide(); // Hide 'Remove' buttons
+                } else {
+                    // Make fields editable
+                    $('#reportModal input, #reportModal textarea').prop('readonly', false);
+                    $('#addRow').show(); // Show 'Add Row' button for submission mode
+                    $('.remove-row').show(); // Show 'Remove' buttons
+                }
+
+                $('#reportModal').modal('show');
+            });
+        }
+
+        function openEditRequestModal(reportId) {
+            $('#reportId').val(reportId);
+            $('#emailSubject').val('Report Edit Request - Report #' + reportId);
+            $('#reportIdText').text(reportId);
+
+            $('#editRequestModal').modal('show');
+        }
+
         function ensureDefaultRows() {
             const currentRows = $('#collectionDetailsTable tbody tr').length;
             const rowsNeeded = 1 - currentRows;
@@ -289,19 +417,20 @@
         function addCollectionDetailRow(sharpsCollectionSite = '', collectionDates = '', poundsCollected = '') {
             const index = $('#collectionDetailsTable tbody tr').length;
 
-            // Format the date correctly
+            // Format the date correctly if it's provided
             const formattedDate = collectionDates ? new Date(collectionDates).toISOString().split('T')[0] : '';
 
             const row = `
             <tr>
-                <td><input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].SharpsCollectionSite" value="${sharpsCollectionSite}" required /></td>
-                <td><input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].CollectionDates" value="${formattedDate}" required /></td>
-                <td><input type="number" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].PoundsCollected" value="${poundsCollected}" required /></td>
-                <td><button type="button" class="btn btn-danger remove-row">Remove</button></td>
+                <td><input type="text" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].SharpsCollectionSite" value="${sharpsCollectionSite}" /></td>
+                <td><input type="date" class="form-control" name="QuarterlyReport.CollectionDetails[${index}].CollectionDates" value="${formattedDate}" /></td>
+                <td><input type="number" class="form-control pounds-collected" name="QuarterlyReport.CollectionDetails[${index}].PoundsCollected" value="${poundsCollected}" /></td>
+                <td><button type="button" class="btn btn-danger remove-row">&times;</button></td>
             </tr>
         `;
             $('#collectionDetailsTable tbody').append(row);
         }
+
 
         $('#addRow').click(function () {
             addCollectionDetailRow();

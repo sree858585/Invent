@@ -11,6 +11,10 @@ using Microsoft.AspNetCore.Mvc;
 using CsvHelper;
 using System.Globalization;
 using System.IO;
+using WebApplication1.Services;
+using System.Security.Claims;
+
+
 
 
 namespace WebApplication1.Pages.Client
@@ -18,10 +22,15 @@ namespace WebApplication1.Pages.Client
     public class ReportsModel : PageModel
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService; // Inject EmailService
+        public string UserEmail { get; set; }
 
-        public ReportsModel(ApplicationDbContext context)
+
+        public ReportsModel(ApplicationDbContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService; // Assign the email service
+
             QuarterlyReport = new QuarterlyReport
             {
                 CollectionDetails = new List<CollectionDetail>()
@@ -35,11 +44,46 @@ namespace WebApplication1.Pages.Client
 
         public string SuccessMessage { get; set; }
 
-        public async Task OnGetAsync(bool? success = null)
+        public async Task<IActionResult> OnGetAsync(bool? success = null)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                // return Unauthorized("User is not logged in.");
+            }
+            UserEmail = User.FindFirstValue(ClaimTypes.Email); // Fetch email in code-behind
+
+            // Fetch the user's registration and classification
+            var registration = await _context.AgencyRegistrations
+                .Include(ar => ar.LnkAgencyClassificationData)
+                .FirstOrDefaultAsync(ar => ar.UserId == userId);
+
+            if (registration == null || !registration.LnkAgencyClassificationData.Any())
+            {
+                ModelState.AddModelError(string.Empty, "You are not registered or classified.");
+                return Page();
+            }
+
+            // Fetch the ESAP Tier 2 classification id (adjust according to your data)
+            var esapTier2ClassificationId = await _context.LkAgencyClassifications
+                .Where(ac => ac.classifcation_description == "ESAP Tier 2")
+                .Select(ac => ac.agency_classification_id)
+                .FirstOrDefaultAsync();
+
+            // Check if the user has ESAP Tier 2 classification by matching with the Category field
+            var hasEsapTier2 = registration.LnkAgencyClassificationData
+                .Any(c => c.Category == esapTier2ClassificationId);
+
+            if (!hasEsapTier2)
+            {
+                // If the user is not classified as ESAP Tier 2, show a message
+                ModelState.AddModelError(string.Empty, "Reports are only available for ESAP Tier 2 users.");
+                return Page();
+            }
+
+            // Proceed with loading the reports for ESAP Tier 2 users
             var currentYear = DateTime.Now.Year;
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var reports = await _context.QuarterlyReports
                             .Where(qr => qr.UserId == userId && qr.Year == currentYear)
                             .Include(qr => qr.CollectionDetails)
@@ -61,14 +105,13 @@ namespace WebApplication1.Pages.Client
                             })
                             .ToListAsync();
 
-
             var quarterData = new List<QuarterViewModel>
-    {
-        new QuarterViewModel { QuarterName = "Q1", StartMonth = 1, EndMonth = 3, DueDate = new DateTime(currentYear, 4, 15) },
-        new QuarterViewModel { QuarterName = "Q2", StartMonth = 4, EndMonth = 6, DueDate = new DateTime(currentYear, 7, 15) },
-        new QuarterViewModel { QuarterName = "Q3", StartMonth = 7, EndMonth = 9, DueDate = new DateTime(currentYear, 10, 15) },
-        new QuarterViewModel { QuarterName = "Q4", StartMonth = 10, EndMonth = 12, DueDate = new DateTime(currentYear + 1, 1, 15) }
-    };
+{
+    new QuarterViewModel { QuarterName = "Q1", StartMonth = 1, EndMonth = 3, DueDate = new DateTime(currentYear, 4, 15) },
+    new QuarterViewModel { QuarterName = "Q2", StartMonth = 4, EndMonth = 6, DueDate = new DateTime(currentYear, 7, 15) },
+    new QuarterViewModel { QuarterName = "Q3", StartMonth = 7, EndMonth = 9, DueDate = new DateTime(currentYear, 10, 15) },
+    new QuarterViewModel { QuarterName = "Q4", StartMonth = 10, EndMonth = 12, DueDate = new DateTime(currentYear + 1, 1, 15) }
+};
 
             // Assign status to each quarter
             UpcomingQuarters = quarterData
@@ -85,6 +128,26 @@ namespace WebApplication1.Pages.Client
             {
                 SuccessMessage = "Report submitted successfully!";
             }
+
+            return Page();
+        }
+
+        public async Task<IActionResult> OnPostRaiseEditRequestAsync(int reportId)
+        {
+            // Get the email of the current user
+            var email = User.FindFirstValue(ClaimTypes.Email);
+
+            // Define the subject and body of the email
+            var emailSubject = $"Report Edit Request for Report #{reportId}";
+            var emailBody = $"The user with email {email} has requested an edit for Report #{reportId}. Please review the request.";
+
+            // Send the email using the injected email service
+            await _emailService.SendEmailAsync("hemanthgara.hg@gmail.com", emailSubject, emailBody);
+
+            // Display a success message to the user
+            SuccessMessage = "Your edit request has been submitted. You will be notified once it's processed.";
+
+            return RedirectToPage(new { success = true });
         }
 
         public async Task<IActionResult> OnPostDownloadReportAsync(int reportId)
@@ -263,15 +326,48 @@ namespace WebApplication1.Pages.Client
                     return NotFound();
                 }
 
-                return new JsonResult(quarterlyReport);
+                // Log the collection details to ensure they are populated
+                Console.WriteLine($"CollectionDetails: {quarterlyReport.CollectionDetails.Count}");
+
+                var response = new
+                {
+                    Id = quarterlyReport.Id,
+                    FacilityName = quarterlyReport.FacilityName,
+                    CompletedBy = quarterlyReport.CompletedBy,
+                    Address = quarterlyReport.Address,
+                    Phone = quarterlyReport.Phone,
+                    Fax = quarterlyReport.Fax,
+                    SyringesProvidedUnits = quarterlyReport.SyringesProvidedUnits,
+                    SyringesProvidedSessions = quarterlyReport.SyringesProvidedSessions,
+                    PharmacyVouchersUnits = quarterlyReport.PharmacyVouchersUnits,
+                    PharmacyVouchersSessions = quarterlyReport.PharmacyVouchersSessions,
+                    ReportedVouchersUnits = quarterlyReport.ReportedVouchersUnits,
+                    ReportedVouchersSessions = quarterlyReport.ReportedVouchersSessions,
+                    FitpacksProvidedUnits = quarterlyReport.FitpacksProvidedUnits,
+                    FitpacksProvidedSessions = quarterlyReport.FitpacksProvidedSessions,
+                    QuartContainersProvidedUnits = quarterlyReport.QuartContainersProvidedUnits,
+                    QuartContainersProvidedSessions = quarterlyReport.QuartContainersProvidedSessions,
+                    GallonContainersProvidedUnits = quarterlyReport.GallonContainersProvidedUnits,
+                    GallonContainersProvidedSessions = quarterlyReport.GallonContainersProvidedSessions,
+                    OtherSuccessesConcernsIssues = quarterlyReport.OtherSuccessesConcernsIssues,
+                    CollectionDetails = quarterlyReport.CollectionDetails.Select(cd => new {
+                        SharpsCollectionSite = cd.SharpsCollectionSite,
+                        CollectionDates = cd.CollectionDates.HasValue ? cd.CollectionDates.Value.ToString("yyyy-MM-dd") : null,
+                        PoundsCollected = cd.PoundsCollected
+                    }).ToList(),
+                    IsSubmitted = quarterlyReport.Status == "Submitted"
+                };
+
+                return new JsonResult(response);
             }
             catch (Exception ex)
             {
-                // Log the exception details (e.g., to a file or console)
                 Console.WriteLine($"Error loading report: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
         }
+
+
 
 
         public class QuarterViewModel
