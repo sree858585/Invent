@@ -27,7 +27,8 @@
 
     <!-- Modal for requesting edits -->
     <div class="modal fade" id="requestEditsModal" tabindex="-1" aria-labelledby="requestEditsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
+            <!-- Added modal-lg to make the modal larger -->
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="requestEditsModalLabel">Request Edits</h5>
@@ -49,7 +50,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="editMessage" class="form-label">Message</label>
-                            <textarea class="form-control" id="editMessage" name="editMessage" rows="5">Please allow me to request the following edits...</textarea>
+                            <textarea class="form-control" id="editMessage" name="editMessage" rows="10">Please allow me to request the following edits...</textarea> <!-- Increased rows to 10 for a larger text area -->
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -60,6 +61,7 @@
             </div>
         </div>
     </div>
+
 
     <form id="registrationForm" method="post" class="needs-validation" novalidate>
         <fieldset @(ViewData["IsReadOnly"] != null && (bool)ViewData["IsReadOnly"] ? "disabled" : "")>
