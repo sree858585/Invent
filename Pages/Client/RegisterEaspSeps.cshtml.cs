@@ -195,13 +195,46 @@ namespace WebApplication1.Pages.Client
             return Page();
         }
 
+        public async Task<IActionResult> OnPostSendEditRequestAsync(string editTo, string editFrom, string editSubject, string editMessage)
+        {
+            if (!ModelState.IsValid)
+            {
+               // return Page();
+            }
+
+            // Add unique ID, agency contact name, and agency contact email to the email message
+            var agencyId = EaspSepsRegistration?.Id;
+            var agencyContactName = AgencyContact?.ProgramDirector;
+            var agencyContactEmail = AgencyContact?.Email;
+
+            var fullMessage = $@"
+        <p>Dear Admin,</p>
+        <p>The following edit request has been submitted:</p>
+        <p><strong>From:</strong> {editFrom}</p>
+        <p><strong>Unique ID:</strong> {agencyId}</p>
+        <p><strong>Agency Contact Name:</strong> {agencyContactName}</p>
+        <p><strong>Agency Contact Email:</strong> {agencyContactEmail}</p>
+        <p><strong>Message:</strong></p>
+        <p>{editMessage}</p>
+        <p>Best regards,<br/>Your Application</p>
+    ";
+
+            // Send email using your email service
+            await _emailService.SendEmailAsync(editTo, editSubject, fullMessage);
+
+            // Display success message and reload the page
+            SuccessMessage = "Your request for edits has been sent successfully.";
+            return RedirectToPage("/Client/RegisterEaspSeps");
+        }
+
+
 
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
             {
                 await PopulateData(); // Repopulate dropdowns but avoid resetting `CountiesServed`
-               // return Page();
+                                      // return Page();
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -348,7 +381,7 @@ namespace WebApplication1.Pages.Client
         <p>Please reachout to your agency to change the password</p>
         <p>Best regards,<br/>Your Team</p>
     ";
-          //  await _emailService.SendEmailAsync(email, subject, message);
+            //  await _emailService.SendEmailAsync(email, subject, message);
         }
 
 
@@ -365,7 +398,7 @@ namespace WebApplication1.Pages.Client
         <p>Best regards,<br/>Your Company</p>
     ";
 
-         //   await _emailService.SendEmailAsync(recipientEmail, subject, message);
+            //   await _emailService.SendEmailAsync(recipientEmail, subject, message);
         }
 
 
@@ -384,12 +417,13 @@ namespace WebApplication1.Pages.Client
             PrefixList = await _context.Prefixes
                 .Where(s => s.IsActive)
                 .Select(s => new SelectListItem { Value = s.ID.ToString(), Text = s.Prefx })
-                .ToListAsync();
+                .ToListAsync();  // Ensure PrefixList is properly populated
 
             AgencyClassifications = await _context.LkAgencyClassifications
                 .Where(c => c.is_active)
                 .Select(c => new SelectListItem { Value = c.agency_classification_id.ToString(), Text = c.classifcation_description })
                 .ToListAsync();
         }
+
     }
 }

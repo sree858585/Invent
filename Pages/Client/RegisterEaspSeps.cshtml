@@ -14,6 +14,52 @@
         <div class="alert alert-success">@Model.SuccessMessage</div>
     }
 
+    <!-- If the form is already submitted, show the "Request Edits" button -->
+    @if (ViewData["IsReadOnly"] != null && (bool)ViewData["IsReadOnly"])
+    {
+        <div class="d-flex justify-content-end mb-4">
+            <!-- Changed justify-content-center to justify-content-end -->
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#requestEditsModal">
+                Request Edits
+            </button>
+        </div>
+    }
+
+    <!-- Modal for requesting edits -->
+    <div class="modal fade" id="requestEditsModal" tabindex="-1" aria-labelledby="requestEditsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="requestEditsModalLabel">Request Edits</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="requestEditsForm" method="post" asp-page-handler="SendEditRequest">
+                        <div class="mb-3">
+                            <label for="editTo" class="form-label">To</label>
+                            <input type="email" class="form-control" id="editTo" name="editTo" value="hemanthgara.hg@gmail.com" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFrom" class="form-label">From</label>
+                            <input type="email" class="form-control" id="editFrom" name="editFrom" value="@Model.LoggedInUserEmail" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSubject" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="editSubject" name="editSubject" value="Request for Edit in ESAP/SEPS Registration" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="editMessage" class="form-label">Message</label>
+                            <textarea class="form-control" id="editMessage" name="editMessage" rows="5">Please allow me to request the following edits...</textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Send Request</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <form id="registrationForm" method="post" class="needs-validation" novalidate>
         <fieldset @(ViewData["IsReadOnly"] != null && (bool)ViewData["IsReadOnly"] ? "disabled" : "")>
@@ -512,18 +558,24 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Convert the Razor boolean into lowercase 'true' or 'false' for JavaScript
-            const isReadOnly = @((bool)ViewData["IsReadOnly"] ? "true" : "false");
 
-            if (isReadOnly === "true") {
-                // Disable all form fields and the submit button
-                const formElements = document.querySelectorAll('#registrationForm input, #registrationForm select, #registrationForm textarea, #registrationForm button[type="submit"]');
-                formElements.forEach(function (element) {
-                    element.disabled = true; // Disable the form elements
-                });
-            }
+        document.addEventListener("DOMContentLoaded", function () {
+            // Initialize Bootstrap modal
+            var requestEditsModal = new bootstrap.Modal(document.getElementById('requestEditsModal'));
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+        // Check if ViewData["IsReadOnly"] exists and is a boolean
+        const isReadOnly = @((ViewData["IsReadOnly"] != null && (bool)ViewData["IsReadOnly"]) ? "true" : "false");
+
+        if (isReadOnly === "true") {
+            // Disable all form fields and the submit button
+            const formElements = document.querySelectorAll('#registrationForm input, #registrationForm select, #registrationForm textarea, #registrationForm button[type="submit"]');
+            formElements.forEach(function (element) {
+                element.disabled = true; // Disable the form elements
+            });
+        }
+    });
         const countyList = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.CountyList));
 
         document.getElementById("add-additional-ship-to-site").addEventListener("click", function () {

@@ -235,7 +235,7 @@ namespace WebApplication1.Pages.Client
             if (!ModelState.IsValid)
             {
                 // Handle validation errors
-              //  return Page();
+                //  return Page();
             }
 
             if (QuarterlyReport.CollectionDetails == null)
@@ -249,7 +249,7 @@ namespace WebApplication1.Pages.Client
                 if (detail.CollectionDates == default(DateTime))
                 {
                     ModelState.AddModelError(string.Empty, "Please provide a valid Collection Date.");
-                   // return Page();
+                    // return Page();
                 }
             }
 
