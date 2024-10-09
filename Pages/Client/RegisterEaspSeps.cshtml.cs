@@ -202,26 +202,52 @@ namespace WebApplication1.Pages.Client
                // return Page();
             }
 
-            // Add unique ID, agency contact name, and agency contact email to the email message
-            var agencyId = EaspSepsRegistration?.Id;
-            var agencyContactName = AgencyContact?.ProgramDirector;
-            var agencyContactEmail = AgencyContact?.Email;
+            // Load EaspSepsRegistration and AgencyContact from the database if needed
+            var userEmail = User.Identity.Name;
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
 
-            var fullMessage = $@"
-        <p>Dear Admin,</p>
-        <p>The following edit request has been submitted:</p>
-        <p><strong>From:</strong> {editFrom}</p>
-        <p><strong>Unique ID:</strong> {agencyId}</p>
-        <p><strong>Agency Contact Name:</strong> {agencyContactName}</p>
-        <p><strong>Agency Contact Email:</strong> {agencyContactEmail}</p>
-        <p><strong>Message:</strong></p>
-        <p>{editMessage}</p>
-        <p>Best regards,<br/>Your Application</p>
-    ";
+            if (user != null)
+            {
+                // Load the registration and associated data
+                EaspSepsRegistration = await _context.AgencyRegistrations
+                    .Include(ar => ar.AgencyContacts)
+                    .FirstOrDefaultAsync(ar => ar.UserId == user.Id);
 
-            // Send email using your email service
-            await _emailService.SendEmailAsync(editTo, editSubject, fullMessage);
+                if (EaspSepsRegistration != null)
+                {
+                    // Load the first AgencyContact
+                    AgencyContact = EaspSepsRegistration.AgencyContacts?.FirstOrDefault();
 
+                    // Fetch the UniqueId from the LnkAgencyClassificationData table
+                    var agencyClassification = await _context.Lnk_AgencyClassificationData
+                        .FirstOrDefaultAsync(acd => acd.AgencyRegistrationId == EaspSepsRegistration.Id);
+
+                    var uniqueId = agencyClassification?.UniqueId ?? "Not Provided"; // Default message if null
+
+                    // Construct the full email message
+                    var agencyContactName = AgencyContact?.ProgramDirector ?? "Not Provided"; // Default message if null
+                    var agencyContactEmail = AgencyContact?.Email ?? "Not Provided"; // Default message if null
+
+                    var fullMessage = $@"
+                <p>Dear Admin,</p>
+                <p>The following edit request has been submitted:</p>
+                <p><strong>From:</strong> {editFrom}</p>
+                <p><strong>Unique ID:</strong> {uniqueId}</p>  <!-- Unique ID from LnkAgencyClassificationData -->
+                <p><strong>Agency Contact Name:</strong> {agencyContactName}</p>
+                <p><strong>Agency Contact Email:</strong> {agencyContactEmail}</p>
+                <p><strong>Message:</strong></p>
+                <p>{editMessage}</p>
+                <p>Best regards,<br/>Your Application</p>
+            ";
+
+                    // Send email using your email service
+                    await _emailService.SendEmailAsync(editTo, editSubject, fullMessage);
+
+                    // Display success message and reload the page
+                    SuccessMessage = "Your request for edits has been sent successfully.";
+                    return RedirectToPage("/Client/RegisterEaspSeps");
+                }
+            }
             // Display success message and reload the page
             SuccessMessage = "Your request for edits has been sent successfully.";
             return RedirectToPage("/Client/RegisterEaspSeps");
