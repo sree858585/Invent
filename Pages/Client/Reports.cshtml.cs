@@ -132,23 +132,50 @@ namespace WebApplication1.Pages.Client
             return Page();
         }
 
-        public async Task<IActionResult> OnPostRaiseEditRequestAsync(int reportId)
+        public async Task<IActionResult> OnPostRaiseEditRequestAsync(int reportId, string customMessage)
         {
             // Get the email of the current user
             var email = User.FindFirstValue(ClaimTypes.Email);
 
-            // Define the subject and body of the email
-            var emailSubject = $"Report Edit Request for Report #{reportId}";
-            var emailBody = $"The user with email {email} has requested an edit for Report #{reportId}. Please review the request.";
+            // Fetch the report details based on the provided reportId
+            var report = await _context.QuarterlyReports
+                .FirstOrDefaultAsync(qr => qr.Id == reportId);
+
+            if (report == null)
+            {
+                // Handle case where the report does not exist
+                ModelState.AddModelError(string.Empty, "Report not found.");
+                return Page();
+            }
+
+            // Create a more detailed email subject
+            var emailSubject = $"Edit Request for Report #{reportId} - {report.Quarter} {report.Year}";
+
+            // Construct a detailed email body with the report information and custom message
+            var emailBody = $@"
+        <p>Dear Admin,</p>
+        <p>The user with email <strong>{email}</strong> has requested an edit for the following report:</p>
+        <ul>
+            <li><strong>Report ID:</strong> {reportId}</li>
+            <li><strong>Quarter:</strong> {report.Quarter}</li>
+            <li><strong>Year:</strong> {report.Year}</li>
+            <li><strong>Facility Name:</strong> {report.FacilityName}</li>
+            <li><strong>Completed By:</strong> {report.CompletedBy}</li>
+        </ul>
+        <p><strong>Request Details:</strong></p>
+        <p>{customMessage}</p>
+        <p>Please review the request and take necessary actions.</p>
+        <p>Best regards,<br/></p>";
 
             // Send the email using the injected email service
-            await _emailService.SendEmailAsync("hemanthgara.hg@gmail.com", emailSubject, emailBody);
+            await _emailService.SendEmailAsync("hemanthkumar.gara@health.ny.gov", emailSubject, emailBody);
 
             // Display a success message to the user
             SuccessMessage = "Your edit request has been submitted. You will be notified once it's processed.";
 
             return RedirectToPage(new { success = true });
         }
+
 
         public async Task<IActionResult> OnPostDownloadReportAsync(int reportId)
         {
