@@ -23,25 +23,35 @@ namespace WebApplication1.Pages.Admin
 
         public List<int> Years { get; set; }
         public List<QuarterViewModel> Quarters { get; set; }
+        public List<QuarterlyReport> Reports { get; set; } // Store search results
+        public bool SearchPerformed { get; set; } = false;
 
         public void OnGet()
         {
+            // Initialize Years for the view
             var currentYear = DateTime.Now.Year;
-            var currentQuarter = (DateTime.Now.Month - 1) / 3 + 1;
+            var startYear = 2024;
 
-            Years = Enumerable.Range(2024, currentYear - 2024 + 1).ToList();
+            Years = Enumerable.Range(startYear, currentYear - startYear + 1).ToList();
 
+            // Initialize Quarters for the view
             Quarters = new List<QuarterViewModel>
-            {
-                new QuarterViewModel { QuarterName = "Q1", StartMonth = 1, EndMonth = 3, DueDate = new DateTime(currentYear, 4, 15), Year = currentYear },
-                new QuarterViewModel { QuarterName = "Q2", StartMonth = 4, EndMonth = 6, DueDate = new DateTime(currentYear, 7, 15), Year = currentYear },
-                new QuarterViewModel { QuarterName = "Q3", StartMonth = 7, EndMonth = 9, DueDate = new DateTime(currentYear, 10, 15), Year = currentYear },
-                new QuarterViewModel { QuarterName = "Q4", StartMonth = 10, EndMonth = 12, DueDate = new DateTime(currentYear + 1, 1, 15), Year = currentYear }
-            };
+    {
+        new QuarterViewModel { QuarterName = "Q1", StartMonth = 1, EndMonth = 3, DueDate = new DateTime(currentYear, 4, 15), Year = currentYear },
+        new QuarterViewModel { QuarterName = "Q2", StartMonth = 4, EndMonth = 6, DueDate = new DateTime(currentYear, 7, 15), Year = currentYear },
+        new QuarterViewModel { QuarterName = "Q3", StartMonth = 7, EndMonth = 9, DueDate = new DateTime(currentYear, 10, 15), Year = currentYear },
+        new QuarterViewModel { QuarterName = "Q4", StartMonth = 10, EndMonth = 12, DueDate = new DateTime(currentYear + 1, 1, 15), Year = currentYear }
+    };
 
-            // Filter the quarters to only show the current and upcoming ones dynamically
+            // Filter the quarters to show current and upcoming quarters
+            var currentQuarter = (DateTime.Now.Month - 1) / 3 + 1;
             Quarters = Quarters.Where(q => q.StartMonth >= (currentQuarter - 1) * 3 + 1).ToList();
+
+            // Set Reports to null initially so that nothing is displayed before search
+            Reports = null;
         }
+
+
 
         public async Task<IActionResult> OnPostDownloadReportAsync(string quarter)
         {
@@ -119,6 +129,173 @@ namespace WebApplication1.Pages.Admin
                 return File(memoryStream.ToArray(), "text/csv", $"QuarterlyReport_{quarter}_{currentYear}.csv");
             }
         }
+
+        // New POST method to handle search
+        public async Task<IActionResult> OnPostAsync(string searchTerm)
+        {
+            SearchPerformed = true;
+
+            if (string.IsNullOrEmpty(searchTerm))
+            {
+                ModelState.AddModelError(string.Empty, "Please provide a search term.");
+                return Page();
+            }
+
+            // Search by Report ID (numeric) or user email (from ApplicationUser)
+            if (int.TryParse(searchTerm, out int reportId))
+            {
+                // Search by report ID, include CollectionDetails
+                Reports = await _context.QuarterlyReports
+                    .Include(r => r.CollectionDetails) // Include CollectionDetails
+                    .Include(r => r.User) // Include user email
+                    .Where(r => r.Id == reportId)
+                    .ToListAsync();
+            }
+            else
+            {
+                // Search by user email (case-insensitive), include CollectionDetails
+                Reports = await _context.QuarterlyReports
+                    .Include(r => r.CollectionDetails) // Include CollectionDetails
+                    .Include(r => r.User) // Include user email
+                    .Where(r => r.User.Email.ToLower() == searchTerm.ToLower())
+                    .ToListAsync();
+            }
+
+            return Page();
+        }
+
+
+
+        public async Task<IActionResult> OnPostSearchAsync(string searchTerm)
+        {
+            SearchPerformed = true;
+
+            if (string.IsNullOrEmpty(searchTerm))
+            {
+                ModelState.AddModelError(string.Empty, "Please provide a search term.");
+                return Page();
+            }
+            // Initialize the Years to avoid null reference errors
+            var currentYear = DateTime.Now.Year;
+            var startYear = 2024; // Change this if needed
+            Years = Enumerable.Range(startYear, currentYear - startYear + 1).ToList();
+
+
+            // Search by Report ID (numeric) or by user email (fetching from ApplicationUser)
+            if (int.TryParse(searchTerm, out int reportId))
+            {
+                // Search by report ID
+                Reports = await _context.QuarterlyReports
+                    .Include(qr => qr.User) // Include the User to access email
+                    .Where(qr => qr.Id == reportId)
+                    .ToListAsync();
+            }
+            else
+            {
+                // Search by user email (case-insensitive)
+                Reports = await _context.QuarterlyReports
+                    .Include(qr => qr.User) // Include the User to access email
+                    .Where(qr => qr.User.Email.ToLower() == searchTerm.ToLower()) // Filter by email
+                    .ToListAsync();
+            }
+
+            return Page();
+        }
+
+
+        public async Task<IActionResult> OnGetLoadReportAsync(int id)
+        {
+            var report = await _context.QuarterlyReports
+                .Include(r => r.CollectionDetails) // Include CollectionDetails
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (report == null)
+            {
+                return NotFound();
+            }
+
+            return new JsonResult(new
+            {
+                id = report.Id,
+                facilityName = report.FacilityName,
+                completedBy = report.CompletedBy,
+                address = report.Address,
+                phone = report.Phone,
+                fax = report.Fax,
+                status = report.Status,
+                syringesProvidedUnits = report.SyringesProvidedUnits,
+                syringesProvidedSessions = report.SyringesProvidedSessions,
+                pharmacyVouchersUnits = report.PharmacyVouchersUnits,
+                pharmacyVouchersSessions = report.PharmacyVouchersSessions,
+                reportedVouchersUnits = report.ReportedVouchersUnits,
+                reportedVouchersSessions = report.ReportedVouchersSessions,
+                fitpacksProvidedUnits = report.FitpacksProvidedUnits,
+                fitpacksProvidedSessions = report.FitpacksProvidedSessions,
+                quartContainersProvidedUnits = report.QuartContainersProvidedUnits,
+                quartContainersProvidedSessions = report.QuartContainersProvidedSessions,
+                gallonContainersProvidedUnits = report.GallonContainersProvidedUnits,
+                gallonContainersProvidedSessions = report.GallonContainersProvidedSessions,
+                otherSuccessesConcernsIssues = report.OtherSuccessesConcernsIssues,
+                // Add Collection Details
+                collectionDetails = report.CollectionDetails.Select(cd => new
+                {
+                    cd.SharpsCollectionSite,
+                    cd.CollectionDates,
+                    cd.PoundsCollected
+                }).ToList()
+            });
+        }
+
+
+
+
+        public async Task<IActionResult> OnPostEditReportAsync(int reportId, QuarterlyReport updatedReport)
+        {
+            var report = await _context.QuarterlyReports.FindAsync(reportId);
+            if (report == null)
+            {
+                return NotFound("Report not found.");
+            }
+
+            // Update the report with the new values
+            report.FacilityName = updatedReport.FacilityName;
+            report.CompletedBy = updatedReport.CompletedBy;
+            report.Address = updatedReport.Address;
+            report.Phone = updatedReport.Phone;
+            report.Fax = updatedReport.Fax;
+            report.Status = updatedReport.Status;
+            report.SyringesProvidedUnits = updatedReport.SyringesProvidedUnits;
+            report.SyringesProvidedSessions = updatedReport.SyringesProvidedSessions;
+            report.PharmacyVouchersUnits = updatedReport.PharmacyVouchersUnits;
+            report.PharmacyVouchersSessions = updatedReport.PharmacyVouchersSessions;
+            report.ReportedVouchersUnits = updatedReport.ReportedVouchersUnits;
+            report.ReportedVouchersSessions = updatedReport.ReportedVouchersSessions;
+            report.FitpacksProvidedUnits = updatedReport.FitpacksProvidedUnits;
+            report.FitpacksProvidedSessions = updatedReport.FitpacksProvidedSessions;
+            report.QuartContainersProvidedUnits = updatedReport.QuartContainersProvidedUnits;
+            report.QuartContainersProvidedSessions = updatedReport.QuartContainersProvidedSessions;
+            report.GallonContainersProvidedUnits = updatedReport.GallonContainersProvidedUnits;
+            report.GallonContainersProvidedSessions = updatedReport.GallonContainersProvidedSessions;
+            report.OtherSuccessesConcernsIssues = updatedReport.OtherSuccessesConcernsIssues;
+
+            report.EditedDate = DateTime.Now;
+
+            //report.CollectionDetails.Clear();  // Remove existing details
+            //foreach (var detail in updatedReport.CollectionDetails)
+            //{
+            //    report.CollectionDetails.Add(new CollectionDetail
+            //    {
+            //        SharpsCollectionSite = detail.SharpsCollectionSite,
+            //        CollectionDates = detail.CollectionDates,
+            //        PoundsCollected = detail.PoundsCollected
+            //    });
+            //}
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("/Admin/AdminReportView", new { success = true });
+        }
+
+
 
         public class QuarterViewModel
         {
