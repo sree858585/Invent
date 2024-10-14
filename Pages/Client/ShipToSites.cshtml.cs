@@ -43,7 +43,7 @@ namespace WebApplication1.Pages.Client
             // Check if the logged-in user is an additional user
             var additionalUser = await _context.AdditionalUsers
                 .Include(au => au.AgencyRegistration) // Include the AgencyRegistration relation
-                .FirstOrDefaultAsync(u => u.Email == userEmail);
+                .FirstOrDefaultAsync(u => u.Email == userEmail);        
 
             AgencyRegistration registration = null;
 
