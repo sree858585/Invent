@@ -25,6 +25,8 @@ namespace WebApplication1.Pages.Client
         private readonly ILogger<RegisterEaspSepsModel> _logger;
         private readonly IEmailService _emailService; // Inject EmailService
         private readonly UserManager<ApplicationUser> _userManager; // Inject UserManager
+        private readonly GeocodingService _geocodingService;
+
 
 
 
@@ -73,12 +75,14 @@ namespace WebApplication1.Pages.Client
 
         public string SuccessMessage { get; set; }
 
-        public RegisterEaspSepsModel(ApplicationDbContext context, ILogger<RegisterEaspSepsModel> logger, IEmailService emailService, UserManager<ApplicationUser> userManager)
+        public RegisterEaspSepsModel(ApplicationDbContext context, ILogger<RegisterEaspSepsModel> logger, IEmailService emailService, UserManager<ApplicationUser> userManager, GeocodingService geocodingService)
         {
             _context = context;
             _logger = logger;
             _emailService = emailService; // Assign the email service
             _userManager = userManager; // Assign UserManager
+            _geocodingService = geocodingService;
+
 
 
         }
@@ -387,6 +391,59 @@ namespace WebApplication1.Pages.Client
                     }
                 }
             }
+
+            //************** Google API's Geocode start here *************** 
+            // Geocode AgencyRegistration address
+            var agencyAddress = $"{EaspSepsRegistration.Address}, {EaspSepsRegistration.City}, {EaspSepsRegistration.State}, {EaspSepsRegistration.Zip}";
+            var (agencyLat, agencyLng) = await _geocodingService.GetCoordinatesAsync(agencyAddress);
+            if (agencyLat == null || agencyLng == null)
+            {
+                ModelState.AddModelError(string.Empty, "Unable to fetch coordinates for the provided address.");
+                await PopulateData();
+                return Page(); // Stop the submission if geocoding fails
+            }
+            EaspSepsRegistration.Lat = agencyLat;
+            EaspSepsRegistration.Lng = agencyLng;
+
+            // Geocode AgencyContact address
+            var contactAddress = $"{AgencyContact.Address}, {AgencyContact.City}, {AgencyContact.State}, {AgencyContact.Zip}";
+            var (contactLat, contactLng) = await _geocodingService.GetCoordinatesAsync(contactAddress);
+            AgencyContact.Lat = contactLat;
+            AgencyContact.Lng = contactLng;
+
+            // Geocode ShipInformation address
+            var shipAddress = $"{ShipInformation.ShipToAddress}, {ShipInformation.ShipToCity}, {ShipInformation.ShipToState}, {ShipInformation.ShipToZip}";
+            var (shipLat, shipLng) = await _geocodingService.GetCoordinatesAsync(shipAddress);
+            ShipInformation.Lat = shipLat;
+            ShipInformation.Lng = shipLng;
+
+            // Geocode Additional ShipToSites
+            foreach (var shipToSite in AdditionalShipToSites)
+            {
+                var shipToSiteAddress = $"{shipToSite.Address}, {shipToSite.City}, {shipToSite.State}, {shipToSite.Zip}";
+                var (siteLat, siteLng) = await _geocodingService.GetCoordinatesAsync(shipToSiteAddress);
+                shipToSite.Lat = siteLat;
+                shipToSite.Lng = siteLng;
+            }
+
+            // Geocode AdditionalUsers' addresses
+            foreach (var additionalUser in AdditionalUsers)
+            {
+                if (!string.IsNullOrEmpty(additionalUser.Address))
+                {
+                    var additionalUserAddress = $"{additionalUser.Address}, {additionalUser.City}, {additionalUser.State}, {additionalUser.Zip}";
+                    var (additionalUserLat, additionalUserLng) = await _geocodingService.GetCoordinatesAsync(additionalUserAddress);
+                    additionalUser.Lat = additionalUserLat;
+                    additionalUser.Lng = additionalUserLng;
+                }
+            }
+
+
+            _context.AgencyContacts.Add(AgencyContact);
+            _context.ShipInformations.Add(ShipInformation);
+            _context.ShipToSites.AddRange(AdditionalShipToSites);
+            _context.AdditionalUsers.AddRange(AdditionalUsers);
+            _context.AgencyRegistrations.Add(EaspSepsRegistration);
 
             await _context.SaveChangesAsync();
 
