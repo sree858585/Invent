@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Services;
+
 
 public class Startup
 {
@@ -15,6 +17,7 @@ public class Startup
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+        services.AddScoped<GeocodingService>();
 
         services.AddIdentity<ApplicationUser, IdentityRole>()
        .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -44,9 +47,9 @@ public class Startup
             // Password settings.
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;
-            options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = true;
-            options.Password.RequiredLength = 6;
+            options.Password.RequireNonAlphanumeric = true;
+            options.Password.RequiredLength = 12;
             options.Password.RequiredUniqueChars = 1;
 
             // Lockout settings.
