@@ -12,7 +12,7 @@ namespace WebApplication1.Models
     {
        // public string Id { get; set; }
 
-        public string Role { get; set; } // "Client", "Admin", "Distributor"
+        public string Role { get; set; } // "Client", "Admin", "Distributor" , "AdditionalUser"
         public bool IsApproved { get; set; } // For Admin approval
     }
 }

@@ -20,6 +20,9 @@ namespace WebApplication1.Models
         public int? SuffixId { get; set; }  // Update here
         public Suffix Suffix { get; set; }  // Navigation property
 
+        public decimal? Lat { get; set; }
+        public decimal? Lng { get; set; }
+
         // Change to SameAddressAsAgency
         public bool SameAddressAsAgency { get; set; }
 

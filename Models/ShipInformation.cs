@@ -14,6 +14,9 @@ namespace WebApplication1.Models
         public string ShipToZip { get; set; }
         public bool SameAsSite { get; set; }
 
+        public decimal? Lat { get; set; }
+        public decimal? Lng { get; set; }
+
         [Required]
         public int AgencyRegistrationId { get; set; }
         public AgencyRegistration AgencyRegistration { get; set; }

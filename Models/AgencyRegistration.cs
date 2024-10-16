@@ -23,6 +23,10 @@ namespace WebApplication1.Models
         public string RegistrationType { get; set; }
         [Required]
         public string UserId { get; set; }
+
+        public decimal? Lat { get; set; }
+        public decimal? Lng { get; set; }
+
         public List<EaspSepsRegistrationCounty> CountiesServed { get; set; } = new List<EaspSepsRegistrationCounty>();
         public ICollection<ShipToSite> ShipToSites { get; set; }
         public ICollection<LnkAgencyClassificationData> LnkAgencyClassificationData { get; set; } // Updated property name
