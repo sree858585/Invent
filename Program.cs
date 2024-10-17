@@ -6,6 +6,7 @@ using Serilog;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Net;
+using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,8 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+builder.Services.AddScoped<GeocodingService>(); // Register GeocodingService
 
 builder.Services.AddRazorPages();
 builder.Services.AddRazorPages()
