@@ -54,6 +54,11 @@ namespace WebApplication1.Models
         public DateTime? EditedDate { get; set; }
         public string? Note { get; set; } // Nullable string for note
 
+        // New fields for latitude and longitude
+        public decimal? Lat { get; set; } // Nullable decimal for latitude
+        public decimal? Lng { get; set; } // Nullable decimal for longitude
+
+
         public ICollection<OrderDetail> OrderDetails { get; set; }
     }
 }
