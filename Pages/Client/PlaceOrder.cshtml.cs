@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using WebApplication1.Data;
@@ -170,8 +171,17 @@ namespace WebApplication1.Pages.Client
                 }
 
                 // Get the latitude and longitude using the geocoding service
-                var fullAddress = $"{request.ShippingInfo.ShipToAddress}, {request.ShippingInfo.ShipToCity}, {request.ShippingInfo.ShipToState}, {request.ShippingInfo.ShipToZip}";
-                var (lat, lng) = await _geocodingService.GetCoordinatesAsync(fullAddress);
+        var fullAddress = $"{request.ShippingInfo.ShipToAddress}, {request.ShippingInfo.ShipToCity}, {request.ShippingInfo.ShipToState}, {request.ShippingInfo.ShipToZip}";
+                var coordinates = _geocodingService.FindLngLat(fullAddress);
+
+                decimal lat = 0;
+                decimal lng = 0;
+
+                if (coordinates.Count > 0)
+                {
+                    lat = coordinates["Lat"];
+                    lng = coordinates["Lng"];
+                }
 
                 // Create the order object
                 var order = new Order

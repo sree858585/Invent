@@ -148,13 +148,13 @@ namespace WebApplication1.Pages.Client
                 var fullAddress = $"{site.Address}, {site.City}, {site.State}, {site.Zip}";
 
                 // Fetch latitude and longitude using GeocodingService
-                var (lat, lng) = await _geocodingService.GetCoordinatesAsync(fullAddress);
+                //var (lat, lng) = await _geocodingService.GetCoordinatesAsync(fullAddress);
 
                 if (site.Id == 0)
                 {
                     // Add new ShipToSite
-                    site.Lat = lat; // Set the latitude
-                    site.Lng = lng; // Set the longitude    
+                   // site.Lat = lat; // Set the latitude
+                  //  site.Lng = lng; // Set the longitude    
                     _context.ShipToSites.Add(site);
                 }
                 else
@@ -186,8 +186,8 @@ namespace WebApplication1.Pages.Client
                     existingSite.SameAsSite = site.SameAsSite;
 
                     // Update latitude and longitude
-                    existingSite.Lat = lat;
-                    existingSite.Lng = lng;
+                   // existingSite.Lat = lat;
+                  //  existingSite.Lng = lng;
                 }
 
                 await _context.SaveChangesAsync();

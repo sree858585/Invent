@@ -112,8 +112,15 @@ namespace WebApplication1.Pages.Client
                 var fullAddress = $"{user.Address}, {user.City}, {user.State}, {user.Zip}";
 
                 // Fetch latitude and longitude using GeocodingService
-                var (lat, lng) = await _geocodingService.GetCoordinatesAsync(fullAddress);
+                var coordinates = _geocodingService.FindLngLat(fullAddress);
+                decimal lat = 0;
+                decimal lng = 0;
 
+                if (coordinates.Count > 0)
+                {
+                    lat = coordinates["Lat"];
+                    lng = coordinates["Lng"];
+                }
                 if (user.Id == 0)
                 {
                     // New additional user
