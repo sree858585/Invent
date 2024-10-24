@@ -439,18 +439,19 @@ namespace WebApplication1.Pages.Client
             }
 
 
-            _context.AgencyContacts.Add(AgencyContact);
-            _context.ShipInformations.Add(ShipInformation);
-            _context.ShipToSites.AddRange(AdditionalShipToSites);
-            _context.AdditionalUsers.AddRange(AdditionalUsers);
-            _context.AgencyRegistrations.Add(EaspSepsRegistration);
+            //_context.AgencyContacts.Add(AgencyContact);
+            //_context.ShipInformations.Add(ShipInformation);
+            //_context.ShipToSites.AddRange(AdditionalShipToSites);
+            //_context.AdditionalUsers.AddRange(AdditionalUsers);
+            //_context.AgencyRegistrations.Add(EaspSepsRegistration);
 
             await _context.SaveChangesAsync();
 
             // Send confirmation email to the agency contact
-            await SendRegistrationConfirmationEmail(AgencyContact.Email, EaspSepsRegistration.AgencyName);
+            await SendRegistrationConfirmationEmail(AgencyContact.Email, EaspSepsRegistration.AgencyName, AdditionalUsers);
 
-            SuccessMessage = "Your registration has been successfully submitted. Please wait for the approval.";
+            SuccessMessage = "Your registration has been successfully submitted. Please wait for approval. " +
+                    "Your additional users have received a temporary password to access the account and place orders.";
             return RedirectToPage("/Client/Home");
         }
 
@@ -469,15 +470,28 @@ namespace WebApplication1.Pages.Client
 
 
 
-        private async Task SendRegistrationConfirmationEmail(string recipientEmail, string agencyName)
+        private async Task SendRegistrationConfirmationEmail(string recipientEmail, string agencyName, List<AdditionalUser> additionalUsers)
         {
             var subject = "ESAP/SEPS Registration Confirmation";
+
+            // Prepare the message for additional users' passwords
+            var additionalUsersMessage = "";
+            if (additionalUsers != null && additionalUsers.Count > 0)
+            {
+                additionalUsersMessage = "<p>Your additional users have received the following temporary passwords:</p><ul>";
+                foreach (var user in additionalUsers)
+                {
+                    additionalUsersMessage += $"<li><strong>{user.Name}</strong> ({user.Email}): Temporary Password: TempPassword123!</li>";
+                }
+                additionalUsersMessage += "</ul>";
+            }
 
             var message = $@"
         <p>Dear Colleague,</p>
         <p>Your registration for the agency <strong>{agencyName}</strong> has been successfully submitted.</p>
         <p>Please wait for the approval process to complete. Once your registration is approved, you will be notified accordingly.</p>
-        <p>If you have any questions, feel free to reply to this email.</p>
+        {additionalUsersMessage}
+<p>If you have any questions, feel free to reply to this email.</p>
         <p>Best regards,<br/>Your Company</p>
     ";
 

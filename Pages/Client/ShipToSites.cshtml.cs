@@ -9,6 +9,8 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using WebApplication1.Data;
 using WebApplication1.Models;
+using WebApplication1.Services;
+
 namespace WebApplication1.Pages.Client
 {
     [Authorize(Roles = "Client,AdditionalUser")]
@@ -17,10 +19,14 @@ namespace WebApplication1.Pages.Client
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ShipToSitesModel> _logger;
-        public ShipToSitesModel(ApplicationDbContext context, ILogger<ShipToSitesModel> logger)
+        private readonly GeocodingService _geocodingService;
+
+        public ShipToSitesModel(ApplicationDbContext context, ILogger<ShipToSitesModel> logger, GeocodingService geocodingService)
         {
             _context = context;
             _logger = logger;
+            _geocodingService = geocodingService;
+
         }
         [BindProperty]
         public List<ShipToSite> ShipToSites { get; set; }
@@ -138,9 +144,17 @@ namespace WebApplication1.Pages.Client
 
             try
             {
+                // Build the full address for geocoding
+                var fullAddress = $"{site.Address}, {site.City}, {site.State}, {site.Zip}";
+
+                // Fetch latitude and longitude using GeocodingService
+                var (lat, lng) = await _geocodingService.GetCoordinatesAsync(fullAddress);
+
                 if (site.Id == 0)
                 {
                     // Add new ShipToSite
+                    site.Lat = lat; // Set the latitude
+                    site.Lng = lng; // Set the longitude    
                     _context.ShipToSites.Add(site);
                 }
                 else
@@ -170,6 +184,10 @@ namespace WebApplication1.Pages.Client
                     existingSite.ShipToState = site.ShipToState;
                     existingSite.ShipToZip = site.ShipToZip;
                     existingSite.SameAsSite = site.SameAsSite;
+
+                    // Update latitude and longitude
+                    existingSite.Lat = lat;
+                    existingSite.Lng = lng;
                 }
 
                 await _context.SaveChangesAsync();

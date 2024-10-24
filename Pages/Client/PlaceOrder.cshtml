@@ -7,616 +7,692 @@
 
 <h2>@ViewData["Title"]</h2>
 
+
+
 <!-- Hidden field to store product data -->
 <input type="hidden" id="classification1ProductsJson" value='@Html.Raw(Model.Classification1ProductsJson ?? "[]")' />
 <input type="hidden" id="classification2ProductsJson" value='@Html.Raw(Model.Classification2ProductsJson ?? "[]")' />
 
 <div>
-    <ul class="nav nav-tabs" id="productTab" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="classification1-tab" data-toggle="tab" href="#classification1" role="tab" aria-controls="classification1" aria-selected="true">Syringe Exchange program</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="classification2-tab" data-toggle="tab" href="#classification2" role="tab" aria-controls="classification2" aria-selected="false">ESAP Tier 1/2</a>
-        </li>
-    </ul>
-    <div class="tab-content" id="productTabContent">
-        <div class="tab-pane fade show active" id="classification1" role="tabpanel" aria-labelledby="classification1-tab">
-            @if (Model.CanAccessClassification1)
-            {
-                <div class="mb-3">
-                    <input type="text" class="form-control" id="searchClassification1" placeholder="Search by item number or description" />
-                </div>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Product Item Number</th>
-                            <th>Product Description</th>
-                            <th>Pieces per Case</th>
-                            <th>Is Active</th>
-                            <th>Quantity</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="classification1Products">
-                        <!-- Products will be populated by JavaScript -->
-                    </tbody>
-                </table>
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item" id="prev-page-item">
-                            <a class="page-link" href="#" id="prev-page" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                        <div id="pagination-numbers" class="d-inline-flex"></div>
-                        <li class="page-item" id="next-page-item">
-                            <a class="page-link" href="#" id="next-page" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            }
-            else
-            {
-                <p>You are not registered for Classification 1 products.</p>
-            }
-        </div>
-        <div class="tab-pane fade" id="classification2" role="tabpanel" aria-labelledby="classification2-tab">
-            @if (Model.CanAccessClassification2)
-            {
-                <div class="mb-3">
-                    <input type="text" class="form-control" id="searchClassification2" placeholder="Search by item number or description" />
-                </div>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Product Item Number</th>
-                            <th>Product Description</th>
-                            <th>Pieces per Case</th>
-                            <th>Is Active</th>
-                            <th>Quantity</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="classification2Products">
-                        <!-- Products will be populated by JavaScript -->
-                    </tbody>
-                </table>
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item" id="prev-page-item">
-                            <a class="page-link" href="#" id="prev-page" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
-                        <div id="pagination-numbers" class="d-inline-flex"></div>
-                        <li class="page-item" id="next-page-item">
-                            <a class="page-link" href="#" id="next-page" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            }
-            else
-            {
-                <p>You are not registered for Classification 2 products.</p>
-            }
+    <div class="d-flex justify-content-between align-items-center">
+
+        <ul class="nav nav-tabs" id="productTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="classification1-tab" data-toggle="tab" href="#classification1" role="tab" aria-controls="classification1" aria-selected="true">Syringe Exchange program</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="classification2-tab" data-toggle="tab" href="#classification2" role="tab" aria-controls="classification2" aria-selected="false">ESAP Tier 1/2</a>
+            </li>
+        </ul>
+        <!-- Cart summary displayed inline with the tabs -->
+        <div class="cart-summary-inline ml-auto">
+            <span id="cart-count">Items in cart: 0</span>
+            <button type="button" class="btn btn-success ml-2" id="checkout-button-top">Checkout</button>
         </div>
     </div>
-</div>
-
-<div class="cart-summary">
-    <h4>Cart Summary</h4>
-    <div id="cart-count">Items in cart: 0</div>
-    <button type="button" class="btn btn-success mt-3" id="checkout-button">Checkout</button>
-</div>
-
-<!-- Modal for Checkout -->
-<div class="modal fade" id="checkoutModal" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="checkoutModalLabel">Checkout</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+        <div class="tab-content" id="productTabContent">
+            <div class="tab-pane fade show active" id="classification1" role="tabpanel" aria-labelledby="classification1-tab">
+                @if (Model.CanAccessClassification1)
+                {
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="searchClassification1" placeholder="Search by item number or description" />
+                    </div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product Item Number</th>
+                                <th>Product Description</th>
+                                <th>Pieces per Case</th>
+                                <th>Is Active</th>
+                                <th>Quantity</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="classification1Products">
+                            <!-- Products will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" id="prev-page-item">
+                                <a class="page-link" href="#" id="prev-page" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <div id="pagination-numbers" class="d-inline-flex"></div>
+                            <li class="page-item" id="next-page-item">
+                                <a class="page-link" href="#" id="next-page" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+                else
+                {
+                    <p>You are not registered for Classification 1 products.</p>
+                }
             </div>
-            <div class="modal-body">
-                <h4>Products in Cart</h4>
-                <table class="table table-striped" id="cartItemsTable">
-                    <thead>
-                        <tr>
-                            <th>Product Item Number</th>
-                            <th>Product Description</th>
-                            <th>Quantity</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-                <h4>Shipping Information</h4>
-                <form id="shippingInfoForm">
-                    <div class="form-group">
-                        <label for="shipToName">Name</label>
-                        <input type="text" class="form-control" id="shipToName" name="shipToName" required>
+            <div class="tab-pane fade" id="classification2" role="tabpanel" aria-labelledby="classification2-tab">
+                @if (Model.CanAccessClassification2)
+                {
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="searchClassification2" placeholder="Search by item number or description" />
                     </div>
-                    <div class="form-group">
-                        <label for="shipToEmail">Email</label>
-                        <input type="email" class="form-control" id="shipToEmail" name="shipToEmail" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="shipToAddress">Address</label>
-                        <input type="text" class="form-control" id="shipToAddress" name="shipToAddress" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="shipToAddress2">Address 2</label>
-                        <input type="text" class="form-control" id="shipToAddress2" name="shipToAddress2">
-                    </div>
-                    <div class="form-group">
-                        <label for="shipToCity">City</label>
-                        <input type="text" class="form-control" id="shipToCity" name="shipToCity" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="shipToState">State</label>
-                        <input type="text" class="form-control" id="shipToState" name="shipToState" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="shipToZip">Zip</label>
-                        <input type="text" class="form-control" id="shipToZip" name="shipToZip" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancel-button" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="place-order-button">Place Order</button>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product Item Number</th>
+                                <th>Product Description</th>
+                                <th>Pieces per Case</th>
+                                <th>Is Active</th>
+                                <th>Quantity</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="classification2Products">
+                            <!-- Products will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" id="prev-page-item">
+                                <a class="page-link" href="#" id="prev-page" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <div id="pagination-numbers" class="d-inline-flex"></div>
+                            <li class="page-item" id="next-page-item">
+                                <a class="page-link" href="#" id="next-page" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+                else
+                {
+                    <p>You are not registered for Classification 2 products.</p>
+                }
             </div>
         </div>
     </div>
-</div>
-@section Styles {
-    <style>
-        .order-confirmation-card {
-            position: fixed;
-            top: 20%;
-            left: 50%;
-            transform: translate(-50%, -20%);
-            z-index: 1050;
-            width: 80%;
-            max-width: 600px;
-        }
 
-            .order-confirmation-card .card {
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                border-radius: 10px;
+    <!-- Cart Summary at bottom right -->
+    <div class="cart-summary-bottom" style="position: fixed; bottom: 20px; right: 20px;">
+        <button type="button" class="btn btn-success" id="checkout-button-bottom">Checkout</button>
+    </div>
+
+    <!-- Modal for Checkout -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="checkoutModalLabel">Checkout</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h4>Products in Cart</h4>
+                    <table class="table table-striped" id="cartItemsTable">
+                        <thead>
+                            <tr>
+                                <th>Product Item Number</th>
+                                <th>Product Description</th>
+                                <th>Quantity</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <h4>Shipping Information</h4>
+                    <form id="shippingInfoForm">
+                        <div class="form-group">
+                            <label for="shipToName">Name</label>
+                            <input type="text" class="form-control" id="shipToName" name="shipToName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shipToEmail">Email</label>
+                            <input type="email" class="form-control" id="shipToEmail" name="shipToEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shipToAddress">Address</label>
+                            <input type="text" class="form-control" id="shipToAddress" name="shipToAddress" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shipToAddress2">Address 2</label>
+                            <input type="text" class="form-control" id="shipToAddress2" name="shipToAddress2">
+                        </div>
+                        <div class="form-group">
+                            <label for="shipToCity">City</label>
+                            <input type="text" class="form-control" id="shipToCity" name="shipToCity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shipToState">State</label>
+                            <input type="text" class="form-control" id="shipToState" name="shipToState" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shipToZip">Zip</label>
+                            <input type="text" class="form-control" id="shipToZip" name="shipToZip" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-button" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="place-order-button">Place Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @section Styles {
+        <style>
+            .order-confirmation-card {
+                position: fixed;
+                top: 20%;
+                left: 50%;
+                transform: translate(-50%, -20%);
+                z-index: 1050;
+                width: 80%;
+                max-width: 600px;
             }
 
-            .order-confirmation-card .card-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-radius: 10px 10px 0 0;
-            }
-
-            .order-confirmation-card .card-body {
-                padding: 20px;
-                background-color: #f4f4f4;
-                border-radius: 0 0 10px 10px;
-            }
-
-            .order-confirmation-card .table {
-                margin-top: 20px;
-            }
-    </style>
-}
-
-@section Scripts {
-    <script>$(document).ready(function () {
-            var cart = [];
-            var classification1Products = [];
-            var classification2Products = [];
-            var shipInfo = {};
-
-            var currentPage = 1;
-            var productsPerPage = 10;
-
-            try {
-                classification1Products = JSON.parse($('#classification1ProductsJson').val());
-            } catch (e) {
-                console.error("Error parsing classification1ProductsJson:", e);
-            }
-
-            try {
-                classification2Products = JSON.parse($('#classification2ProductsJson').val());
-            } catch (e) {
-                console.error("Error parsing classification2ProductsJson:", e);
-            }
-
-            $('#productTab a').on('click', function (e) {
-                e.preventDefault();
-                $(this).tab('show');
-                currentPage = 1;
-                updatePagination();
-            });
-
-            $(document).on('click', '.add-to-cart', function () {
-                var productId = $(this).data('product-id');
-                var quantity = $(this).closest('tr').find('.quantity-input').val();
-                addToCart(productId, quantity);
-            });
-
-            $('#checkout-button').on('click', function () {
-                showCheckoutModal();
-            });
-
-            $('#cancel-button, .close').on('click', function () {
-                $('#checkoutModal').modal('hide');
-            });
-
-            $('#prev-page').on('click', function (e) {
-                e.preventDefault();
-                if (currentPage > 1) {
-                    currentPage--;
-                    updatePagination();
+                .order-confirmation-card .card {
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    border-radius: 10px;
                 }
-            });
 
-            $('#next-page').on('click', function (e) {
-                e.preventDefault();
-                var activeTab = $('#productTab .active').attr('id');
-                var totalProducts = activeTab === 'classification1-tab' ? classification1Products.length : classification2Products.length;
-                var totalPages = Math.ceil(totalProducts / productsPerPage);
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    updatePagination();
+                .order-confirmation-card .card-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-radius: 10px 10px 0 0;
                 }
-            });
 
-            $(document).on('click', '.page-number', function (e) {
-                e.preventDefault();
-                var pageNumber = parseInt($(this).text());
-                currentPage = pageNumber;
-                updatePagination();
-            });
+                .order-confirmation-card .card-body {
+                    padding: 20px;
+                    background-color: #f4f4f4;
+                    border-radius: 0 0 10px 10px;
+                }
 
-            $('#place-order-button').on('click', function () {
-                placeOrder();
-            });
+                .order-confirmation-card .table {
+                    margin-top: 20px;
+                }
 
-            $('#searchClassification1').on('input', function () {
-                var query = $(this).val().toLowerCase();
-                var filteredProducts = classification1Products.filter(p =>
-                    p.product_item_num.toLowerCase().includes(query) ||
-                    p.product_description.toLowerCase().includes(query)
-                );
-                currentPage = 1; // Reset to the first page when searching
-                populateProductTable('#classification1Products', filteredProducts);
-            });
+            .cart-summary-top {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: #f8f9fa;
+                padding: 10px;
+                border: 1px solid #dee2e6;
+                border-radius: 5px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                width: 250px;
+                text-align: center;
+            }
 
-            $('#searchClassification2').on('input', function () {
-                var query = $(this).val().toLowerCase();
-                var filteredProducts = classification2Products.filter(p =>
-                    p.product_item_num.toLowerCase().includes(query) ||
-                    p.product_description.toLowerCase().includes(query)
-                );
-                currentPage = 1; // Reset to the first page when searching
-                populateProductTable('#classification2Products', filteredProducts);
-            });
+                .cart-summary-top h4 {
+                    margin-bottom: 10px;
+                    font-size: 18px;
+                }
 
-            $(document).on('input', '.cart-quantity-input', function () {
-                var productId = $(this).data('product-id');
-                var newQuantity = parseInt($(this).val());
-                updateCartQuantity(productId, newQuantity);
-            });
+                .cart-summary-top button {
+                    width: 100%; /* Make the button full width */
+                }
+        </style>
+    }
 
-            $(document).on('click', '.remove-from-cart', function () {
-                var productId = $(this).data('product-id');
-                removeFromCart(productId);
-                showCheckoutModal(); // Update the modal view
-            });
+    @section Scripts {
+        <script>$(document).ready(function () {
+                var cart = [];
+                var classification1Products = [];
+                var classification2Products = [];
+                var shipInfo = {};
+
+                var currentPage = 1;
+                var productsPerPage = 10;
+
+                try {
+                    classification1Products = JSON.parse($('#classification1ProductsJson').val());
+                } catch (e) {
+                    console.error("Error parsing classification1ProductsJson:", e);
+                }
+
+                try {
+                    classification2Products = JSON.parse($('#classification2ProductsJson').val());
+                } catch (e) {
+                    console.error("Error parsing classification2ProductsJson:", e);
+                }
+
+    $(document).on('click', '.add-to-cart', function () {
+        var $row = $(this).closest('tr');
+        var productId = $(this).data('product-id');
+        var quantity = parseInt($row.find('.quantity-input').val());
+
+        addToCart(productId, quantity);
+
+        // Show the correct "X item(s) added" message next to the button
+        var $addToCartBtn = $(this);
+        $addToCartBtn.siblings('.item-added-msg').remove();  // Clear previous message
+        $addToCartBtn.after('<span class="item-added-msg" style="color: green;">' + quantity + ' item(s) added</span>');
+
+        // Keep the quantity input reflecting the added quantity
+        $row.find('.quantity-input').val(quantity);
+    });
+
+
+
+                // Handle both checkout buttons
+                $('#checkout-button-top, #checkout-button-bottom').on('click', function () {
+                    if (cart.length === 0) {
+                        alert('Your cart is empty. Please add at least one item before proceeding to checkout.');
+                    } else {
+                        showCheckoutModal(); // Proceed to show the checkout modal if cart is not empty
+                    }
+                });
+                $('#productTab a').on('click', function (e) {
+                    e.preventDefault();
+                    $(this).tab('show');
+                    currentPage = 1;
+                    updatePagination();
+                });
+
+                $(document).on('click', '.add-to-cart', function () {
+                    var productId = $(this).data('product-id');
+                    var quantity = $(this).closest('tr').find('.quantity-input').val();
+                    addToCart(productId, quantity);
+                });
+
+                $('#checkout-button').on('click', function () {
+                    if (cart.length === 0) {
+                        alert('Your cart is empty. Please add at least one item before proceeding to checkout.');
+                        return; // Stop execution if cart is empty
+                    }
+                    showCheckoutModal(); // Proceed to show the checkout modal if cart is not empty
+                });
+
+
+                $('#cancel-button, .close').on('click', function () {
+                    $('#checkoutModal').modal('hide');
+                });
+
+                $('#prev-page').on('click', function (e) {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        currentPage--;
+                        updatePagination();
+                    }
+                });
+
+                $('#next-page').on('click', function (e) {
+                    e.preventDefault();
+                    var activeTab = $('#productTab .active').attr('id');
+                    var totalProducts = activeTab === 'classification1-tab' ? classification1Products.length : classification2Products.length;
+                    var totalPages = Math.ceil(totalProducts / productsPerPage);
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        updatePagination();
+                    }
+                });
+
+                $(document).on('click', '.page-number', function (e) {
+                    e.preventDefault();
+                    var pageNumber = parseInt($(this).text());
+                    currentPage = pageNumber;
+                    updatePagination();
+                });
+
+                $('#place-order-button').on('click', function () {
+                    placeOrder();
+                });
+
+                $('#searchClassification1').on('input', function () {
+                    var query = $(this).val().toLowerCase();
+                    var filteredProducts = classification1Products.filter(p =>
+                        p.product_item_num.toLowerCase().includes(query) ||
+                        p.product_description.toLowerCase().includes(query)
+                    );
+                    currentPage = 1; // Reset to the first page when searching
+                    populateProductTable('#classification1Products', filteredProducts);
+                });
+
+                $('#searchClassification2').on('input', function () {
+                    var query = $(this).val().toLowerCase();
+                    var filteredProducts = classification2Products.filter(p =>
+                        p.product_item_num.toLowerCase().includes(query) ||
+                        p.product_description.toLowerCase().includes(query)
+                    );
+                    currentPage = 1; // Reset to the first page when searching
+                    populateProductTable('#classification2Products', filteredProducts);
+                });
+
+                $(document).on('input', '.cart-quantity-input', function () {
+                    var productId = $(this).data('product-id');
+                    var newQuantity = parseInt($(this).val());
+                    updateCartQuantity(productId, newQuantity);
+                });
+
+                $(document).on('click', '.remove-from-cart', function () {
+                    var productId = $(this).data('product-id');
+                    removeFromCart(productId);
+                    showCheckoutModal(); // Update the modal view
+                });
 
     function addToCart(productId, quantity) {
-        let product = getProductById(productId); // Fetch the product by ID
+        let product = getProductById(productId);
 
         if (!product) {
             console.error("Product not found when adding to cart:", productId);
             return;
         }
 
-        console.log('Adding to cart:', { productId, quantity });
-
         var existingItem = cart.find(item => item.product_id === productId);
+
         if (existingItem) {
-            existingItem.Quantity += parseInt(quantity); // Use Quantity with uppercase Q
+            // Update the quantity for the existing product
+            existingItem.Quantity = parseInt(quantity);  // Set the exact quantity, not increment
         } else {
-            cart.push({ product_id: productId, Quantity: parseInt(quantity) }); // Use Quantity with uppercase Q
+            // Add a new product to the cart
+            cart.push({ product_id: productId, Quantity: parseInt(quantity) });
         }
+
         updateCartCount();
     }
 
 
-            function updateCartQuantity(productId, newQuantity) {
-                var existingItem = cart.find(item => item.product_id === productId);
-                if (existingItem) {
-                    existingItem.Quantity = newQuantity; // Use Quantity with uppercase Q
-                }
-                updateCartCount();
-            }
 
-            function removeFromCart(productId) {
-                cart = cart.filter(item => item.product_id !== productId);
-                updateCartCount();
-            }
-
-            function showCheckoutModal() {
-                var $cartItemsTableBody = $('#cartItemsTable tbody');
-                $cartItemsTableBody.empty();
-
-                cart.forEach(item => {
-                    var product = getProductById(item.product_id);
-                    if (product) {
-                        var row = `<tr>
-                                <td>${product.product_item_num}</td>
-                                <td>${product.product_description}</td>
-                                <td>
-                                    <input type="number" class="form-control cart-quantity-input" data-product-id="${item.product_id}" value="${item.Quantity}" min="1" />
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-danger remove-from-cart" data-product-id="${item.product_id}">&times;</button>
-                                </td>
-                            </tr>`;
-                        $cartItemsTableBody.append(row);
+                function updateCartQuantity(productId, newQuantity) {
+                    var existingItem = cart.find(item => item.product_id === productId);
+                    if (existingItem) {
+                        existingItem.Quantity = newQuantity; // Use Quantity with uppercase Q
                     }
-                });
-
-                populateShippingInfo(shipInfo);
-                $('#checkoutModal').modal('show');
-            }
-
-            function populateProductTable(selector, products) {
-                var $tbody = $(selector);
-                $tbody.empty();
-
-                var startIndex = (currentPage - 1) * productsPerPage;
-                var endIndex = startIndex + productsPerPage;
-                var paginatedProducts = products.slice(startIndex, endIndex);
-
-                paginatedProducts.forEach(product => {
-                    var row = `<tr>
-                            <td>${product.product_item_num}</td>
-                            <td>${product.product_description}</td>
-                            <td>${product.product_pieces_per_case || 'N/A'}</td>
-                            <td>${product.is_active ? "Yes" : "No"}</td>
-                            <td>
-                                <input type="number" class="form-control quantity-input" data-product-id="${product.product_id}" value="1" min="1" />
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-primary add-to-cart" data-product-id="${product.product_id}">Add to Cart</button>
-                            </td>
-                        </tr>`;
-                    $tbody.append(row);
-                });
-
-                updatePaginationControls(products.length);
-            }
-
-    function getProductById(productId) {
-        let product = classification1Products.find(p => p.product_id === productId);
-
-        if (!product) {
-            product = classification2Products.find(p => p.product_id === productId);
-        }
-
-        if (!product) {
-            console.warn(`Product with ID ${productId} not found in any classification.`);
-            return null; // Ensure null is returned if not found
-        }
-
-        return product;
-    }
-
-
-
-
-
-            function populateShippingInfo(shipInfo) {
-                if (shipInfo) {
-                    $('#shipToName').val(shipInfo.ShipToName);
-                    $('#shipToEmail').val(shipInfo.ShipToEmail);
-                    $('#shipToAddress').val(shipInfo.ShipToAddress);
-                    $('#shipToAddress2').val(shipInfo.ShipToAddress2);
-                    $('#shipToCity').val(shipInfo.ShipToCity);
-                    $('#shipToState').val(shipInfo.ShipToState);
-                    $('#shipToZip').val(shipInfo.ShipToZip);
-                }
-            }
-
-    function placeOrder() {
-        var shippingInfo = {
-            ShipToName: $('#shipToName').val(),
-            ShipToEmail: $('#shipToEmail').val(),
-            ShipToAddress: $('#shipToAddress').val(),
-            ShipToAddress2: $('#shipToAddress2').val(),
-            ShipToCity: $('#shipToCity').val(),
-            ShipToState: $('#shipToState').val(),
-            ShipToZip: $('#shipToZip').val()
-        };
-
-        var requestData = { Cart: cart, ShippingInfo: shippingInfo };
-
-        // Log cart to check if product IDs are properly included
-        console.log('Placing order with cart:', cart);
-
-        var url = '/Client/PlaceOrder?handler=Checkout';
-
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-            },
-            body: JSON.stringify(requestData)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    $('#checkoutModal').modal('hide');
-                    cart = [];
                     updateCartCount();
-                    showOrderConfirmation(data.orderConfirmation);
-                } else {
-                    alert(data.message);
                 }
-            })
-            .catch(error => {
-                console.error('Error during order placement:', error);
-                alert('An error occurred while placing the order.');
-            });
-    }
+
+                function removeFromCart(productId) {
+                    cart = cart.filter(item => item.product_id !== productId);
+                    updateCartCount();
+                }
+
+                function showCheckoutModal() {
+                    var $cartItemsTableBody = $('#cartItemsTable tbody');
+                    $cartItemsTableBody.empty();
+
+                    cart.forEach(item => {
+                        var product = getProductById(item.product_id);
+                        if (product) {
+                            var row = `<tr>
+                                                <td>${product.product_item_num}</td>
+                                                <td>${product.product_description}</td>
+                                                <td>
+                                                    <input type="number" class="form-control cart-quantity-input" data-product-id="${item.product_id}" value="${item.Quantity}" min="1" />
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-danger remove-from-cart" data-product-id="${item.product_id}">&times;</button>
+                                                </td>
+                                            </tr>`;
+                            $cartItemsTableBody.append(row);
+                        }
+                    });
+
+                    populateShippingInfo(shipInfo);
+                    $('#checkoutModal').modal('show');
+                }
+
+                function populateProductTable(selector, products) {
+                    var $tbody = $(selector);
+                    $tbody.empty();
+
+                    var startIndex = (currentPage - 1) * productsPerPage;
+                    var endIndex = startIndex + productsPerPage;
+                    var paginatedProducts = products.slice(startIndex, endIndex);
+
+                    paginatedProducts.forEach(product => {
+                        var row = `<tr>
+                                            <td>${product.product_item_num}</td>
+                                            <td>${product.product_description}</td>
+                                            <td>${product.product_pieces_per_case || 'N/A'}</td>
+                                            <td>${product.is_active ? "Yes" : "No"}</td>
+                                            <td>
+                                                <input type="number" class="form-control quantity-input" data-product-id="${product.product_id}" value="1" min="1" />
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-primary add-to-cart" data-product-id="${product.product_id}">Add to Cart</button>
+                                            </td>
+                                        </tr>`;
+                        $tbody.append(row);
+                    });
+
+                    updatePaginationControls(products.length);
+                }
+
+                function getProductById(productId) {
+                    let product = classification1Products.find(p => p.product_id === productId);
+
+                    if (!product) {
+                        product = classification2Products.find(p => p.product_id === productId);
+                    }
+
+                    if (!product) {
+                        console.warn(`Product with ID ${productId} not found in any classification.`);
+                        return null; // Ensure null is returned if not found
+                    }
+
+                    return product;
+                }
 
 
-    function showOrderConfirmation(orderConfirmation) {
-        if (!orderConfirmation) {
-            console.error("orderConfirmation is not defined", orderConfirmation);
-            return;
-        }
 
-        var orderDetailsArray = orderConfirmation.orderDetails.$values;
 
-        if (!Array.isArray(orderDetailsArray)) {
-            console.error("OrderDetails is not defined or not an array", orderDetailsArray);
-            return;
-        }
 
-        var orderDetailsHtml = orderDetailsArray.map(detail => {
-            console.log('Processing order detail:', detail);
+                function populateShippingInfo(shipInfo) {
+                    if (shipInfo) {
+                        $('#shipToName').val(shipInfo.ShipToName);
+                        $('#shipToEmail').val(shipInfo.ShipToEmail);
+                        $('#shipToAddress').val(shipInfo.ShipToAddress);
+                        $('#shipToAddress2').val(shipInfo.ShipToAddress2);
+                        $('#shipToCity').val(shipInfo.ShipToCity);
+                        $('#shipToState').val(shipInfo.ShipToState);
+                        $('#shipToZip').val(shipInfo.ShipToZip);
+                    }
+                }
 
-            // Check if product_id is available and handle error logging
-            if (!detail.product_id) {
-                console.error("Product ID is undefined for order detail:", detail);
-            }
+                function placeOrder() {
+                    var shippingInfo = {
+                        ShipToName: $('#shipToName').val(),
+                        ShipToEmail: $('#shipToEmail').val(),
+                        ShipToAddress: $('#shipToAddress').val(),
+                        ShipToAddress2: $('#shipToAddress2').val(),
+                        ShipToCity: $('#shipToCity').val(),
+                        ShipToState: $('#shipToState').val(),
+                        ShipToZip: $('#shipToZip').val()
+                    };
 
-            // Retrieve product using product_id
-            let product = getProductById(detail.product_id);
+                    var requestData = { Cart: cart, ShippingInfo: shippingInfo };
 
-            if (!product) {
-                console.warn(`Product with ID ${detail.product_id} not found.`);
-            }
+                    // Log cart to check if product IDs are properly included
+                    console.log('Placing order with cart:', cart);
 
-            let productName = product ? product.product_description : "Unknown Product";
-            let quantity = detail.quantity !== undefined ? detail.quantity : "Not available";
+                    var url = '/Client/PlaceOrder?handler=Checkout';
 
-            return `
-            <tr>
-                <td>${productName}</td>
-                <td>${quantity}</td>
-            </tr>
-        `;
-        }).join('');
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        body: JSON.stringify(requestData)
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok ' + response.statusText);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                $('#checkoutModal').modal('hide');
+                                cart = [];
+                                updateCartCount();
+                                showOrderConfirmation(data.orderConfirmation);
+                            } else {
+                                alert(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error during order placement:', error);
+                            alert('An error occurred while placing the order.');
+                        });
+                }
 
-        var confirmationHtml = `
-        <div class="order-confirmation-card">
-            <div class="card text-center">
-                <div class="card-header bg-primary text-white">
-                    <h4>Order Confirmation</h4>
-                    <button type="button" class="close text-white" id="close-confirmation-card">&times;</button>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">Order ID: ${orderConfirmation.orderId}</h5>
-                    <p><strong>Order Date:</strong> ${new Date(orderConfirmation.orderDate).toLocaleDateString()}</p>
-                    <h6>Order Details</h6>
-                    <table class="table table-bordered">
-                        <thead>
+
+                function showOrderConfirmation(orderConfirmation) {
+                    if (!orderConfirmation) {
+                        console.error("orderConfirmation is not defined", orderConfirmation);
+                        return;
+                    }
+
+                    var orderDetailsArray = orderConfirmation.orderDetails.$values;
+
+                    if (!Array.isArray(orderDetailsArray)) {
+                        console.error("OrderDetails is not defined or not an array", orderDetailsArray);
+                        return;
+                    }
+
+                    var orderDetailsHtml = orderDetailsArray.map(detail => {
+                        console.log('Processing order detail:', detail);
+
+                        // Check if product_id is available and handle error logging
+                        if (!detail.product_id) {
+                            console.error("Product ID is undefined for order detail:", detail);
+                        }
+
+                        // Retrieve product using product_id
+                        let product = getProductById(detail.product_id);
+
+                        if (!product) {
+                            console.warn(`Product with ID ${detail.product_id} not found.`);
+                        }
+
+                        let productName = product ? product.product_description : "Unknown Product";
+                        let quantity = detail.quantity !== undefined ? detail.quantity : "Not available";
+
+                        return `
                             <tr>
-                                <th>Product</th>
-                                <th>Quantity</th>
+                                <td>${productName}</td>
+                                <td>${quantity}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            ${orderDetailsHtml}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    `;
+                        `;
+                    }).join('');
 
-        $('body').append(confirmationHtml);
+                    var confirmationHtml = `
+                        <div class="order-confirmation-card">
+                            <div class="card text-center">
+                                <div class="card-header bg-primary text-white">
+                                    <h4>Order Confirmation</h4>
+                                    <button type="button" class="close text-white" id="close-confirmation-card">&times;</button>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">Order ID: ${orderConfirmation.orderId}</h5>
+                                    <p><strong>Order Date:</strong> ${new Date(orderConfirmation.orderDate).toLocaleDateString()}</p>
+                                    <h6>Order Details</h6>
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Quantity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${orderDetailsHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
 
-        $('#close-confirmation-card').on('click', function () {
-            $('.order-confirmation-card').remove();
-        });
+                    $('body').append(confirmationHtml);
+
+                    $('#close-confirmation-card').on('click', function () {
+                        $('.order-confirmation-card').remove();
+                    });
+                }
+
+
+                // Async function to get product description from the server
+                async function getProductByIdAsync(productId) {
+                    if (!productId) {
+                        console.error('Product ID is undefined or null');
+                        return null;
+                    }
+
+                    try {
+                        const response = await fetch(`/Client/PlaceOrder?handler=GetProductById&productId=${productId}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const product = await response.json();
+                            return product;
+                        } else {
+                            console.error(`Failed to fetch product with ID: ${productId}`);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching product data:', error);
+                    }
+
+                    return null;
+                }
+
+
+
+
+    function updateCartCount() {
+        var totalItems = cart.reduce((sum, item) => sum + item.Quantity, 0);
+        $('#cart-count').text('Items in cart: ' + totalItems);
+
+        // Enable or disable the checkout buttons based on cart state
+        if (totalItems === 0) {
+            $('#checkout-button-top, #checkout-button-bottom').attr('disabled', true);
+        } else {
+            $('#checkout-button-top, #checkout-button-bottom').attr('disabled', false);
+        }
     }
 
 
-    // Async function to get product description from the server
-    async function getProductByIdAsync(productId) {
-        if (!productId) {
-            console.error('Product ID is undefined or null');
-            return null;
-        }
 
-        try {
-            const response = await fetch(`/Client/PlaceOrder?handler=GetProductById&productId=${productId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
+
+                function updatePagination() {
+                    var activeTab = $('#productTab .active').attr('id');
+                    if (activeTab === 'classification1-tab') {
+                        populateProductTable('#classification1Products', classification1Products);
+                    } else if (activeTab === 'classification2-tab') {
+                        populateProductTable('#classification2Products', classification2Products);
+                    }
                 }
-            });
 
-            if (response.ok) {
-                const product = await response.json();
-                return product;
-            } else {
-                console.error(`Failed to fetch product with ID: ${productId}`);
-            }
-        } catch (error) {
-            console.error('Error fetching product data:', error);
-        }
+                function updatePaginationControls(totalProducts) {
+                    var totalPages = Math.ceil(totalProducts / productsPerPage);
+                    $('#prev-page').parent().toggleClass('disabled', currentPage <= 1);
+                    $('#next-page').parent().toggleClass('disabled', currentPage >= totalPages);
 
-        return null;
+                    var paginationNumbers = '';
+                    for (var i = 1; i <= totalPages; i++) {
+                        paginationNumbers += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                                                                <a href="#" class="page-link page-number">${i}</a>
+                                                             </li>`;
+                    }
+                    $('#pagination-numbers').html(paginationNumbers);
+                }
+
+                updatePagination();
+            });</script>
+
     }
-
-
-
-
-            function updateCartCount() {
-                var totalItems = cart.reduce((sum, item) => sum + item.Quantity, 0);
-                $('#cart-count').text('Items in cart: ' + totalItems);
-            }
-
-            function updatePagination() {
-                var activeTab = $('#productTab .active').attr('id');
-                if (activeTab === 'classification1-tab') {
-                    populateProductTable('#classification1Products', classification1Products);
-                } else if (activeTab === 'classification2-tab') {
-                    populateProductTable('#classification2Products', classification2Products);
-                }
-            }
-
-            function updatePaginationControls(totalProducts) {
-                var totalPages = Math.ceil(totalProducts / productsPerPage);
-                $('#prev-page').parent().toggleClass('disabled', currentPage <= 1);
-                $('#next-page').parent().toggleClass('disabled', currentPage >= totalPages);
-
-                var paginationNumbers = '';
-                for (var i = 1; i <= totalPages; i++) {
-                    paginationNumbers += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                                                <a href="#" class="page-link page-number">${i}</a>
-                                             </li>`;
-                }
-                $('#pagination-numbers').html(paginationNumbers);
-            }
-
-            updatePagination();
-        });</script>
-
-}

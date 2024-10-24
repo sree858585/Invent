@@ -35,8 +35,14 @@
                             <p><strong>Alternate Name:</strong> @registration.AlternateName</p>
                             <p><strong>County:</strong> @registration.County</p>
                             <p><strong>Address:</strong> @registration.Address, @registration.Address2, @registration.City, @registration.State, @registration.Zip</p>
-                            <p><strong>Program Director:</strong> @(registration.AgencyContact?.ProgramDirector ?? "N/A")</p>
-                            <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
+                            <p>
+                                <strong>Program Director:</strong>
+                                @(registration.AgencyContact?.ProgramDirector ?? "N/A")
+                                <br />
+                                @registration.AgencyContact?.Email
+                                <br />
+                                @registration.AgencyContact?.Phone
+                            </p>                            <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
                             <p><strong>Submission Date:</strong> @registration.SubmissionDate.ToString("g")</p>
                             <p><strong>Status:</strong> @registration.Status</p>
                         </div>
@@ -137,8 +143,14 @@
                             <p><strong>Alternate Name:</strong> @registration.AlternateName</p>
                             <p><strong>County:</strong> @registration.County</p>
                             <p><strong>Address:</strong> @registration.Address, @registration.Address2, @registration.City, @registration.State, @registration.Zip</p>
-                            <p><strong>Program Director:</strong> @(registration.AgencyContact?.ProgramDirector ?? "N/A")</p>
-                            <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
+                            <p>
+                                <strong>Program Director:</strong>
+                                @(registration.AgencyContact?.ProgramDirector ?? "N/A")
+                                <br />
+                                @registration.AgencyContact?.Email
+                                <br />
+                                @registration.AgencyContact?.Phone
+                            </p>                             <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
                             <p><strong>Submission Date:</strong> @registration.SubmissionDate.ToString("g")</p>
                             <p><strong>Status:</strong> @registration.Status</p>
                         </div>
@@ -229,8 +241,14 @@
                             <p><strong>Alternate Name:</strong> @registration.AlternateName</p>
                             <p><strong>County:</strong> @registration.County</p>
                             <p><strong>Address:</strong> @registration.Address, @registration.Address2, @registration.City, @registration.State, @registration.Zip</p>
-                            <p><strong>Program Director:</strong> @(registration.AgencyContact?.ProgramDirector ?? "N/A")</p>
-                            <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
+                            <p>
+                                <strong>Program Director:</strong>
+                                @(registration.AgencyContact?.ProgramDirector ?? "N/A")
+                                <br />
+                                @registration.AgencyContact?.Email
+                                <br />
+                                @registration.AgencyContact?.Phone
+                            </p>                             <p><strong>Registration Type:</strong> @registration.RegistrationType</p>
                             <p><strong>Submission Date:</strong> @registration.SubmissionDate.ToString("g")</p>
                             <p><strong>Status:</strong> @registration.Status</p>
                         </div>

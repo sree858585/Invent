@@ -16,17 +16,21 @@ namespace WebApplication1.Pages.Client
     [Authorize(Roles = "Client")]
 
     public class ManageAdditionalUsersModel : PageModel
-    {
+    {   
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailService _emailService; // Inject EmailService
+        private readonly GeocodingService _geocodingService;
 
 
-        public ManageAdditionalUsersModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService)
+
+        public ManageAdditionalUsersModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailService emailService, GeocodingService geocodingService)
         {
             _context = context;
             _userManager = userManager;
             _emailService = emailService; // Assign the email service
+            _geocodingService = geocodingService;
+
 
         }
 
@@ -104,11 +108,18 @@ namespace WebApplication1.Pages.Client
                 {
                     return new JsonResult(new { success = false, message = "Agency not found." });
                 }
+                // Build the full address for geocoding
+                var fullAddress = $"{user.Address}, {user.City}, {user.State}, {user.Zip}";
+
+                // Fetch latitude and longitude using GeocodingService
+                var (lat, lng) = await _geocodingService.GetCoordinatesAsync(fullAddress);
 
                 if (user.Id == 0)
                 {
                     // New additional user
                     user.AgencyRegistrationId = agency.Id;  // Map AdditionalUser to the correct AgencyRegistration
+                    user.Lat = lat;  // Set the latitude
+                    user.Lng = lng;  // Set the longitude
                     _context.AdditionalUsers.Add(user);
 
                     // Now create the Identity user for the additional user
@@ -159,6 +170,10 @@ namespace WebApplication1.Pages.Client
                     existingUser.SuffixId = user.SuffixId;
                     existingUser.Title = user.Title;
                     existingUser.SameAddressAsAgency = user.SameAddressAsAgency;
+
+                    // Update latitude and longitude
+                    existingUser.Lat = lat;
+                    existingUser.Lng = lng;
                 }
 
                 await _context.SaveChangesAsync();

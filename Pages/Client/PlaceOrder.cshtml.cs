@@ -19,11 +19,15 @@ namespace WebApplication1.Pages.Client
     {
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly GeocodingService _geocodingService;
 
-        public PlaceOrderModel(ApplicationDbContext context, IEmailService emailService)
+
+        public PlaceOrderModel(ApplicationDbContext context, IEmailService emailService, GeocodingService geocodingService)
         {
             _context = context;
             _emailService = emailService;
+            _geocodingService = geocodingService;
+
         }
 
         public string Classification1ProductsJson { get; set; }
@@ -165,6 +169,10 @@ namespace WebApplication1.Pages.Client
                     throw new Exception("One or more required fields are missing.");
                 }
 
+                // Get the latitude and longitude using the geocoding service
+                var fullAddress = $"{request.ShippingInfo.ShipToAddress}, {request.ShippingInfo.ShipToCity}, {request.ShippingInfo.ShipToState}, {request.ShippingInfo.ShipToZip}";
+                var (lat, lng) = await _geocodingService.GetCoordinatesAsync(fullAddress);
+
                 // Create the order object
                 var order = new Order
                 {
@@ -178,7 +186,9 @@ namespace WebApplication1.Pages.Client
                     ShipToAddress2 = request.ShippingInfo.ShipToAddress2,
                     ShipToCity = request.ShippingInfo.ShipToCity,
                     ShipToState = request.ShippingInfo.ShipToState,
-                    ShipToZip = request.ShippingInfo.ShipToZip
+                    ShipToZip = request.ShippingInfo.ShipToZip,
+                    Lat = lat, // Save the latitude value
+                    Lng = lng  // Save the longitude value
                 };
 
                 // Add the order to the database
